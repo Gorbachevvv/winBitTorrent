@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
+  <Project Path="WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
+  <Project Path="tests\WinBitTorrent.Core.Tests\WinBitTorrent.Core.Tests.csproj" />
+  <Project Path="tests\WinBitTorrent.Infrastructure.Tests\WinBitTorrent.Infrastructure.Tests.csproj" />
+  <Project Path="tests\WinBitTorrent.IntegrationTests\WinBitTorrent.IntegrationTests.csproj" />
+  <Project Path="tests\WinBitTorrent.UiTests\WinBitTorrent.UiTests.csproj" />
+  <Project Path="WinBitTorrent.csproj">
+    <Platform Project="x64" />
+    <Deploy />
+  </Project>
+</Solution>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="WinBitTorrent.CreateTorrentWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Create torrent">
+    <Grid Padding="20" RowSpacing="12">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <TextBlock x:Uid="CreateTorrentTitle" Style="{StaticResource TitleTextBlockStyle}" Text="Create new torrent" />
+        <InfoBar x:Name="MessageBar" Grid.Row="1" IsClosable="True" IsOpen="False" />
+        <Grid Grid.Row="2" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox x:Uid="CreateTorrentSource" x:Name="SourceBox" Header="Source file or folder" /><Button x:Uid="CommonFile" Grid.Column="1" VerticalAlignment="Bottom" Content="File…" Click="PickFile_Click" /><Button x:Uid="CommonFolder" Grid.Column="2" VerticalAlignment="Bottom" Content="Folder…" Click="PickFolder_Click" /></Grid>
+        <Grid Grid.Row="3" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox x:Uid="CreateTorrentOutput" x:Name="OutputBox" Header="Output .torrent file" /><Button x:Uid="CommonBrowse" Grid.Column="1" VerticalAlignment="Bottom" Content="Browse…" Click="PickOutput_Click" /></Grid>
+        <TextBox x:Uid="CreateTorrentTrackers" x:Name="TrackersBox" Grid.Row="4" Height="92" AcceptsReturn="True" Header="Tracker URLs (one per line, blank line starts a new tier)" TextWrapping="Wrap" />
+        <Grid Grid.Row="5" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="160" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox x:Uid="CreateTorrentComment" x:Name="CommentBox" Header="Comment" /><ComboBox x:Uid="CreateTorrentPieceSize" x:Name="PieceSizeBox" Grid.Column="1" Header="Piece size"><ComboBoxItem x:Uid="ChoiceAutomatic" Content="Automatic" Tag="0" IsSelected="True" /><ComboBoxItem Content="256 KiB" Tag="262144" /><ComboBoxItem Content="1 MiB" Tag="1048576" /><ComboBoxItem Content="4 MiB" Tag="4194304" /><ComboBoxItem Content="16 MiB" Tag="16777216" /></ComboBox><CheckBox x:Uid="CreateTorrentPrivate" x:Name="PrivateBox" Grid.Column="2" VerticalAlignment="Bottom" Content="Private torrent" /><CheckBox x:Uid="CreateTorrentSeed" x:Name="SeedBox" Grid.Column="3" VerticalAlignment="Bottom" Content="Start seeding" /></Grid>
+        <Border Grid.Row="6" Padding="12" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="6"><StackPanel Spacing="8"><ProgressBar x:Name="Progress" Minimum="0" Maximum="100" /><TextBlock x:Uid="CreateTorrentReady" x:Name="StatusText" Text="Ready" TextWrapping="Wrap" /></StackPanel></Border>
+        <StackPanel Grid.Row="7" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8"><Button x:Uid="CommonCancel" Content="Cancel" Click="Cancel_Click" /><Button x:Uid="CommonCreate" x:Name="CreateButton" Content="Create" Style="{StaticResource AccentButtonStyle}" Click="Create_Click" /></StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,404 @@
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Windows.AppLifecycle;
+using WinBitTorrent.ViewModels;
+using WinBitTorrent.Services;
+using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.System;
+using System.Runtime.InteropServices;
+using WinBitTorrent.Core.Models;
+
+namespace WinBitTorrent;
+
+public sealed partial class MainWindow : Window
+{
+    private readonly AppWindow _appWindow;
+    private readonly IntPtr _windowHandle;
+    private readonly TrayIconService _trayIcon;
+    private bool _allowClose;
+    private bool _closing;
+    private bool _isWindowVisible = true;
+
+    public MainWindow(MainViewModel viewModel)
+    {
+        ViewModel = viewModel;
+        InitializeComponent();
+        RootGrid.DataContext = viewModel;
+        RootGrid.RequestedTheme = (ClientSettings.GetValue("ui.theme") as string) switch
+        {
+            "Light" => ElementTheme.Light,
+            "Dark" => ElementTheme.Dark,
+            _ => ElementTheme.Default
+        };
+
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(TitleBarDragRegion);
+
+        _windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(_windowHandle);
+        _appWindow = AppWindow.GetFromWindowId(windowId);
+        _appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "WinBitTorrent.ico"));
+        _appWindow.Resize(new Windows.Graphics.SizeInt32(1240, 800));
+        _appWindow.Closing += AppWindow_Closing;
+        Closed += MainWindow_Closed;
+        _trayIcon = new TrayIconService(
+            _windowHandle,
+            ExecuteTrayCommand,
+            () => _isWindowVisible,
+            () => ViewModel.IsConnected,
+            () => ViewModel.UseAlternativeSpeedLimits);
+    }
+
+    public MainViewModel ViewModel { get; }
+
+    public void ShowMainWindow()
+    {
+        ShowWindow(_windowHandle, ShowWindowCommand.Show);
+        _isWindowVisible = true;
+        Activate();
+        SetForegroundWindow(_windowHandle);
+    }
+
+    public void HandleActivation(AppActivationArguments args)
+    {
+        switch (args.Kind)
+        {
+            case ExtendedActivationKind.File when args.Data is IFileActivatedEventArgs fileArgs:
+                var files = fileArgs.Files.OfType<StorageFile>().Where(file => file.FileType.Equals(".torrent", StringComparison.OrdinalIgnoreCase)).Select(file => file.Path).ToList();
+                if (files.Count > 0)
+                    DispatcherQueue.TryEnqueue(() => new AddTorrentWindow(files, []).Activate());
+                break;
+            case ExtendedActivationKind.Protocol when args.Data is IProtocolActivatedEventArgs protocolArgs:
+                DispatcherQueue.TryEnqueue(() => new AddTorrentWindow([], [protocolArgs.Uri.AbsoluteUri]).Activate());
+                break;
+        }
+    }
+
+    private async void AddTorrentFile_Click(object sender, RoutedEventArgs e)
+    {
+        var picker = new FileOpenPicker { SuggestedStartLocation = PickerLocationId.Downloads };
+        picker.FileTypeFilter.Add(".torrent");
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(this));
+        var files = await picker.PickMultipleFilesAsync();
+        if (files.Count > 0)
+            new AddTorrentWindow(files.Select(static file => file.Path).ToList(), []).Activate();
+    }
+
+    private void RootGrid_DragOver(object sender, DragEventArgs e)
+    {
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+            return;
+
+        e.AcceptedOperation = DataPackageOperation.Copy;
+        e.DragUIOverride.Caption = "Add torrent files";
+        e.DragUIOverride.IsCaptionVisible = true;
+        e.DragUIOverride.IsContentVisible = true;
+        TorrentDropOverlay.Visibility = Visibility.Visible;
+        e.Handled = true;
+    }
+
+    private void RootGrid_DragLeave(object sender, DragEventArgs e)
+        => TorrentDropOverlay.Visibility = Visibility.Collapsed;
+
+    private async void RootGrid_Drop(object sender, DragEventArgs e)
+    {
+        TorrentDropOverlay.Visibility = Visibility.Collapsed;
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+            return;
+
+        var deferral = e.GetDeferral();
+        try
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            var files = items
+                .OfType<StorageFile>()
+                .Where(static file => file.FileType.Equals(".torrent", StringComparison.OrdinalIgnoreCase))
+                .Select(static file => file.Path)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (files.Count > 0)
+                new AddTorrentWindow(files, []).Activate();
+        }
+        finally
+        {
+            deferral.Complete();
+        }
+    }
+
+    private void AddTorrentLink_Click(object sender, RoutedEventArgs e) => new AddTorrentWindow([], []).Activate();
+    private void CreateTorrent_Click(object sender, RoutedEventArgs e) => new CreateTorrentWindow().Activate();
+    private void Profiles_Click(object sender, RoutedEventArgs e) => new ProfilesWindow().Activate();
+    private void Options_Click(object sender, RoutedEventArgs e) => new SettingsWindow().Activate();
+    private void Cookies_Click(object sender, RoutedEventArgs e) => new CookiesWindow().Activate();
+
+    private async void Statistics_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.Api is null)
+            return;
+        try
+        {
+            var transfer = await ViewModel.Api.Transfer.GetInfoAsync();
+            var process = await ViewModel.Api.Application.GetProcessInfoAsync();
+            var content = new TextBox
+            {
+                IsReadOnly = true,
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.NoWrap,
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas"),
+                Height = 430,
+                Width = 680,
+                Text = $"Transfer statistics\n{transfer.ToJsonString(new() { WriteIndented = true })}\n\nBackend process\n{process.ToJsonString(new() { WriteIndented = true })}"
+            };
+            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = "qBittorrent statistics", Content = content, CloseButtonText = "Close" }.ShowAsync();
+        }
+        catch (Exception exception)
+        {
+            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = "Statistics unavailable", Content = exception.Message, CloseButtonText = "Close" }.ShowAsync();
+        }
+    }
+
+    private async void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTorrents.Count == 0 && ViewModel.SelectedTorrent is null)
+            return;
+
+        if (!ClientSettings.Get("ui.confirmDelete", true))
+        {
+            await ViewModel.DeleteSelectedAsync(deleteFiles: false);
+            return;
+        }
+
+        var deleteFiles = new CheckBox { Content = "Also delete files from disk" };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            Title = "Delete selected torrents?",
+            Content = deleteFiles,
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            await ViewModel.DeleteSelectedAsync(deleteFiles.IsChecked == true);
+    }
+
+    private async void AlternativeSpeed_Click(object sender, RoutedEventArgs e) => await ViewModel.ToggleAlternativeSpeedLimitsAsync();
+
+    private void NavigateMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuFlyoutItem { Tag: string value })
+            return;
+
+        var tab = WorkspaceTabs.TabItems
+            .OfType<TabViewItem>()
+            .FirstOrDefault(item => string.Equals(item.Tag?.ToString(), value, StringComparison.Ordinal));
+        if (tab is null)
+            return;
+        tab.Visibility = Visibility.Visible;
+        WorkspaceTabs.SelectedItem = tab;
+    }
+
+    private void WorkspaceTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
+    {
+        if (args.Tab is not TabViewItem tab)
+            return;
+
+        var closedIndex = sender.TabItems.IndexOf(tab);
+        tab.Visibility = Visibility.Collapsed;
+        for (var offset = 1; offset <= sender.TabItems.Count; offset++)
+        {
+            var candidateIndex = (closedIndex + offset) % sender.TabItems.Count;
+            if (sender.TabItems[candidateIndex] is TabViewItem { Visibility: Visibility.Visible } candidate)
+            {
+                sender.SelectedItem = candidate;
+                return;
+            }
+        }
+    }
+
+    private async void Documentation_Click(object sender, RoutedEventArgs e)
+        => await Launcher.LaunchUriAsync(new Uri("https://github.com/qbittorrent/qBittorrent/wiki"));
+
+    private async void About_Click(object sender, RoutedEventArgs e)
+    {
+        var backend = string.Empty;
+        if (ViewModel.Api is not null)
+        {
+            try
+            {
+                backend = $"\nBackend: {await ViewModel.Api.Application.GetVersionAsync()} / Web API {await ViewModel.Api.Application.GetWebApiVersionAsync()}";
+            }
+            catch
+            {
+            }
+        }
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            Title = "WinBitTorrent",
+            Content = $"Native WinUI 3 client for qBittorrent 5.2.3\nWeb API 2.15.1{backend}\n\nqBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app.",
+            CloseButtonText = "Close"
+        };
+        await dialog.ShowAsync();
+    }
+
+    private void Exit_Click(object sender, RoutedEventArgs e) => _ = ExitApplicationAsync();
+
+    private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (_allowClose)
+            return;
+
+        args.Cancel = true;
+        HideToTray();
+    }
+
+    private void HideToTray()
+    {
+        ShowWindow(_windowHandle, ShowWindowCommand.Hide);
+        _isWindowVisible = false;
+    }
+
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
+        => _trayIcon.Dispose();
+
+    private void ExecuteTrayCommand(TrayIconCommand command)
+    {
+        switch (command)
+        {
+            case TrayIconCommand.ToggleWindow:
+                if (_isWindowVisible)
+                    HideToTray();
+                else
+                    ShowMainWindow();
+                break;
+            case TrayIconCommand.AddTorrentFile:
+                ShowMainWindow();
+                AddTorrentFile_Click(this, new RoutedEventArgs());
+                break;
+            case TrayIconCommand.AddTorrentLink:
+                ShowMainWindow();
+                new AddTorrentWindow([], []).Activate();
+                break;
+            case TrayIconCommand.ToggleAlternativeSpeedLimits:
+                _ = ToggleAlternativeSpeedLimitsFromTrayAsync();
+                break;
+            case TrayIconCommand.GlobalSpeedLimits:
+                _ = ShowGlobalSpeedLimitsDialogAsync();
+                break;
+            case TrayIconCommand.StartAll:
+                _ = ExecuteAllFromTrayAsync(TorrentCommand.Start);
+                break;
+            case TrayIconCommand.StopAll:
+                _ = ExecuteAllFromTrayAsync(TorrentCommand.Stop);
+                break;
+            case TrayIconCommand.Options:
+                ShowMainWindow();
+                new SettingsWindow().Activate();
+                break;
+            case TrayIconCommand.Exit:
+                _ = ExitApplicationAsync();
+                break;
+        }
+    }
+
+    private async Task ToggleAlternativeSpeedLimitsFromTrayAsync()
+    {
+        if (ViewModel.Api is null)
+            return;
+        await ViewModel.ToggleAlternativeSpeedLimitsAsync();
+    }
+
+    private async Task ShowGlobalSpeedLimitsDialogAsync()
+    {
+        if (ViewModel.Api is null)
+            return;
+
+        ShowMainWindow();
+        var downloadLimit = await ViewModel.Api.Transfer.GetDownloadLimitAsync();
+        var uploadLimit = await ViewModel.Api.Transfer.GetUploadLimitAsync();
+        var downloadBox = CreateSpeedLimitBox(
+            Localizer.Get("Dialog_DownloadLimit", "Download limit (KiB/s, 0 = unlimited)"),
+            downloadLimit);
+        var uploadBox = CreateSpeedLimitBox(
+            Localizer.Get("Dialog_UploadLimit", "Upload limit (KiB/s, 0 = unlimited)"),
+            uploadLimit);
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(downloadBox);
+        content.Children.Add(uploadBox);
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            Title = Localizer.Get("Tray_GlobalSpeedLimits", "Global speed limits..."),
+            Content = content,
+            PrimaryButtonText = Localizer.Get("CommonSave.Content", "Save"),
+            CloseButtonText = Localizer.Get("CommonCancel.Content", "Cancel"),
+            DefaultButton = ContentDialogButton.Primary
+        };
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        await ViewModel.Api.Transfer.SetDownloadLimitAsync(ToBytesPerSecond(downloadBox.Value));
+        await ViewModel.Api.Transfer.SetUploadLimitAsync(ToBytesPerSecond(uploadBox.Value));
+    }
+
+    private async Task ExecuteAllFromTrayAsync(TorrentCommand command)
+    {
+        if (ViewModel.Api is null)
+            return;
+        await ViewModel.ExecuteAllAsync(command);
+    }
+
+    private async Task ExitApplicationAsync()
+    {
+        if (_closing)
+            return;
+
+        _closing = true;
+        try
+        {
+            _allowClose = true;
+            _trayIcon.Dispose();
+            await ViewModel.ShutdownAsync();
+            Close();
+        }
+        finally
+        {
+            _closing = false;
+        }
+    }
+
+    private static NumberBox CreateSpeedLimitBox(string header, long bytesPerSecond)
+        => new()
+        {
+            Header = header,
+            Value = bytesPerSecond <= 0 ? 0 : bytesPerSecond / 1024d,
+            Minimum = 0,
+            SmallChange = 50,
+            LargeChange = 500,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Inline
+        };
+
+    private static long ToBytesPerSecond(double kibPerSecond)
+        => double.IsNaN(kibPerSecond) || kibPerSecond <= 0
+            ? 0
+            : (long)Math.Round(kibPerSecond * 1024d, MidpointRounding.AwayFromZero);
+
+    private enum ShowWindowCommand
+    {
+        Hide = 0,
+        Show = 5
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+}

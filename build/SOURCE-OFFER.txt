@@ -1,0 +1,24 @@
+WinBitTorrent bundled backend — corresponding source offer
+==========================================================
+
+The bundled qbittorrent-nox.exe is built without source modifications from the
+official qBittorrent tag release-5.2.3. qBittorrent is licensed under
+GPL-2.0-or-later for source and GPL-3.0-or-later for this binary distribution,
+with the OpenSSL exception stated in its COPYING file.
+
+The complete build recipe, exact source URLs, SHA-256 values, vcpkg registry
+baseline and dependency versions are in build/build-backend.ps1 and
+build/vcpkg.json. Those files are the durable written offer for obtaining the
+corresponding source used by this distribution. The exact upstream tag is:
+
+  https://github.com/qbittorrent/qBittorrent/tree/release-5.2.3
+
+The libtorrent source is the official v2.0.13 tag. Qt 6.11.1, Boost 1.91.0,
+OpenSSL 3.6.2 and their transitive source archives are resolved by the pinned
+vcpkg baseline. CPython 3.13.14 is distributed under the Python Software
+Foundation License.
+
+This offer is valid for at least three years after the last binary distribution
+of this WinBitTorrent release. A complete source archive can also be produced by
+running the build script; downloaded, hash-verified source archives remain under
+build/.work/downloads.

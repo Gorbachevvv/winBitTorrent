@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WinBitTorrent.Views.TrackerSearchView"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tv="using:WinUI.TableView">
+
+    <Grid>
+        <Grid
+            Padding="40,32"
+            Visibility="{Binding IsPickerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <StackPanel MaxWidth="960" HorizontalAlignment="Center" Spacing="10">
+                    <TextBlock x:Uid="TrackerPickerTitle" FontSize="28" FontWeight="SemiBold" Text="Tracker search" />
+                    <TextBlock
+                        x:Uid="TrackerPickerSubtitle"
+                        MaxWidth="720"
+                        HorizontalAlignment="Left"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Choose a tracker. More providers can be added later."
+                        TextWrapping="Wrap" />
+                    <ItemsControl Margin="0,24,0,0" ItemsSource="{Binding Trackers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><ItemsWrapGrid Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Width="330"
+                                    Height="132"
+                                    Margin="0,0,16,16"
+                                    Padding="20"
+                                    HorizontalContentAlignment="Stretch"
+                                    Tag="{Binding Id}"
+                                    Click="TrackerButton_Click">
+                                    <Grid ColumnSpacing="18">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Border Width="112" Height="72" Background="White" CornerRadius="12">
+                                            <Image Margin="8" Source="{Binding LogoUri}" Stretch="Uniform" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                            <TextBlock FontSize="20" FontWeight="SemiBold" Text="{Binding Name}" />
+                                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding HomePage}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <Grid
+            Padding="8"
+            Visibility="{Binding IsSearchVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid Margin="2,0,2,8" ColumnSpacing="10">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Button x:Uid="TrackerBackSearch" Command="{Binding BackToTrackersCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE72B;" /><TextBlock x:Uid="TrackerBackSearchText" Text="All trackers" /></StackPanel>
+                </Button>
+                <Image Grid.Column="1" Width="88" Height="30" Source="{Binding ActiveLogoUri}" Stretch="Uniform" />
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="{Binding ActiveTrackerName}" />
+                <TextBlock Grid.Column="3" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding SignedInUser}" />
+                <Button
+                    x:Uid="TrackerSignOut"
+                    Grid.Column="4"
+                    Content="Sign out"
+                    Click="SignOut_Click"
+                    Visibility="{Binding IsSignedIn, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </Grid>
+            <Grid Grid.Row="1" ColumnSpacing="8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBox x:Uid="TrackerQuery" PlaceholderText="Search RuTracker" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" KeyDown="Query_KeyDown" />
+                <Button x:Uid="TrackerSearch" Grid.Column="1" Content="Search" Command="{Binding SearchCommand}" />
+                <Button x:Uid="TrackerStop" Grid.Column="2" Content="Stop" Command="{Binding StopSearchCommand}" />
+            </Grid>
+            <Grid Grid.Row="2" Margin="0,8,0,6" ColumnSpacing="8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <ProgressRing Width="20" Height="20" IsActive="{Binding IsBusy}" />
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Status}" />
+            </Grid>
+            <InfoBar Grid.Row="2" Margin="0,30,0,6" IsOpen="{Binding ErrorMessage, Converter={StaticResource NonEmptyStringConverter}}" IsClosable="False" Severity="Error" Message="{Binding ErrorMessage}" />
+            <tv:TableView
+                x:Name="TrackerResultsTable"
+                Grid.Row="3"
+                AutoGenerateColumns="False"
+                CanReorderColumns="True"
+                CanResizeColumns="True"
+                CanSortColumns="True"
+                IsReadOnly="True"
+                ItemsSource="{Binding Results}"
+                SelectedItem="{Binding SelectedResult, Mode=TwoWay}"
+                SelectionMode="Single"
+                DoubleTapped="TrackerResultsTable_DoubleTapped">
+                <tv:TableView.Columns>
+                    <tv:TableViewTextColumn x:Uid="ColumnName" Header="Name" Width="3*" MinWidth="320" Binding="{Binding Name}" />
+                    <tv:TableViewTextColumn x:Uid="ColumnSize" Header="Size" Width="105" Binding="{Binding Size}" />
+                    <tv:TableViewTextColumn x:Uid="ColumnSeeds" Header="Seeds" Width="80" Binding="{Binding Seeds}" />
+                    <tv:TableViewTextColumn x:Uid="SearchColumnLeechers" Header="Leechers" Width="80" Binding="{Binding Leechers}" />
+                    <tv:TableViewTextColumn x:Uid="TrackerColumnPublished" Header="Added" Width="150" Binding="{Binding Published}" />
+                </tv:TableView.Columns>
+            </tv:TableView>
+            <StackPanel Grid.Row="4" Margin="0,8,0,0" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                <Button x:Uid="TrackerOpenTopic" Content="Open topic" Click="OpenTopic_Click" />
+                <Button x:Uid="TrackerDownload" Content="Download" Click="Download_Click" />
+            </StackPanel>
+        </Grid>
+
+        <Grid
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            Visibility="{Binding IsBrowserLoginVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid Padding="16,12" ColumnSpacing="12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Button x:Uid="TrackerBrowserBack" Click="TrackerBrowserBack_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE72B;" /><TextBlock x:Uid="TrackerBrowserBackText" Text="All trackers" /></StackPanel>
+                </Button>
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Spacing="10">
+                    <Image Width="104" Height="32" Source="{Binding ActiveLogoUri}" Stretch="Uniform" />
+                    <TextBlock x:Uid="TrackerSecureLoginTitle" VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="Secure sign-in" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                    <ProgressRing Width="20" Height="20" IsActive="{Binding IsBusy}" />
+                    <TextBlock VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Status}" />
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1" Margin="24,8,24,12">
+                <Border
+                    MaxWidth="720"
+                    MaxHeight="600"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="White"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                    <Grid>
+                        <WebView2
+                            x:Name="TrackerLoginWebView"
+                            NavigationCompleted="TrackerLoginWebView_NavigationCompleted"
+                            NavigationStarting="TrackerLoginWebView_NavigationStarting" />
+                        <StackPanel
+                            Padding="20"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Background="White"
+                            Spacing="12"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <ProgressRing Width="32" Height="32" IsActive="{Binding IsBusy}" />
+                            <TextBlock Foreground="DimGray" Text="{Binding Status}" TextAlignment="Center" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+            <Grid Grid.Row="2" Padding="16,10" ColumnSpacing="16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <ToggleSwitch
+                    x:Uid="TrackerProxySwitch"
+                    VerticalAlignment="Center"
+                    IsOn="{Binding UseTrackerProxy, Mode=TwoWay}"
+                    OffContent="Off"
+                    OnContent="On"
+                    Visibility="{Binding HasProxyOption, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <StackPanel Grid.Column="1" Spacing="6">
+                    <TextBlock
+                        x:Uid="TrackerBrowserHint"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Sign in and complete the captcha. WinBitTorrent will recognize the session automatically."
+                        TextWrapping="Wrap" />
+                    <InfoBar IsOpen="{Binding ErrorMessage, Converter={StaticResource NonEmptyStringConverter}}" IsClosable="False" Severity="Error" Message="{Binding ErrorMessage}" />
+                </StackPanel>
+                <Button
+                    x:Uid="TrackerBrowserComplete"
+                    Grid.Column="2"
+                    VerticalAlignment="Bottom"
+                    Content="Check sign-in"
+                    Click="TrackerBrowserComplete_Click" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

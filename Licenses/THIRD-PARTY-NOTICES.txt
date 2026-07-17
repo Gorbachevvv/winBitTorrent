@@ -1,0 +1,19 @@
+WinBitTorrent third-party notices
+=================================
+
+qBittorrent 5.2.3 — GPL-2.0-or-later source / GPL-3.0-or-later binary with the
+project's OpenSSL exception. https://github.com/qbittorrent/qBittorrent
+
+libtorrent 2.0.13 — BSD 3-Clause. https://github.com/arvidn/libtorrent
+Qt 6.11.1 — LGPL-3.0-only/GPL licensing options. https://www.qt.io/
+Boost 1.91.0 — Boost Software License 1.0. https://www.boost.org/
+OpenSSL 3.6.2 — Apache License 2.0. https://www.openssl.org/
+CPython 3.13.14 — Python Software Foundation License. https://www.python.org/
+WinUI.TableView 1.4.1 — MIT. https://github.com/w-ahmad/WinUI.TableView
+CommunityToolkit.Mvvm 8.4.0 — MIT. https://github.com/CommunityToolkit/dotnet
+
+RuTracker.org logo - public-domain text logo; RuTracker trademark.
+https://commons.wikimedia.org/wiki/File:Rutracker.org_logo.svg
+
+The backend build copies the full license text supplied by every native package
+into Backend\Licenses. NuGet package licenses are retained in their packages.

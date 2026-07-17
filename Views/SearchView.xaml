@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WinBitTorrent.Views.SearchView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tv="using:WinUI.TableView">
+    <Grid Padding="6">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="160" /><ColumnDefinition Width="180" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox x:Uid="SearchPattern" PlaceholderText="Search pattern" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" KeyDown="Query_KeyDown" /><ComboBox Grid.Column="1" SelectedValue="{Binding Category, Mode=TwoWay}" SelectedValuePath="Tag"><ComboBoxItem x:Uid="SearchCategoryAll" Content="All categories" Tag="all" IsSelected="True" /><ComboBoxItem x:Uid="SearchCategoryMovies" Content="Movies" Tag="movies" /><ComboBoxItem x:Uid="SearchCategoryTv" Content="TV shows" Tag="tv" /><ComboBoxItem x:Uid="SearchCategoryMusic" Content="Music" Tag="music" /><ComboBoxItem x:Uid="SearchCategoryGames" Content="Games" Tag="games" /><ComboBoxItem x:Uid="SearchCategorySoftware" Content="Software" Tag="software" /></ComboBox><ComboBox x:Uid="SearchAllPlugins" Grid.Column="2" ItemsSource="{Binding Plugins}" DisplayMemberPath="FullName" SelectedValuePath="Name" SelectedValue="{Binding SelectedPlugin, Mode=TwoWay}" PlaceholderText="All plugins" /><Button x:Uid="SearchButton" Grid.Column="3" Content="Search" Command="{Binding StartCommand}" /><Button x:Uid="SearchStop" Grid.Column="4" Content="Stop" Command="{Binding StopCommand}" /></Grid>
+        <Grid Grid.Row="1" Margin="0,8,0,6"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Status}" /><StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"><Button x:Uid="SearchDownload" Content="Download" Click="Download_Click" /><Button x:Uid="SearchPlugins" Content="Search plugins…" Click="Plugins_Click" /></StackPanel></Grid>
+        <tv:TableView Grid.Row="2" x:Name="ResultsTable" AutoGenerateColumns="False" CanResizeColumns="True" CanReorderColumns="True" CanSortColumns="True" IsReadOnly="True" SelectionMode="Single" ItemsSource="{Binding Results}" SelectedItem="{Binding SelectedResult, Mode=TwoWay}" DoubleTapped="ResultsTable_DoubleTapped">
+            <tv:TableView.Columns>
+                <tv:TableViewTextColumn x:Uid="ColumnName" Header="Name" Width="3*" MinWidth="260" Binding="{Binding Name}" />
+                <tv:TableViewTextColumn x:Uid="ColumnSize" Header="Size" Width="100" Binding="{Binding Size}" />
+                <tv:TableViewTextColumn x:Uid="ColumnSeeds" Header="Seeds" Width="80" Binding="{Binding Seeds}" />
+                <tv:TableViewTextColumn x:Uid="SearchColumnLeechers" Header="Leechers" Width="80" Binding="{Binding Leechers}" />
+                <tv:TableViewTextColumn x:Uid="SearchColumnEngine" Header="Engine" Width="160" Binding="{Binding Engine}" />
+                <tv:TableViewTextColumn x:Uid="ColumnCategory" Header="Category" Width="120" Binding="{Binding Category}" />
+            </tv:TableView.Columns>
+        </tv:TableView>
+    </Grid>
+</UserControl>

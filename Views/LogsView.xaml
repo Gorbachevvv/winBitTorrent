@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WinBitTorrent.Views.LogsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Padding="6">
+        <Grid.RowDefinitions><RowDefinition Height="44" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><CheckBox x:Uid="LogNormal" Content="Normal" IsChecked="{Binding ShowNormal, Mode=TwoWay}" /><CheckBox x:Uid="LogInformation" Grid.Column="1" Margin="12,0,0,0" Content="Information" IsChecked="{Binding ShowInformation, Mode=TwoWay}" /><CheckBox x:Uid="LogWarning" Grid.Column="2" Margin="12,0,0,0" Content="Warning" IsChecked="{Binding ShowWarning, Mode=TwoWay}" /><CheckBox x:Uid="LogCritical" Grid.Column="3" Margin="12,0,0,0" Content="Critical" IsChecked="{Binding ShowCritical, Mode=TwoWay}" /><Button x:Uid="CommonRefresh" Grid.Column="5" Content="Refresh" Command="{Binding RefreshCommand}" /><Button x:Uid="LogClear" Grid.Column="6" Margin="8,0,0,0" Content="Clear view" Command="{Binding ClearCommand}" /></Grid>
+        <TabView Grid.Row="1" IsAddTabButtonVisible="False">
+          <TabViewItem x:Uid="LogGeneralTab" Header="General log">
+           <ListView ItemsSource="{Binding Entries}">
+            <ListView.Header><Grid Padding="8,5" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="165" /><ColumnDefinition Width="90" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock x:Uid="LogHeaderTime" FontWeight="SemiBold" Text="Time" /><TextBlock x:Uid="LogHeaderLevel" Grid.Column="1" FontWeight="SemiBold" Text="Level" /><TextBlock x:Uid="DetailHeaderMessage" Grid.Column="2" FontWeight="SemiBold" Text="Message" /></Grid></ListView.Header>
+            <ListView.ItemTemplate><DataTemplate><Grid Padding="8,4" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="165" /><ColumnDefinition Width="90" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock FontFamily="Consolas" Text="{Binding Time}" /><TextBlock Grid.Column="1" Text="{Binding Level}" /><TextBlock Grid.Column="2" TextWrapping="Wrap" Text="{Binding Message}" /></Grid></DataTemplate></ListView.ItemTemplate>
+           </ListView>
+          </TabViewItem>
+          <TabViewItem x:Uid="LogPeerTab" Header="Peer log">
+            <ListView ItemsSource="{Binding PeerEntries}">
+              <ListView.Header><Grid Padding="8,5" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="165" /><ColumnDefinition Width="180" /><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock x:Uid="LogHeaderTime" FontWeight="SemiBold" Text="Time" /><TextBlock x:Uid="LogHeaderIp" Grid.Column="1" FontWeight="SemiBold" Text="IP address" /><TextBlock x:Uid="LogHeaderAction" Grid.Column="2" FontWeight="SemiBold" Text="Action" /><TextBlock x:Uid="LogHeaderReason" Grid.Column="3" FontWeight="SemiBold" Text="Reason" /></Grid></ListView.Header>
+              <ListView.ItemTemplate><DataTemplate><Grid Padding="8,4" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="165" /><ColumnDefinition Width="180" /><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock FontFamily="Consolas" Text="{Binding Time}" /><TextBlock Grid.Column="1" FontFamily="Consolas" Text="{Binding Address}" /><TextBlock Grid.Column="2" Text="{Binding Action}" /><TextBlock Grid.Column="3" Text="{Binding Reason}" /></Grid></DataTemplate></ListView.ItemTemplate>
+            </ListView>
+          </TabViewItem>
+        </TabView>
+    </Grid>
+</UserControl>

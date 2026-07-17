@@ -1,0 +1,111 @@
+# Build output (.NET / MSBuild)
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+artifacts/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+publish/
+out/
+TestResults/
+BenchmarkDotNet.Artifacts/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.trx
+*.coverage
+*.coveragexml
+*.binlog
+coverage*.xml
+coverage*.json
+coverage*.lcov
+
+# Visual Studio / VS Code / Rider / ReSharper
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.rsuser
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+_ReSharper*/
+*.sln.iml
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+
+# WinUI / MSIX packaging output
+AppPackages/
+BundleArtifacts/
+PackageLayout/
+Generated Files/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appinstaller
+*.appxsym
+*.appxupload
+*.msix
+*.msixbundle
+*.msixupload
+
+# Generated qBittorrent backend and its native/Python dependencies.
+# Recreate it with build/build-backend.ps1; CI publishes it as an artifact.
+/Backend/
+/build/.work/
+
+# WebView2 browser profiles, caches and cookies
+*.exe.WebView2/
+EBWebView/
+
+# Local publish and signing data
+*.pubxml.user
+*.pfx
+*.p12
+*.snk
+*.key
+*.cer
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.local.json
+secrets.json
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.userprefs
+~$*
+
+# Static analysis / IDE caches
+.sonarqube/
+.scannerwork/
+.fakes/
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Local Codex build directories
+.codex-build/

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="WinBitTorrent.SearchPluginsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Search plugins">
+    <Grid Padding="18" RowSpacing="12">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <TextBlock x:Uid="SearchPluginsTitle" Style="{StaticResource TitleTextBlockStyle}" Text="Search plugins" />
+        <InfoBar x:Name="MessageBar" Grid.Row="1" IsClosable="True" IsOpen="False" />
+        <ListView x:Name="PluginsList" Grid.Row="2" SelectionMode="Extended">
+            <ListView.ItemTemplate><DataTemplate><Grid Padding="8" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="110" /><ColumnDefinition Width="90" /></Grid.ColumnDefinitions><StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding FullName}" /><TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Url}" /></StackPanel><TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Version}" /><TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding Enabled}" /></Grid></DataTemplate></ListView.ItemTemplate>
+        </ListView>
+        <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Orientation="Horizontal" Spacing="8"><Button x:Uid="PluginsInstall" Content="Install…" Click="Install_Click" /><Button x:Uid="PluginsUninstall" Content="Uninstall" Click="Uninstall_Click" /><Button x:Uid="PluginsEnable" Content="Enable" Click="Enable_Click" /><Button x:Uid="PluginsDisable" Content="Disable" Click="Disable_Click" /><Button x:Uid="PluginsUpdate" Content="Check for updates" Click="Update_Click" /></StackPanel><Button x:Uid="CommonClose" Grid.Column="1" Content="Close" Click="Close_Click" /></Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,28 @@
+name: Windows backend
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'build/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  build-backend:
+    runs-on: windows-2025
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build qBittorrent nox and package dependencies
+        shell: pwsh
+        run: .\build\build-backend.ps1
+      - name: Verify Windows PE and dependency manifest
+        shell: pwsh
+        run: |
+          $bytes = [IO.File]::ReadAllBytes('.\Backend\qbittorrent-nox.exe')
+          if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { throw 'Not a PE executable' }
+          Get-Content '.\Backend\versions.json'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qbittorrent-nox-5.2.3-win-x64
+          path: Backend

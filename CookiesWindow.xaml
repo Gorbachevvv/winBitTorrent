@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="WinBitTorrent.CookiesWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Cookies">
+    <Grid Padding="18" RowSpacing="12">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <TextBlock x:Uid="CookiesTitle" Style="{StaticResource TitleTextBlockStyle}" Text="qBittorrent cookies" />
+        <InfoBar x:Name="MessageBar" Grid.Row="1" IsClosable="True" IsOpen="False" />
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <TextBox x:Uid="CookiesJson" x:Name="CookiesEditor" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas" Header="JSON cookie array" />
+        </ScrollViewer>
+        <StackPanel Grid.Row="3" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8"><Button x:Uid="CommonClose" Content="Close" Click="Close_Click" /><Button x:Uid="CookiesSave" Content="Save cookies" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" /></StackPanel>
+    </Grid>
+</Window>

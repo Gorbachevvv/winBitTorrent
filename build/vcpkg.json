@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "winbittorrent-backend-dependencies",
+  "version-string": "5.2.3",
+  "builtin-baseline": "4b1c85d04c9ea3730408fefcabc6123312b714d2",
+  "dependencies": [
+    "boost",
+    "openssl",
+    "qtbase",
+    "qttools",
+    "zlib"
+  ],
+  "overrides": [
+    { "name": "boost", "version": "1.91.0" },
+    { "name": "openssl", "version": "3.6.2" },
+    { "name": "qtbase", "version": "6.11.1", "port-version": 1 },
+    { "name": "qttools", "version": "6.11.1" }
+  ]
+}

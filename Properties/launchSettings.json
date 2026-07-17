@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WinBitTorrent (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "WinBitTorrent (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

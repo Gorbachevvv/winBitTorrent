@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="FileMenu.Title" xml:space="preserve"><value>File</value></data>
+  <data name="EditMenu.Title" xml:space="preserve"><value>Edit</value></data>
+  <data name="ViewMenu.Title" xml:space="preserve"><value>View</value></data>
+  <data name="ToolsMenu.Title" xml:space="preserve"><value>Tools</value></data>
+  <data name="HelpMenu.Title" xml:space="preserve"><value>Help</value></data>
+  <data name="AddTorrentFile.Text" xml:space="preserve"><value>Add Torrent File…</value></data>
+  <data name="AddTorrentLink.Text" xml:space="preserve"><value>Add Torrent Link…</value></data>
+  <data name="CreateTorrent.Text" xml:space="preserve"><value>Create Torrent…</value></data>
+  <data name="Exit.Text" xml:space="preserve"><value>Exit</value></data>
+  <data name="Start.Text" xml:space="preserve"><value>Start</value></data>
+  <data name="Stop.Text" xml:space="preserve"><value>Stop</value></data>
+  <data name="Delete.Text" xml:space="preserve"><value>Delete…</value></data>
+  <data name="ForceRecheck.Text" xml:space="preserve"><value>Force recheck</value></data>
+  <data name="Reannounce.Text" xml:space="preserve"><value>Reannounce</value></data>
+  <data name="ServerProfiles.Text" xml:space="preserve"><value>Server profiles…</value></data>
+  <data name="Options.Text" xml:space="preserve"><value>Options…</value></data>
+  <data name="FilterTorrents.PlaceholderText" xml:space="preserve"><value>Filter torrents</value></data>
+  <data name="TransfersTab.Header" xml:space="preserve"><value>Transfers</value></data>
+  <data name="RssTab.Header" xml:space="preserve"><value>RSS Reader</value></data>
+  <data name="SearchTab.Header" xml:space="preserve"><value>Search</value></data>
+  <data name="LogTab.Header" xml:space="preserve"><value>Execution Log</value></data>
+  <data name="StatusFilter.Header" xml:space="preserve"><value>Status</value></data>
+  <data name="CategoriesFilter.Header" xml:space="preserve"><value>Categories</value></data>
+  <data name="TagsFilter.Header" xml:space="preserve"><value>Tags</value></data>
+  <data name="TrackersFilter.Header" xml:space="preserve"><value>Trackers</value></data>
+  <data name="AlternativeSpeedLimits.Text" xml:space="preserve"><value>Alternative speed limits</value></data>
+  <data name="TransfersMenu.Text" xml:space="preserve"><value>Transfers</value></data>
+  <data name="RssMenu.Text" xml:space="preserve"><value>RSS Reader</value></data>
+  <data name="SearchMenu.Text" xml:space="preserve"><value>Search</value></data>
+  <data name="LogMenu.Text" xml:space="preserve"><value>Execution Log</value></data>
+  <data name="CookiesMenu.Text" xml:space="preserve"><value>Cookies</value></data>
+  <data name="StatisticsMenu.Text" xml:space="preserve"><value>Statistics</value></data>
+  <data name="DocumentationMenu.Text" xml:space="preserve"><value>Documentation</value></data>
+  <data name="AboutMenu.Text" xml:space="preserve"><value>About</value></data>
+  <data name="ToolbarAddTorrent.Label" xml:space="preserve"><value>Add torrent</value></data>
+  <data name="ToolbarAddLink.Label" xml:space="preserve"><value>Add link</value></data>
+  <data name="ToolbarStart.Label" xml:space="preserve"><value>Start</value></data>
+  <data name="ToolbarStop.Label" xml:space="preserve"><value>Stop</value></data>
+  <data name="ToolbarDelete.Label" xml:space="preserve"><value>Delete</value></data>
+  <data name="ToolbarQueueUp.Label" xml:space="preserve"><value>Move up</value></data>
+  <data name="ToolbarQueueDown.Label" xml:space="preserve"><value>Move down</value></data>
+  <data name="ToolbarAlternativeLimits.Label" xml:space="preserve"><value>Alternative speed limits</value></data>
+  <data name="RetryButton.Content" xml:space="preserve"><value>Retry</value></data>
+  <data name="TorrentDropText.Text" xml:space="preserve"><value>Drop .torrent files here</value></data>
+
+  <data name="NewCategory.Text" xml:space="preserve"><value>New category…</value></data>
+  <data name="EditCategory.Text" xml:space="preserve"><value>Edit category…</value></data>
+  <data name="DeleteCategory.Text" xml:space="preserve"><value>Delete category</value></data>
+  <data name="CreateTags.Text" xml:space="preserve"><value>Create tags…</value></data>
+  <data name="DeleteTag.Text" xml:space="preserve"><value>Delete tag</value></data>
+  <data name="ForceStart.Text" xml:space="preserve"><value>Force start</value></data>
+  <data name="QueueMenu.Text" xml:space="preserve"><value>Queue</value></data>
+  <data name="MoveTop.Text" xml:space="preserve"><value>Move to top</value></data>
+  <data name="MoveUp.Text" xml:space="preserve"><value>Move up</value></data>
+  <data name="MoveDown.Text" xml:space="preserve"><value>Move down</value></data>
+  <data name="MoveBottom.Text" xml:space="preserve"><value>Move to bottom</value></data>
+  <data name="SequentialDownload.Text" xml:space="preserve"><value>Download in sequential order</value></data>
+  <data name="FirstLastPriority.Text" xml:space="preserve"><value>Download first and last pieces first</value></data>
+  <data name="SuperSeeding.Text" xml:space="preserve"><value>Super seeding mode</value></data>
+  <data name="SetCategory.Text" xml:space="preserve"><value>Set category…</value></data>
+  <data name="AddTags.Text" xml:space="preserve"><value>Add tags…</value></data>
+  <data name="RemoveTags.Text" xml:space="preserve"><value>Remove tags…</value></data>
+  <data name="LimitRate.Text" xml:space="preserve"><value>Limit rate</value></data>
+  <data name="TransferLimits.Text" xml:space="preserve"><value>Download and upload limits…</value></data>
+  <data name="ShareLimits.Text" xml:space="preserve"><value>Share ratio and seeding time…</value></data>
+  <data name="RenameTorrent.Text" xml:space="preserve"><value>Rename…</value></data>
+  <data name="SetLocation.Text" xml:space="preserve"><value>Set location…</value></data>
+  <data name="TrackersWebSeeds.Text" xml:space="preserve"><value>Trackers and web seeds</value></data>
+  <data name="AddTrackers.Text" xml:space="preserve"><value>Add trackers…</value></data>
+  <data name="AddWebSeeds.Text" xml:space="preserve"><value>Add web seeds…</value></data>
+  <data name="ExportTorrent.Text" xml:space="preserve"><value>Export .torrent…</value></data>
+  <data name="ChooseColumns.Text" xml:space="preserve"><value>Choose columns…</value></data>
+  <data name="OpenDestination.Text" xml:space="preserve"><value>Open destination folder</value></data>
+  <data name="PreviewAvailableFile.Text" xml:space="preserve"><value>Preview first available file</value></data>
+
+  <data name="ColumnQueue.Header" xml:space="preserve"><value>#</value></data>
+  <data name="ColumnName.Header" xml:space="preserve"><value>Name</value></data>
+  <data name="ColumnSize.Header" xml:space="preserve"><value>Size</value></data>
+  <data name="ColumnTotalSize.Header" xml:space="preserve"><value>Total size</value></data>
+  <data name="ColumnProgress.Header" xml:space="preserve"><value>Progress</value></data>
+  <data name="ColumnStatus.Header" xml:space="preserve"><value>Status</value></data>
+  <data name="ColumnSeeds.Header" xml:space="preserve"><value>Seeds</value></data>
+  <data name="ColumnPeers.Header" xml:space="preserve"><value>Peers</value></data>
+  <data name="ColumnDownSpeed.Header" xml:space="preserve"><value>Down speed</value></data>
+  <data name="ColumnUpSpeed.Header" xml:space="preserve"><value>Up speed</value></data>
+  <data name="ColumnEta.Header" xml:space="preserve"><value>ETA</value></data>
+  <data name="ColumnRatio.Header" xml:space="preserve"><value>Ratio</value></data>
+  <data name="ColumnPopularity.Header" xml:space="preserve"><value>Popularity</value></data>
+  <data name="ColumnCategory.Header" xml:space="preserve"><value>Category</value></data>
+  <data name="ColumnTags.Header" xml:space="preserve"><value>Tags</value></data>
+  <data name="ColumnAddedOn.Header" xml:space="preserve"><value>Added on</value></data>
+  <data name="ColumnCompletedOn.Header" xml:space="preserve"><value>Completed on</value></data>
+  <data name="ColumnTracker.Header" xml:space="preserve"><value>Tracker</value></data>
+  <data name="ColumnDownLimit.Header" xml:space="preserve"><value>Down limit</value></data>
+  <data name="ColumnUpLimit.Header" xml:space="preserve"><value>Up limit</value></data>
+  <data name="ColumnDownloaded.Header" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="ColumnUploaded.Header" xml:space="preserve"><value>Uploaded</value></data>
+  <data name="ColumnDownloadedSession.Header" xml:space="preserve"><value>Downloaded session</value></data>
+  <data name="ColumnUploadedSession.Header" xml:space="preserve"><value>Uploaded session</value></data>
+  <data name="ColumnAmountLeft.Header" xml:space="preserve"><value>Amount left</value></data>
+  <data name="ColumnTimeActive.Header" xml:space="preserve"><value>Time active</value></data>
+  <data name="ColumnSavePath.Header" xml:space="preserve"><value>Save path</value></data>
+  <data name="ColumnCompleted.Header" xml:space="preserve"><value>Completed</value></data>
+  <data name="ColumnRatioLimit.Header" xml:space="preserve"><value>Ratio limit</value></data>
+  <data name="ColumnSeenComplete.Header" xml:space="preserve"><value>Last seen complete</value></data>
+  <data name="ColumnLastActivity.Header" xml:space="preserve"><value>Last activity</value></data>
+  <data name="ColumnAvailability.Header" xml:space="preserve"><value>Availability</value></data>
+  <data name="ColumnDownloadPath.Header" xml:space="preserve"><value>Download path</value></data>
+  <data name="ColumnInfoHashV1.Header" xml:space="preserve"><value>Info hash v1</value></data>
+  <data name="ColumnInfoHashV2.Header" xml:space="preserve"><value>Info hash v2</value></data>
+  <data name="ColumnReannounce.Header" xml:space="preserve"><value>Reannounce</value></data>
+  <data name="ColumnPrivate.Header" xml:space="preserve"><value>Private</value></data>
+  <data name="ColumnCreatedOn.Header" xml:space="preserve"><value>Created on</value></data>
+
+  <data name="TorrentState_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="TorrentState_Seeding" xml:space="preserve"><value>Seeding</value></data>
+  <data name="TorrentState_Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="TorrentState_QueuedUpload" xml:space="preserve"><value>Queued upload</value></data>
+  <data name="TorrentState_StalledUpload" xml:space="preserve"><value>Stalled upload</value></data>
+  <data name="TorrentState_Checking" xml:space="preserve"><value>Checking</value></data>
+  <data name="TorrentState_Downloading" xml:space="preserve"><value>Downloading</value></data>
+  <data name="TorrentState_Stopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="TorrentState_QueuedDownload" xml:space="preserve"><value>Queued download</value></data>
+  <data name="TorrentState_StalledDownload" xml:space="preserve"><value>Stalled download</value></data>
+  <data name="TorrentState_Allocating" xml:space="preserve"><value>Allocating</value></data>
+  <data name="TorrentState_Moving" xml:space="preserve"><value>Moving</value></data>
+  <data name="TorrentState_CheckingResumeData" xml:space="preserve"><value>Checking resume data</value></data>
+  <data name="TorrentState_Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="Filter_All" xml:space="preserve"><value>All</value></data>
+  <data name="Filter_Downloading" xml:space="preserve"><value>Downloading</value></data>
+  <data name="Filter_Seeding" xml:space="preserve"><value>Seeding</value></data>
+  <data name="Filter_Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Filter_Stopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="Filter_Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Filter_Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Filter_Stalled" xml:space="preserve"><value>Stalled</value></data>
+  <data name="Filter_Errored" xml:space="preserve"><value>Errored</value></data>
+  <data name="Common_Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Common_No" xml:space="preserve"><value>No</value></data>
+
+  <data name="SettingsWindow.Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsBehavior.Content" xml:space="preserve"><value>Behavior</value></data>
+  <data name="SettingsDownloads.Content" xml:space="preserve"><value>Downloads</value></data>
+  <data name="SettingsConnection.Content" xml:space="preserve"><value>Connection</value></data>
+  <data name="SettingsSpeed.Content" xml:space="preserve"><value>Speed</value></data>
+  <data name="SettingsBitTorrent.Content" xml:space="preserve"><value>BitTorrent</value></data>
+  <data name="SettingsSearch.Content" xml:space="preserve"><value>Search</value></data>
+  <data name="SettingsRss.Content" xml:space="preserve"><value>RSS</value></data>
+  <data name="SettingsWebUi.Content" xml:space="preserve"><value>Web UI</value></data>
+  <data name="SettingsAdvanced.Content" xml:space="preserve"><value>Advanced</value></data>
+  <data name="CommonCancel.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CommonApply.Content" xml:space="preserve"><value>Apply</value></data>
+  <data name="SettingsSection_Behavior" xml:space="preserve"><value>Behavior</value></data>
+  <data name="SettingsSection_Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="SettingsSection_Connection" xml:space="preserve"><value>Connection</value></data>
+  <data name="SettingsSection_Speed" xml:space="preserve"><value>Speed</value></data>
+  <data name="SettingsSection_BitTorrent" xml:space="preserve"><value>BitTorrent</value></data>
+  <data name="SettingsSection_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="SettingsSection_RSS" xml:space="preserve"><value>RSS</value></data>
+  <data name="SettingsSection_WebUI" xml:space="preserve"><value>Web UI</value></data>
+  <data name="SettingsSection_Advanced" xml:space="preserve"><value>Advanced</value></data>
+  <data name="Settings_ManagedTooltip" xml:space="preserve"><value>Managed by WinBitTorrent and available through loopback only.</value></data>
+  <data name="Settings_ManagedTitle" xml:space="preserve"><value>Managed local profile</value></data>
+  <data name="Settings_ManagedMessage" xml:space="preserve"><value>Web UI address, port, and authentication are controlled by WinBitTorrent.</value></data>
+  <data name="Settings_Applied" xml:space="preserve"><value>Settings applied. Restart the application to change language, theme, or interface density.</value></data>
+  <data name="Choice_System" xml:space="preserve"><value>System default</value></data>
+  <data name="Choice_English" xml:space="preserve"><value>English</value></data>
+  <data name="Choice_Russian" xml:space="preserve"><value>Russian</value></data>
+  <data name="Choice_SystemTheme" xml:space="preserve"><value>Use system setting</value></data>
+  <data name="Choice_Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Choice_Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Choice_None" xml:space="preserve"><value>None</value></data>
+  <data name="Choice_HttpProxy" xml:space="preserve"><value>HTTP</value></data>
+  <data name="Choice_Socks4" xml:space="preserve"><value>SOCKS4</value></data>
+  <data name="Choice_Socks5" xml:space="preserve"><value>SOCKS5</value></data>
+  <data name="Choice_EncryptionPrefer" xml:space="preserve"><value>Prefer encryption</value></data>
+  <data name="Choice_EncryptionForce" xml:space="preserve"><value>Require encryption</value></data>
+  <data name="Choice_EncryptionDisable" xml:space="preserve"><value>Disable encryption</value></data>
+  <data name="Choice_ResumeLegacy" xml:space="preserve"><value>Fastresume files</value></data>
+  <data name="Choice_ResumeSqlite" xml:space="preserve"><value>SQLite database</value></data>
+  <data name="Setting_ui_language" xml:space="preserve"><value>Language</value></data>
+  <data name="Setting_ui_theme" xml:space="preserve"><value>Application theme</value></data>
+  <data name="Setting_ui_confirmDelete" xml:space="preserve"><value>Confirm torrent deletion</value></data>
+  <data name="Setting_ui_compactDensity" xml:space="preserve"><value>Use compact interface density</value></data>
+  <data name="Setting_save_path" xml:space="preserve"><value>Default save path</value></data>
+  <data name="Setting_temp_path_enabled" xml:space="preserve"><value>Keep incomplete torrents in a separate folder</value></data>
+  <data name="Setting_temp_path" xml:space="preserve"><value>Incomplete torrent path</value></data>
+  <data name="Setting_create_subfolder_enabled" xml:space="preserve"><value>Create subfolder for torrents with multiple files</value></data>
+  <data name="Setting_auto_tmm_enabled" xml:space="preserve"><value>Automatic torrent management</value></data>
+  <data name="Setting_preallocate_all" xml:space="preserve"><value>Pre-allocate disk space</value></data>
+  <data name="Setting_listen_port" xml:space="preserve"><value>Incoming connections port</value></data>
+  <data name="Setting_upnp" xml:space="preserve"><value>Use UPnP / NAT-PMP port forwarding</value></data>
+  <data name="Setting_random_port" xml:space="preserve"><value>Use a different port on each startup</value></data>
+  <data name="Setting_proxy_type" xml:space="preserve"><value>Proxy type</value></data>
+  <data name="Setting_proxy_ip" xml:space="preserve"><value>Proxy host</value></data>
+  <data name="Setting_proxy_port" xml:space="preserve"><value>Proxy port</value></data>
+  <data name="Setting_dl_limit" xml:space="preserve"><value>Global download limit (KiB/s, 0 = unlimited)</value></data>
+  <data name="Setting_up_limit" xml:space="preserve"><value>Global upload limit (KiB/s, 0 = unlimited)</value></data>
+  <data name="Setting_alt_dl_limit" xml:space="preserve"><value>Alternative download limit (KiB/s)</value></data>
+  <data name="Setting_alt_up_limit" xml:space="preserve"><value>Alternative upload limit (KiB/s)</value></data>
+  <data name="Setting_scheduler_enabled" xml:space="preserve"><value>Schedule alternative rate limits</value></data>
+  <data name="Setting_dht" xml:space="preserve"><value>Enable DHT</value></data>
+  <data name="Setting_pex" xml:space="preserve"><value>Enable Peer Exchange (PeX)</value></data>
+  <data name="Setting_lsd" xml:space="preserve"><value>Enable Local Peer Discovery</value></data>
+  <data name="Setting_encryption" xml:space="preserve"><value>Encryption mode</value></data>
+  <data name="Setting_queueing_enabled" xml:space="preserve"><value>Torrent queueing</value></data>
+  <data name="Setting_max_active_downloads" xml:space="preserve"><value>Maximum active downloads</value></data>
+  <data name="Setting_max_active_uploads" xml:space="preserve"><value>Maximum active uploads</value></data>
+  <data name="Setting_search_enabled" xml:space="preserve"><value>Enable Search Engine</value></data>
+  <data name="Setting_python_executable_path" xml:space="preserve"><value>Python executable</value></data>
+  <data name="Setting_rss_processing_enabled" xml:space="preserve"><value>Enable fetching RSS feeds</value></data>
+  <data name="Setting_rss_refresh_interval" xml:space="preserve"><value>Feed refresh interval (minutes)</value></data>
+  <data name="Setting_rss_max_articles_per_feed" xml:space="preserve"><value>Maximum articles per feed</value></data>
+  <data name="Setting_rss_auto_downloading_enabled" xml:space="preserve"><value>Enable RSS automatic downloading</value></data>
+  <data name="Setting_web_ui_address" xml:space="preserve"><value>IP address</value></data>
+  <data name="Setting_web_ui_port" xml:space="preserve"><value>Port</value></data>
+  <data name="Setting_web_ui_username" xml:space="preserve"><value>Username</value></data>
+  <data name="Setting_web_ui_upnp" xml:space="preserve"><value>Use UPnP / NAT-PMP</value></data>
+  <data name="Setting_web_ui_csrf_protection_enabled" xml:space="preserve"><value>Enable CSRF protection</value></data>
+  <data name="Setting_resume_data_storage_type" xml:space="preserve"><value>Resume data storage type</value></data>
+  <data name="Setting_memory_working_set_limit" xml:space="preserve"><value>Physical memory usage limit (MiB)</value></data>
+  <data name="Setting_disk_cache" xml:space="preserve"><value>Disk cache (MiB, -1 = auto)</value></data>
+  <data name="Setting_async_io_threads" xml:space="preserve"><value>Asynchronous I/O threads</value></data>
+  <data name="Setting_recheck_completed_torrents" xml:space="preserve"><value>Recheck torrents on completion</value></data>
+  <data name="Setting_anonymous_mode" xml:space="preserve"><value>Enable anonymous mode</value></data>
+  <data name="DetailsGeneral.Header" xml:space="preserve"><value>General</value></data>
+  <data name="DetailsTrackers.Header" xml:space="preserve"><value>Trackers</value></data>
+  <data name="DetailsPeers.Header" xml:space="preserve"><value>Peers</value></data>
+  <data name="DetailsHttpSources.Header" xml:space="preserve"><value>HTTP Sources</value></data>
+  <data name="DetailsContent.Header" xml:space="preserve"><value>Content</value></data>
+  <data name="DetailsSpeed.Header" xml:space="preserve"><value>Speed</value></data>
+  <data name="DetailsProgress.Text" xml:space="preserve"><value>Progress</value></data>
+  <data name="DetailsAvailability.Text" xml:space="preserve"><value>Availability</value></data>
+  <data name="DetailsTimeActive.Text" xml:space="preserve"><value>Time active</value></data>
+  <data name="DetailsEta.Text" xml:space="preserve"><value>ETA</value></data>
+  <data name="DetailsDownloaded.Text" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="DetailsUploaded.Text" xml:space="preserve"><value>Uploaded</value></data>
+  <data name="DetailsDownSpeed.Text" xml:space="preserve"><value>Down speed</value></data>
+  <data name="DetailsUpSpeed.Text" xml:space="preserve"><value>Up speed</value></data>
+  <data name="DetailsRatio.Text" xml:space="preserve"><value>Ratio</value></data>
+  <data name="DetailsSavePath.Text" xml:space="preserve"><value>Save path</value></data>
+  <data name="DetailsInfoHash.Text" xml:space="preserve"><value>Info hash v1</value></data>
+  <data name="RemoveSelectedTrackers.Text" xml:space="preserve"><value>Remove selected trackers</value></data>
+  <data name="BanSelectedPeers.Text" xml:space="preserve"><value>Ban selected peers</value></data>
+  <data name="RemoveSelectedWebSeeds.Text" xml:space="preserve"><value>Remove selected web seeds</value></data>
+  <data name="DetailHeaderUrl.Text" xml:space="preserve"><value>URL</value></data>
+  <data name="DetailHeaderStatus.Text" xml:space="preserve"><value>Status</value></data>
+  <data name="DetailHeaderSeeds.Text" xml:space="preserve"><value>Seeds</value></data>
+  <data name="DetailHeaderPeers.Text" xml:space="preserve"><value>Peers</value></data>
+  <data name="DetailHeaderMessage.Text" xml:space="preserve"><value>Message</value></data>
+  <data name="DetailHeaderIpPort.Text" xml:space="preserve"><value>IP / Port</value></data>
+  <data name="DetailHeaderCountry.Text" xml:space="preserve"><value>Country</value></data>
+  <data name="DetailHeaderClient.Text" xml:space="preserve"><value>Client</value></data>
+  <data name="DetailHeaderFlags.Text" xml:space="preserve"><value>Flags</value></data>
+  <data name="DetailHeaderName.Text" xml:space="preserve"><value>Name</value></data>
+  <data name="DetailHeaderSize.Text" xml:space="preserve"><value>Size</value></data>
+  <data name="DetailHeaderPriority.Text" xml:space="preserve"><value>Priority</value></data>
+  <data name="FilePrioritySkip.Text" xml:space="preserve"><value>Do not download</value></data>
+  <data name="FilePriorityNormal.Text" xml:space="preserve"><value>Normal priority</value></data>
+  <data name="FilePriorityHigh.Text" xml:space="preserve"><value>High priority</value></data>
+  <data name="FilePriorityMaximum.Text" xml:space="preserve"><value>Maximum priority</value></data>
+  <data name="Connection_Starting" xml:space="preserve"><value>Starting…</value></data>
+  <data name="Connection_StartingBackend" xml:space="preserve"><value>Starting backend…</value></data>
+  <data name="Connection_Connecting" xml:space="preserve"><value>Connecting…</value></data>
+  <data name="Connection_Authenticating" xml:space="preserve"><value>Authenticating…</value></data>
+  <data name="Connection_Connected" xml:space="preserve"><value>Connected</value></data>
+  <data name="Connection_Reconnecting" xml:space="preserve"><value>Reconnecting…</value></data>
+  <data name="Connection_Failed" xml:space="preserve"><value>Connection failed</value></data>
+  <data name="Connection_Stopping" xml:space="preserve"><value>Stopping…</value></data>
+  <data name="Connection_Disconnected" xml:space="preserve"><value>Disconnected</value></data>
+  <data name="Status_Dht" xml:space="preserve"><value>DHT</value></data>
+  <data name="Search_Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="Search_Starting" xml:space="preserve"><value>Starting search…</value></data>
+  <data name="Search_Running" xml:space="preserve"><value>Running</value></data>
+  <data name="Search_Stopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="Search_Results" xml:space="preserve"><value>results</value></data>
+
+  <data name="AddTorrentWindow.Title" xml:space="preserve"><value>Add torrent</value></data>
+  <data name="AddTorrentTitle.Text" xml:space="preserve"><value>Add torrent</value></data>
+  <data name="AddTorrentSources.Header" xml:space="preserve"><value>Torrent links, magnet links, or local .torrent files</value></data>
+  <data name="AddTorrentSources.PlaceholderText" xml:space="preserve"><value>One source per line</value></data>
+  <data name="CommonBrowse.Content" xml:space="preserve"><value>Browse…</value></data>
+  <data name="AddTorrentPreview.Content" xml:space="preserve"><value>Preview metadata</value></data>
+  <data name="AddTorrentSavePath.Header" xml:space="preserve"><value>Save path</value></data>
+  <data name="AddTorrentCategory.Header" xml:space="preserve"><value>Category</value></data>
+  <data name="AddTorrentTags.Header" xml:space="preserve"><value>Tags</value></data>
+  <data name="AddTorrentTags.PlaceholderText" xml:space="preserve"><value>tag1, tag2</value></data>
+  <data name="AddTorrentStart.Content" xml:space="preserve"><value>Start torrent</value></data>
+  <data name="AddTorrentAutoTmm.Content" xml:space="preserve"><value>Automatic torrent management</value></data>
+  <data name="AddTorrentSequential.Content" xml:space="preserve"><value>Download in sequential order</value></data>
+  <data name="AddTorrentFirstLast.Content" xml:space="preserve"><value>Download first and last pieces first</value></data>
+  <data name="AddTorrentSkipCheck.Content" xml:space="preserve"><value>Skip hash check</value></data>
+  <data name="AddTorrentDownLimit.Header" xml:space="preserve"><value>Download limit (KiB/s)</value></data>
+  <data name="AddTorrentUpLimit.Header" xml:space="preserve"><value>Upload limit (KiB/s)</value></data>
+  <data name="AddTorrentMetadataHint.Text" xml:space="preserve"><value>Preview a magnet, URL, or torrent file to inspect its contents.</value></data>
+  <data name="CommonSelectAll.Content" xml:space="preserve"><value>Select all</value></data>
+  <data name="CommonSelectNone.Content" xml:space="preserve"><value>Select none</value></data>
+  <data name="AddTorrentRawMetadata.Header" xml:space="preserve"><value>Raw metadata</value></data>
+  <data name="AddTorrentManagementMode.Text" xml:space="preserve"><value>Torrent management mode:</value></data>
+  <data name="AddTorrentManagementManual.Content" xml:space="preserve"><value>Manual</value></data>
+  <data name="AddTorrentManagementAutomatic.Content" xml:space="preserve"><value>Automatic</value></data>
+  <data name="AddTorrentSavePathLabel.Text" xml:space="preserve"><value>Save path</value></data>
+  <data name="AddTorrentUseTempPath.Content" xml:space="preserve"><value>Use another path for incomplete torrent</value></data>
+  <data name="AddTorrentSettingsTitle.Text" xml:space="preserve"><value>Torrent settings</value></data>
+  <data name="AddTorrentCategoryLabel.Text" xml:space="preserve"><value>Category:</value></data>
+  <data name="AddTorrentTagsLabel.Text" xml:space="preserve"><value>Tags:</value></data>
+  <data name="AddTorrentStopConditionLabel.Text" xml:space="preserve"><value>Stop condition:</value></data>
+  <data name="AddTorrentStopConditionNone.Content" xml:space="preserve"><value>None</value></data>
+  <data name="AddTorrentContentLayoutLabel.Text" xml:space="preserve"><value>Content layout:</value></data>
+  <data name="AddTorrentContentLayoutOriginal.Content" xml:space="preserve"><value>Original</value></data>
+  <data name="AddTorrentInfoTitle.Text" xml:space="preserve"><value>Torrent information</value></data>
+  <data name="AddTorrentInfoName.Text" xml:space="preserve"><value>Name:</value></data>
+  <data name="AddTorrentInfoSize.Text" xml:space="preserve"><value>Size:</value></data>
+  <data name="AddTorrentInfoDate.Text" xml:space="preserve"><value>Date:</value></data>
+  <data name="AddTorrentInfoHashV1.Text" xml:space="preserve"><value>Info-hash v1:</value></data>
+  <data name="AddTorrentInfoHashV2.Text" xml:space="preserve"><value>Info-hash v2:</value></data>
+  <data name="AddTorrentInfoComment.Text" xml:space="preserve"><value>Comment:</value></data>
+  <data name="AddTorrentSourcesPanel.Header" xml:space="preserve"><value>Torrent sources</value></data>
+  <data name="AddTorrentBrowseFile.Content" xml:space="preserve"><value>Add .torrent…</value></data>
+  <data name="AddTorrentFilesFilter.PlaceholderText" xml:space="preserve"><value>Filter files…</value></data>
+  <data name="AddTorrentFileNameHeader.Text" xml:space="preserve"><value>Name</value></data>
+  <data name="AddTorrentFileSizeHeader.Text" xml:space="preserve"><value>Total size</value></data>
+  <data name="AddTorrentFilePriorityHeader.Text" xml:space="preserve"><value>Priority</value></data>
+  <data name="AddTorrentPriorityDoNotDownload.Content" xml:space="preserve"><value>Do not download</value></data>
+  <data name="AddTorrentPriorityNormal.Content" xml:space="preserve"><value>Normal</value></data>
+  <data name="AddTorrentPriorityHigh.Content" xml:space="preserve"><value>High</value></data>
+  <data name="AddTorrentPriorityMaximum.Content" xml:space="preserve"><value>Maximum</value></data>
+  <data name="CommonNotAvailable" xml:space="preserve"><value>N/A</value></data>
+  <data name="CommonAdd.Content" xml:space="preserve"><value>Add</value></data>
+
+  <data name="SearchPattern.PlaceholderText" xml:space="preserve"><value>Search pattern</value></data>
+  <data name="SearchCategoryAll.Content" xml:space="preserve"><value>All categories</value></data>
+  <data name="SearchCategoryMovies.Content" xml:space="preserve"><value>Movies</value></data>
+  <data name="SearchCategoryTv.Content" xml:space="preserve"><value>TV shows</value></data>
+  <data name="SearchCategoryMusic.Content" xml:space="preserve"><value>Music</value></data>
+  <data name="SearchCategoryGames.Content" xml:space="preserve"><value>Games</value></data>
+  <data name="SearchCategorySoftware.Content" xml:space="preserve"><value>Software</value></data>
+  <data name="SearchAllPlugins.PlaceholderText" xml:space="preserve"><value>All plugins</value></data>
+  <data name="SearchButton.Content" xml:space="preserve"><value>Search</value></data>
+  <data name="SearchStop.Content" xml:space="preserve"><value>Stop</value></data>
+  <data name="SearchDownload.Content" xml:space="preserve"><value>Download</value></data>
+  <data name="SearchPlugins.Content" xml:space="preserve"><value>Search plugins…</value></data>
+  <data name="SearchColumnLeechers.Header" xml:space="preserve"><value>Leechers</value></data>
+  <data name="SearchColumnEngine.Header" xml:space="preserve"><value>Engine</value></data>
+  <data name="RssNewFeed.Label" xml:space="preserve"><value>New feed</value></data>
+  <data name="RssNewFolder.Label" xml:space="preserve"><value>New folder</value></data>
+  <data name="RssRefresh.Label" xml:space="preserve"><value>Refresh</value></data>
+  <data name="RssRemove.Label" xml:space="preserve"><value>Remove</value></data>
+  <data name="RssRules.Label" xml:space="preserve"><value>RSS rules</value></data>
+  <data name="RssFeeds.Text" xml:space="preserve"><value>Feeds</value></data>
+  <data name="RssArticles.Text" xml:space="preserve"><value>Articles</value></data>
+  <data name="RssOpenLink.Content" xml:space="preserve"><value>Open link</value></data>
+  <data name="AddTorrent_LoadingMetadata" xml:space="preserve"><value>Loading torrent metadata…</value></data>
+  <data name="AddTorrent_MetadataFailed" xml:space="preserve"><value>Torrent metadata could not be loaded.</value></data>
+  <data name="AddTorrent_SourceRequired" xml:space="preserve"><value>Add at least one .torrent file, URL, or magnet link.</value></data>
+  <data name="AddTorrent_ClearUnwantedFiles" xml:space="preserve"><value>Clear files you do not want to download.</value></data>
+  <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Uploaded .torrent file priorities can be changed from the Content tab after adding.</value></data>
+  <data name="AddTorrent_File" xml:space="preserve"><value>file</value></data>
+  <data name="AddTorrent_Files" xml:space="preserve"><value>files</value></data>
+  <data name="Common_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Common_Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Dialog_LocalFilesUnavailableTitle" xml:space="preserve"><value>Local files are unavailable</value></data>
+  <data name="Dialog_LocalFilesUnavailableMessage" xml:space="preserve"><value>This torrent belongs to a remote profile. WinBitTorrent can only open folders for the managed local backend.</value></data>
+  <data name="Dialog_DestinationUnavailableTitle" xml:space="preserve"><value>Destination folder is not available</value></data>
+  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>qBittorrent reported save path</value></data>
+  <data name="Dialog_DownloadPath" xml:space="preserve"><value>Download path</value></data>
+  <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>The path may not exist yet, or the torrent metadata has not finished syncing.</value></data>
+  <data name="Dialog_SetCategory" xml:space="preserve"><value>Set category</value></data>
+  <data name="Dialog_CategoryClearHint" xml:space="preserve"><value>Category name; leave empty to clear</value></data>
+  <data name="Dialog_CategoryName" xml:space="preserve"><value>Category name</value></data>
+  <data name="Dialog_DefaultSavePath" xml:space="preserve"><value>Default save path</value></data>
+  <data name="Dialog_NewCategory" xml:space="preserve"><value>New category</value></data>
+  <data name="Dialog_EditCategory" xml:space="preserve"><value>Edit category</value></data>
+  <data name="Dialog_DeleteCategory" xml:space="preserve"><value>Delete category?</value></data>
+  <data name="Dialog_DeleteCategoryMessage" xml:space="preserve"><value>The torrents in “{0}” will become uncategorized.</value></data>
+  <data name="Dialog_CreateTags" xml:space="preserve"><value>Create tags</value></data>
+  <data name="Dialog_CommaSeparatedTags" xml:space="preserve"><value>Comma-separated tag names</value></data>
+  <data name="Dialog_DeleteTag" xml:space="preserve"><value>Delete tag?</value></data>
+  <data name="Dialog_DeleteTagMessage" xml:space="preserve"><value>Remove “{0}” from all torrents?</value></data>
+  <data name="Dialog_TorrentTags" xml:space="preserve"><value>Torrent tags</value></data>
+  <data name="Dialog_DownloadLimit" xml:space="preserve"><value>Download limit (KiB/s, 0 = unlimited)</value></data>
+  <data name="Dialog_UploadLimit" xml:space="preserve"><value>Upload limit (KiB/s, 0 = unlimited)</value></data>
+  <data name="Dialog_TorrentRateLimits" xml:space="preserve"><value>Torrent rate limits</value></data>
+  <data name="Dialog_RatioLimit" xml:space="preserve"><value>Ratio limit (-1 = global)</value></data>
+  <data name="Dialog_SeedingTimeLimit" xml:space="preserve"><value>Seeding time limit (minutes, -1 = global)</value></data>
+  <data name="Dialog_InactiveSeedingTime" xml:space="preserve"><value>Inactive seeding time (minutes, -1 = global)</value></data>
+  <data name="Dialog_ShareLimits" xml:space="preserve"><value>Share limits</value></data>
+  <data name="Dialog_RenameTorrent" xml:space="preserve"><value>Rename torrent</value></data>
+  <data name="Dialog_NewName" xml:space="preserve"><value>New name</value></data>
+  <data name="Dialog_SetTorrentLocation" xml:space="preserve"><value>Set torrent location</value></data>
+  <data name="Dialog_ServerPath" xml:space="preserve"><value>Path on the qBittorrent server</value></data>
+  <data name="Dialog_AddTrackers" xml:space="preserve"><value>Add trackers</value></data>
+  <data name="Dialog_TrackerPerLine" xml:space="preserve"><value>One tracker URL per line</value></data>
+  <data name="Dialog_AddHttpSources" xml:space="preserve"><value>Add HTTP sources</value></data>
+  <data name="Dialog_UrlPerLine" xml:space="preserve"><value>One URL per line</value></data>
+  <data name="Dialog_PreviewUnavailable" xml:space="preserve"><value>Preview is not available</value></data>
+  <data name="Dialog_SelectDownloadedFile" xml:space="preserve"><value>Select a downloaded file in the Content tab first.</value></data>
+  <data name="Dialog_DownloadedFileNotFound" xml:space="preserve"><value>The downloaded file was not found locally.</value></data>
+  <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Expected path</value></data>
+  <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Also delete files from disk</value></data>
+  <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Delete selected torrents?</value></data>
+  <data name="Dialog_ChooseTorrentColumns" xml:space="preserve"><value>Choose torrent columns</value></data>
+  <data name="Filter_Uncategorized" xml:space="preserve"><value>Uncategorized</value></data>
+  <data name="Log_Blocked" xml:space="preserve"><value>Blocked</value></data>
+  <data name="Log_Allowed" xml:space="preserve"><value>Allowed</value></data>
+  <data name="Log_Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Log_Information" xml:space="preserve"><value>Information</value></data>
+  <data name="Log_Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Log_Critical" xml:space="preserve"><value>Critical</value></data>
+  <data name="LogNormal.Content" xml:space="preserve"><value>Normal</value></data>
+  <data name="LogInformation.Content" xml:space="preserve"><value>Information</value></data>
+  <data name="LogWarning.Content" xml:space="preserve"><value>Warning</value></data>
+  <data name="LogCritical.Content" xml:space="preserve"><value>Critical</value></data>
+  <data name="CommonRefresh.Content" xml:space="preserve"><value>Refresh</value></data>
+  <data name="LogClear.Content" xml:space="preserve"><value>Clear view</value></data>
+  <data name="LogGeneralTab.Header" xml:space="preserve"><value>General log</value></data>
+  <data name="LogPeerTab.Header" xml:space="preserve"><value>Peer log</value></data>
+  <data name="LogHeaderTime.Text" xml:space="preserve"><value>Time</value></data>
+  <data name="LogHeaderLevel.Text" xml:space="preserve"><value>Level</value></data>
+  <data name="LogHeaderIp.Text" xml:space="preserve"><value>IP address</value></data>
+  <data name="LogHeaderAction.Text" xml:space="preserve"><value>Action</value></data>
+  <data name="LogHeaderReason.Text" xml:space="preserve"><value>Reason</value></data>
+  <data name="ProfilesWindow.Title" xml:space="preserve"><value>Server profiles</value></data>
+  <data name="ProfilesTitle.Text" xml:space="preserve"><value>Profiles</value></data>
+  <data name="CommonNew.Content" xml:space="preserve"><value>New</value></data>
+  <data name="CommonDelete.Content" xml:space="preserve"><value>Delete</value></data>
+  <data name="CommonClose.Content" xml:space="preserve"><value>Close</value></data>
+  <data name="CommonSave.Content" xml:space="preserve"><value>Save</value></data>
+  <data name="ProfileConnection.Text" xml:space="preserve"><value>Connection</value></data>
+  <data name="ProfileName.Header" xml:space="preserve"><value>Profile name</value></data>
+  <data name="ProfileAddress.Header" xml:space="preserve"><value>Server address</value></data>
+  <data name="ProfileAuthentication.Header" xml:space="preserve"><value>Authentication</value></data>
+  <data name="ProfileUserPassword.Content" xml:space="preserve"><value>Username and password</value></data>
+  <data name="ProfileApiKey.Content" xml:space="preserve"><value>Bearer API key</value></data>
+  <data name="ProfileUsername.Header" xml:space="preserve"><value>Username</value></data>
+  <data name="ProfileSecret.Header" xml:space="preserve"><value>Password or API key</value></data>
+  <data name="ProfileFingerprint.Header" xml:space="preserve"><value>Pinned TLS certificate SHA-256 fingerprint (optional)</value></data>
+  <data name="ProfileTrustFingerprint.Content" xml:space="preserve"><value>I verified and explicitly trust this certificate fingerprint</value></data>
+  <data name="ProfileSecretsProtected.Title" xml:space="preserve"><value>Secrets are protected</value></data>
+  <data name="ProfileSecretsProtected.Message" xml:space="preserve"><value>Passwords and API keys are saved in Windows Credential Manager, separately from profile JSON.</value></data>
+  <data name="ProfileSaveConnect.Content" xml:space="preserve"><value>Save and connect</value></data>
+  <data name="CreateTorrentWindow.Title" xml:space="preserve"><value>Create torrent</value></data>
+  <data name="CreateTorrentTitle.Text" xml:space="preserve"><value>Create new torrent</value></data>
+  <data name="CreateTorrentSource.Header" xml:space="preserve"><value>Source file or folder</value></data>
+  <data name="CommonFile.Content" xml:space="preserve"><value>File…</value></data>
+  <data name="CommonFolder.Content" xml:space="preserve"><value>Folder…</value></data>
+  <data name="CreateTorrentOutput.Header" xml:space="preserve"><value>Output .torrent file</value></data>
+  <data name="CreateTorrentTrackers.Header" xml:space="preserve"><value>Tracker URLs (one per line, blank line starts a new tier)</value></data>
+  <data name="CreateTorrentComment.Header" xml:space="preserve"><value>Comment</value></data>
+  <data name="CreateTorrentPieceSize.Header" xml:space="preserve"><value>Piece size</value></data>
+  <data name="ChoiceAutomatic.Content" xml:space="preserve"><value>Automatic</value></data>
+  <data name="CreateTorrentPrivate.Content" xml:space="preserve"><value>Private torrent</value></data>
+  <data name="CreateTorrentSeed.Content" xml:space="preserve"><value>Start seeding</value></data>
+  <data name="CreateTorrentReady.Text" xml:space="preserve"><value>Ready</value></data>
+  <data name="CommonCreate.Content" xml:space="preserve"><value>Create</value></data>
+  <data name="CookiesWindow.Title" xml:space="preserve"><value>Cookies</value></data>
+  <data name="CookiesTitle.Text" xml:space="preserve"><value>qBittorrent cookies</value></data>
+  <data name="CookiesJson.Header" xml:space="preserve"><value>JSON cookie array</value></data>
+  <data name="CookiesSave.Content" xml:space="preserve"><value>Save cookies</value></data>
+  <data name="SearchPluginsWindow.Title" xml:space="preserve"><value>Search plugins</value></data>
+  <data name="SearchPluginsTitle.Text" xml:space="preserve"><value>Search plugins</value></data>
+  <data name="PluginsInstall.Content" xml:space="preserve"><value>Install…</value></data>
+  <data name="PluginsUninstall.Content" xml:space="preserve"><value>Uninstall</value></data>
+  <data name="PluginsEnable.Content" xml:space="preserve"><value>Enable</value></data>
+  <data name="PluginsDisable.Content" xml:space="preserve"><value>Disable</value></data>
+  <data name="PluginsUpdate.Content" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="RssRulesWindow.Title" xml:space="preserve"><value>RSS downloader rules</value></data>
+  <data name="RssRulesListTitle.Text" xml:space="preserve"><value>Rules</value></data>
+  <data name="RssRuleTitle.Text" xml:space="preserve"><value>Automatic downloader rule</value></data>
+  <data name="RssRuleName.Header" xml:space="preserve"><value>Rule name</value></data>
+  <data name="RssRuleEnabled.Header" xml:space="preserve"><value>Enabled</value></data>
+  <data name="RssRuleMustContain.Header" xml:space="preserve"><value>Must contain</value></data>
+  <data name="RssRuleMustContain.PlaceholderText" xml:space="preserve"><value>Words separated by |</value></data>
+  <data name="RssRuleMustNotContain.Header" xml:space="preserve"><value>Must not contain</value></data>
+  <data name="RssRuleEpisode.Header" xml:space="preserve"><value>Episode filter</value></data>
+  <data name="RssRuleCategory.Header" xml:space="preserve"><value>Assign category</value></data>
+  <data name="RssRuleFeeds.Header" xml:space="preserve"><value>Apply rule to feeds</value></data>
+  <data name="RssRuleFeeds.PlaceholderText" xml:space="preserve"><value>One feed path per line; leave empty for all</value></data>
+  <data name="RssRuleSavePath.Header" xml:space="preserve"><value>Save to a different directory</value></data>
+  <data name="RssRuleRegex.Content" xml:space="preserve"><value>Use regular expressions</value></data>
+  <data name="RssRuleSmartFilter.Content" xml:space="preserve"><value>Use smart episode filter</value></data>
+  <data name="RssRulePaused.Content" xml:space="preserve"><value>Add torrents stopped</value></data>
+  <data name="RssRuleSave.Content" xml:space="preserve"><value>Save rule</value></data>
+  <data name="WindowTitle_AddTorrent" xml:space="preserve"><value>Add torrent</value></data>
+  <data name="WindowTitle_Cookies" xml:space="preserve"><value>Cookies</value></data>
+  <data name="WindowTitle_CreateTorrent" xml:space="preserve"><value>Create torrent</value></data>
+  <data name="WindowTitle_Profiles" xml:space="preserve"><value>Server profiles</value></data>
+  <data name="WindowTitle_RssRules" xml:space="preserve"><value>RSS downloader rules</value></data>
+  <data name="WindowTitle_SearchPlugins" xml:space="preserve"><value>Search plugins</value></data>
+  <data name="WindowTitle_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Tray_Show" xml:space="preserve"><value>Show WinBitTorrent</value></data>
+  <data name="Tray_Hide" xml:space="preserve"><value>Hide WinBitTorrent</value></data>
+  <data name="Tray_AddTorrentFile" xml:space="preserve"><value>Add Torrent File...</value></data>
+  <data name="Tray_AddTorrentLink" xml:space="preserve"><value>Add Torrent Link...</value></data>
+  <data name="Tray_AlternativeSpeedLimits" xml:space="preserve"><value>Alternative speed limits</value></data>
+  <data name="Tray_GlobalSpeedLimits" xml:space="preserve"><value>Global speed limits...</value></data>
+  <data name="Tray_StartAll" xml:space="preserve"><value>Resume all</value></data>
+  <data name="Tray_StopAll" xml:space="preserve"><value>Pause all</value></data>
+  <data name="Tray_Options" xml:space="preserve"><value>Options...</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit WinBitTorrent</value></data>
+  <data name="TrackersMenu.Text" xml:space="preserve"><value>Tracker Search</value></data>
+  <data name="TrackersTab.Header" xml:space="preserve"><value>Trackers</value></data>
+  <data name="TrackerPickerTitle.Text" xml:space="preserve"><value>Tracker search</value></data>
+  <data name="TrackerPickerSubtitle.Text" xml:space="preserve"><value>Choose a tracker. More providers can be added later.</value></data>
+  <data name="TrackerBackText.Text" xml:space="preserve"><value>All trackers</value></data>
+  <data name="TrackerBackSearchText.Text" xml:space="preserve"><value>All trackers</value></data>
+  <data name="TrackerLoginTitle.Text" xml:space="preserve"><value>Sign in to RuTracker</value></data>
+  <data name="TrackerLoginSubtitle.Text" xml:space="preserve"><value>Your credentials are saved securely in Windows Credential Manager.</value></data>
+  <data name="TrackerUserName.Header" xml:space="preserve"><value>Username</value></data>
+  <data name="TrackerPassword.Header" xml:space="preserve"><value>Password</value></data>
+  <data name="TrackerProxySwitch.Header" xml:space="preserve"><value>RuTracker proxy</value></data>
+  <data name="TrackerProxySwitch.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="TrackerProxySwitch.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="TrackerProxyHint.Text" xml:space="preserve"><value>Uses the proxy from the official RuTracker browser extension:</value></data>
+  <data name="TrackerSignIn.Content" xml:space="preserve"><value>Sign in</value></data>
+  <data name="TrackerBrowserSignIn.Content" xml:space="preserve"><value>Sign in through browser / solve captcha</value></data>
+  <data name="TrackerBrowserBackText.Text" xml:space="preserve"><value>All trackers</value></data>
+  <data name="TrackerSecureLoginTitle.Text" xml:space="preserve"><value>Secure RuTracker sign-in</value></data>
+  <data name="TrackerBrowserHint.Text" xml:space="preserve"><value>Sign in and complete the captcha. WinBitTorrent will recognize the session automatically.</value></data>
+  <data name="TrackerBrowserComplete.Content" xml:space="preserve"><value>Check sign-in</value></data>
+  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Search RuTracker</value></data>
+  <data name="TrackerSearch.Content" xml:space="preserve"><value>Search</value></data>
+  <data name="TrackerStop.Content" xml:space="preserve"><value>Stop</value></data>
+  <data name="TrackerColumnPublished.Header" xml:space="preserve"><value>Added</value></data>
+  <data name="TrackerOpenTopic.Content" xml:space="preserve"><value>Open topic</value></data>
+  <data name="TrackerDownload.Content" xml:space="preserve"><value>Download</value></data>
+  <data name="TrackerSignOut.Content" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Tracker_EnterCredentials" xml:space="preserve"><value>Enter your username and password.</value></data>
+  <data name="Tracker_SigningIn" xml:space="preserve"><value>Signing in…</value></data>
+  <data name="Tracker_BrowserLoginStatus" xml:space="preserve"><value>Complete sign-in and any captcha in the embedded browser.</value></data>
+  <data name="Tracker_ImportingBrowserSession" xml:space="preserve"><value>Checking the RuTracker session…</value></data>
+  <data name="Tracker_SessionExpired" xml:space="preserve"><value>The RuTracker session has expired. Sign in again.</value></data>
+  <data name="Tracker_BrowserOpenFailed" xml:space="preserve"><value>Could not open the RuTracker sign-in page: {0}</value></data>
+  <data name="Tracker_BrowserNotSignedIn" xml:space="preserve"><value>Sign-in has not completed yet. Enter your credentials and complete the captcha.</value></data>
+  <data name="Tracker_BrowserNavigationBlocked" xml:space="preserve"><value>Only the RuTracker sign-in page is available here.</value></data>
+  <data name="Tracker_BrowserNavigationFailed" xml:space="preserve"><value>The sign-in page could not be loaded: {0}</value></data>
+  <data name="Tracker_WaitingForBrowserLogin" xml:space="preserve"><value>Waiting for RuTracker sign-in…</value></data>
+  <data name="Tracker_BrowserSessionReadFailed" xml:space="preserve"><value>Could not check the RuTracker session: {0}</value></data>
+  <data name="Tracker_Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="Tracker_Searching" xml:space="preserve"><value>Searching RuTracker…</value></data>
+  <data name="Tracker_ResultCount" xml:space="preserve"><value>Results: {0}</value></data>
+  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Connect to qBittorrent before downloading.</value></data>
+  <data name="Tracker_Downloading" xml:space="preserve"><value>Downloading torrent file…</value></data>
+  <data name="Tracker_Added" xml:space="preserve"><value>Torrent added to qBittorrent.</value></data>
+  <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent file downloaded. Review add options.</value></data>
+  <data name="Tracker_SignedOut" xml:space="preserve"><value>Signed out. Sign in with another account.</value></data>
+  <data name="DuplicateTorrent_Title" xml:space="preserve"><value>Torrent is already present</value></data>
+  <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Torrent '{0}' is already in the transfer list. Do you want to merge trackers from the new source?</value></data>
+  <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Torrent '{0}' is private. Its trackers cannot be merged.</value></data>
+  <data name="Connection_NotConnected" xml:space="preserve"><value>Not connected to qBittorrent.</value></data>
+</root>
