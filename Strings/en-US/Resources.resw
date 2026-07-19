@@ -196,7 +196,7 @@
   <data name="Setting_preallocate_all" xml:space="preserve"><value>Pre-allocate disk space</value></data>
   <data name="Setting_listen_port" xml:space="preserve"><value>Incoming connections port</value></data>
   <data name="Setting_upnp" xml:space="preserve"><value>Use UPnP / NAT-PMP port forwarding</value></data>
-  <data name="Setting_random_port" xml:space="preserve"><value>Use a different port on each startup</value></data>
+  <data name="Setting_random_port" xml:space="preserve"><value>Choose an available port automatically on startup</value></data>
   <data name="Setting_proxy_type" xml:space="preserve"><value>Proxy type</value></data>
   <data name="Setting_proxy_ip" xml:space="preserve"><value>Proxy host</value></data>
   <data name="Setting_proxy_port" xml:space="preserve"><value>Proxy port</value></data>
@@ -233,7 +233,7 @@
   <data name="DetailsTrackers.Header" xml:space="preserve"><value>Trackers</value></data>
   <data name="DetailsPeers.Header" xml:space="preserve"><value>Peers</value></data>
   <data name="DetailsHttpSources.Header" xml:space="preserve"><value>HTTP Sources</value></data>
-  <data name="DetailsContent.Header" xml:space="preserve"><value>Content</value></data>
+  <data name="DetailsContent.Header" xml:space="preserve"><value>Files</value></data>
   <data name="DetailsSpeed.Header" xml:space="preserve"><value>Speed</value></data>
   <data name="DetailsProgress.Text" xml:space="preserve"><value>Progress</value></data>
   <data name="DetailsAvailability.Text" xml:space="preserve"><value>Availability</value></data>
@@ -360,7 +360,7 @@
   <data name="AddTorrent_MetadataFailed" xml:space="preserve"><value>Torrent metadata could not be loaded.</value></data>
   <data name="AddTorrent_SourceRequired" xml:space="preserve"><value>Add at least one .torrent file, URL, or magnet link.</value></data>
   <data name="AddTorrent_ClearUnwantedFiles" xml:space="preserve"><value>Clear files you do not want to download.</value></data>
-  <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Uploaded .torrent file priorities can be changed from the Content tab after adding.</value></data>
+  <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Uploaded .torrent file priorities can be changed from the Files tab after adding.</value></data>
   <data name="AddTorrent_File" xml:space="preserve"><value>file</value></data>
   <data name="AddTorrent_Files" xml:space="preserve"><value>files</value></data>
   <data name="Common_Apply" xml:space="preserve"><value>Apply</value></data>
@@ -403,7 +403,7 @@
   <data name="Dialog_AddHttpSources" xml:space="preserve"><value>Add HTTP sources</value></data>
   <data name="Dialog_UrlPerLine" xml:space="preserve"><value>One URL per line</value></data>
   <data name="Dialog_PreviewUnavailable" xml:space="preserve"><value>Preview is not available</value></data>
-  <data name="Dialog_SelectDownloadedFile" xml:space="preserve"><value>Select a downloaded file in the Content tab first.</value></data>
+  <data name="Dialog_SelectDownloadedFile" xml:space="preserve"><value>Select a downloaded file in the Files tab first.</value></data>
   <data name="Dialog_DownloadedFileNotFound" xml:space="preserve"><value>The downloaded file was not found locally.</value></data>
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Expected path</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Also delete files from disk</value></data>
@@ -557,4 +557,64 @@
   <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Torrent '{0}' is already in the transfer list. Do you want to merge trackers from the new source?</value></data>
   <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Torrent '{0}' is private. Its trackers cannot be merged.</value></data>
   <data name="Connection_NotConnected" xml:space="preserve"><value>Not connected to qBittorrent.</value></data>
+  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>qBittorrent is not connected</value></data>
+  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Connect to a qBittorrent profile to view and change these settings.</value></data>
+  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Settings were applied and verified by qBittorrent.</value></data>
+  <data name="Settings_VerificationFailed" xml:space="preserve"><value>qBittorrent did not apply these settings: {0}</value></data>
+  <data name="SettingsConnection_ProtocolTitle" xml:space="preserve"><value>Protocol and listening port</value></data>
+  <data name="SettingsConnection_ProtocolDescription" xml:space="preserve"><value>Controls how peers reach this client. Port 0 lets the operating system select an available port.</value></data>
+  <data name="SettingsConnection_LimitsTitle" xml:space="preserve"><value>Connection limits</value></data>
+  <data name="SettingsConnection_LimitsDescription" xml:space="preserve"><value>Use -1 for no limit. Conservative limits can reduce router and memory load.</value></data>
+  <data name="SettingsConnection_ProxyTitle" xml:space="preserve"><value>Proxy server</value></data>
+  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Choose which qBittorrent traffic is routed through the proxy.</value></data>
+  <data name="SettingsConnection_I2pTitle" xml:space="preserve"><value>I2P (experimental)</value></data>
+  <data name="SettingsConnection_I2pDescription" xml:space="preserve"><value>Requires a running I2P router with a SAM bridge.</value></data>
+  <data name="SettingsConnection_FilterTitle" xml:space="preserve"><value>IP filtering</value></data>
+  <data name="SettingsConnection_FilterDescription" xml:space="preserve"><value>Load a compatible filter list or block individual addresses manually.</value></data>
+  <data name="SettingsConnection_RandomPort" xml:space="preserve"><value>Random port</value></data>
+  <data name="Setting_bittorrent_protocol" xml:space="preserve"><value>Peer connection protocol</value></data>
+  <data name="Setting_max_connec" xml:space="preserve"><value>Global maximum connections (-1 = unlimited)</value></data>
+  <data name="Setting_max_connec_per_torrent" xml:space="preserve"><value>Maximum connections per torrent (-1 = unlimited)</value></data>
+  <data name="Setting_max_uploads" xml:space="preserve"><value>Global maximum upload slots (-1 = unlimited)</value></data>
+  <data name="Setting_max_uploads_per_torrent" xml:space="preserve"><value>Maximum upload slots per torrent (-1 = unlimited)</value></data>
+  <data name="Setting_proxy_hostname_lookup" xml:space="preserve"><value>Resolve host names through the proxy</value></data>
+  <data name="Setting_proxy_auth_enabled" xml:space="preserve"><value>Proxy requires authentication</value></data>
+  <data name="Setting_proxy_username" xml:space="preserve"><value>Proxy username</value></data>
+  <data name="Setting_proxy_password" xml:space="preserve"><value>Proxy password</value></data>
+  <data name="Setting_proxy_bittorrent" xml:space="preserve"><value>Use proxy for BitTorrent traffic</value></data>
+  <data name="Setting_proxy_peer_connections" xml:space="preserve"><value>Use proxy for peer connections</value></data>
+  <data name="Setting_proxy_rss" xml:space="preserve"><value>Use proxy for RSS</value></data>
+  <data name="Setting_proxy_misc" xml:space="preserve"><value>Use proxy for general traffic</value></data>
+  <data name="Setting_i2p_enabled" xml:space="preserve"><value>Enable I2P</value></data>
+  <data name="Setting_i2p_address" xml:space="preserve"><value>I2P SAM bridge host</value></data>
+  <data name="Setting_i2p_port" xml:space="preserve"><value>I2P SAM bridge port</value></data>
+  <data name="Setting_i2p_mixed_mode" xml:space="preserve"><value>Allow regular peers for I2P torrents (mixed mode)</value></data>
+  <data name="Setting_ip_filter_enabled" xml:space="preserve"><value>Enable IP filter</value></data>
+  <data name="Setting_ip_filter_path" xml:space="preserve"><value>IP filter file (.dat, .p2p, .p2b)</value></data>
+  <data name="Setting_ip_filter_trackers" xml:space="preserve"><value>Apply IP filter to trackers</value></data>
+  <data name="Setting_banned_IPs" xml:space="preserve"><value>Manually banned IP addresses (one per line)</value></data>
+  <data name="Setting_random_port_Description" xml:space="preserve"><value>Overrides the fixed port with automatic selection at every backend start.</value></data>
+  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>qBittorrent stores this password without encryption.</value></data>
+  <data name="Setting_proxy_peer_connections_Description" xml:space="preserve"><value>Enable this to prevent direct peer connections when BitTorrent proxying is active.</value></data>
+  <data name="Setting_i2p_mixed_mode_Description" xml:space="preserve"><value>Mixed mode can connect to regular IP peers and therefore does not provide I2P anonymity.</value></data>
+  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Enter a path that is accessible on the remote qBittorrent server.</value></data>
+  <data name="Choice_ProtocolBoth" xml:space="preserve"><value>TCP and µTP</value></data>
+  <data name="Choice_ProtocolTcp" xml:space="preserve"><value>TCP only</value></data>
+  <data name="Choice_ProtocolUtp" xml:space="preserve"><value>µTP only</value></data>
+  <data name="AddTorrent_PriorityMixed" xml:space="preserve"><value>Mixed</value></data>
+  <data name="FilesExpandAll.Content" xml:space="preserve"><value>Expand all</value></data>
+  <data name="FilesCollapseAll.Content" xml:space="preserve"><value>Collapse all</value></data>
+  <data name="FilesPriority.Content" xml:space="preserve"><value>Priority</value></data>
+  <data name="FilesRemaining.Text" xml:space="preserve"><value>Remaining</value></data>
+  <data name="FilesAvailability.Text" xml:space="preserve"><value>Availability</value></data>
+  <data name="FilesOpen.Text" xml:space="preserve"><value>Open</value></data>
+  <data name="FilesOpenDestination.Text" xml:space="preserve"><value>Open destination folder</value></data>
+  <data name="Files_PriorityMixed" xml:space="preserve"><value>Mixed</value></data>
+  <data name="Files_SelectItemsFirst" xml:space="preserve"><value>Select one or more files or folders first.</value></data>
+  <data name="Files_PriorityUpdated" xml:space="preserve"><value>Priority updated for {0} files.</value></data>
+  <data name="Files_LocalItemUnavailable" xml:space="preserve"><value>The selected file or folder is not available locally yet.</value></data>
+  <data name="Files_SelectionUpdated" xml:space="preserve"><value>Download selection updated for {0} files.</value></data>
+  <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>The torrent was added, but its file list is not available yet.</value></data>
+  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>The torrent was added, but qBittorrent did not return a compatible file list for applying priorities.</value></data>
+  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>The torrent was added, but qBittorrent did not apply all selected file priorities.</value></data>
 </root>

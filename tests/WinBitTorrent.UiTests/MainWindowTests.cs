@@ -30,6 +30,77 @@ public sealed class MainWindowTests
             try { if (!application.HasExited) application.Kill(); } catch (InvalidOperationException) { }
         }
     }
+
+    [UiFact]
+    public void ConnectionSettingsExposeGroupedQbittorrentControls()
+    {
+        using var application = Application.Launch(UiFactAttribute.FindExecutable()!);
+        using var automation = new UIA3Automation();
+        try
+        {
+            var mainWindow = Retry.WhileNull(() => application.GetMainWindow(automation), TimeSpan.FromSeconds(15)).Result;
+            Assert.NotNull(mainWindow);
+
+            var tools = Retry.WhileNull(
+                () => FindByAnyName(mainWindow!, "Tools", "Инструменты"),
+                TimeSpan.FromSeconds(10)).Result;
+            Assert.NotNull(tools);
+            tools!.Click();
+
+            var options = Retry.WhileNull(
+                () => FindByAnyName(mainWindow!, "Options…", "Options...", "Настройки…", "Настройки..."),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(options);
+            options!.Click();
+
+            var mainHandle = mainWindow!.FrameworkAutomationElement.NativeWindowHandle;
+            var settingsWindow = Retry.WhileNull(
+                () => application.GetAllTopLevelWindows(automation)
+                    .FirstOrDefault(window => window.FrameworkAutomationElement.NativeWindowHandle != mainHandle),
+                TimeSpan.FromSeconds(10)).Result;
+            Assert.NotNull(settingsWindow);
+
+            var connection = Retry.WhileNull(
+                () => FindByAnyName(settingsWindow!, "Connection", "Соединение"),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(connection);
+            connection!.Click();
+
+            var visibleNames = Retry.While(
+                () => settingsWindow!.FindAllDescendants()
+                    .Select(SafeName)
+                    .Where(static name => !string.IsNullOrWhiteSpace(name))
+                    .ToArray(),
+                names => !names.Any(name => name.Contains("Proxy server", StringComparison.OrdinalIgnoreCase)
+                    || name.Contains("Прокси-сервер", StringComparison.OrdinalIgnoreCase)),
+                TimeSpan.FromSeconds(10)).Result;
+
+            var verifiedNames = visibleNames ?? [];
+            Assert.Contains(verifiedNames, name => name.Contains("Protocol and listening port", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Протокол и порт прослушивания", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(verifiedNames, name => name.Contains("Connection limits", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Ограничения соединений", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(verifiedNames, name => name.Contains("Proxy server", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Прокси-сервер", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(verifiedNames, name => name.Contains("I2P", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(verifiedNames, name => name.Contains("IP filtering", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Фильтрация IP", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            try { application.Close(); } catch (InvalidOperationException) { }
+            try { if (!application.HasExited) application.Kill(); } catch (InvalidOperationException) { }
+        }
+    }
+
+    private static AutomationElement? FindByAnyName(AutomationElement root, params string[] names)
+        => root.FindAllDescendants().FirstOrDefault(element => names.Contains(SafeName(element), StringComparer.Ordinal));
+
+    private static string SafeName(AutomationElement element)
+    {
+        try { return element.Name; }
+        catch (FlaUI.Core.Exceptions.PropertyNotSupportedException) { return string.Empty; }
+    }
 }
 
 public sealed class UiFactAttribute : FactAttribute

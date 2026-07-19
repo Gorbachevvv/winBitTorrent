@@ -347,10 +347,6 @@ public sealed class QbittorrentApi : IQBittorrentApi
             AddString(content, "skip_checking", request.SkipChecking ? "true" : "false");
             AddString(content, "upLimit", request.UploadLimit?.ToString(CultureInfo.InvariantCulture));
             AddString(content, "dlLimit", request.DownloadLimit?.ToString(CultureInfo.InvariantCulture));
-            AddString(content, "filePriorities", request.FilePriorities is { Count: > 0 }
-                ? string.Join(',', request.FilePriorities)
-                : null);
-
             await api.PostMultipartAsync("api/v2/torrents/add", content, cancellationToken).ConfigureAwait(false);
         }
 

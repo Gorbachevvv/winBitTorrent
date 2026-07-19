@@ -22,6 +22,13 @@
             <FontIconSource x:Key="TrackerIcon" Glyph="&#xE774;" />
             <FontIconSource x:Key="LogIcon" Glyph="&#xE9D9;" />
 
+            <FontIconSource x:Key="DetailsGeneralIcon" Glyph="&#xE946;" />
+            <FontIconSource x:Key="DetailsTrackersIcon" Glyph="&#xE774;" />
+            <FontIconSource x:Key="DetailsPeersIcon" Glyph="&#xE716;" />
+            <FontIconSource x:Key="DetailsHttpSourcesIcon" Glyph="&#xE71B;" />
+            <FontIconSource x:Key="DetailsFilesIcon" Glyph="&#xE8B7;" />
+            <FontIconSource x:Key="DetailsSpeedIcon" Glyph="&#xE9E9;" />
+
             <Style x:Key="CompactToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
                 <Setter Property="MinWidth" Value="36" />
                 <Setter Property="MinHeight" Value="32" />

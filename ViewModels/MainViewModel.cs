@@ -548,6 +548,39 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
+    public async Task RefreshSelectedFilesAsync()
+    {
+        var selected = SelectedTorrent;
+        var api = _api;
+        if (selected is null || api is null)
+            return;
+
+        var files = await api.Torrents.GetFilesAsync(selected.Hash, _detailsLifetime?.Token ?? default);
+        if (!string.Equals(SelectedTorrent?.Hash, selected.Hash, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var currentByIndex = SelectedFiles.ToDictionary(static file => file.Index);
+        if (files.Count == SelectedFiles.Count
+            && files.All(file => currentByIndex.TryGetValue(file.Index, out var current)
+                && current.Name.Equals(file.Name, StringComparison.Ordinal)))
+        {
+            foreach (var updated in files)
+            {
+                var current = currentByIndex[updated.Index];
+                current.Size = updated.Size;
+                current.Progress = updated.Progress;
+                current.Priority = updated.Priority;
+                current.IsSeed = updated.IsSeed;
+                current.Availability = updated.Availability;
+            }
+            return;
+        }
+
+        SelectedFiles.Clear();
+        foreach (var file in files)
+            SelectedFiles.Add(file);
+    }
+
     private async Task RefreshSelectedPeersAsync(CancellationToken cancellationToken)
     {
         var selected = SelectedTorrent;

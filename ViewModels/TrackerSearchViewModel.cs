@@ -89,6 +89,9 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         if (!_providers.TryGetValue(trackerId, out var provider))
             return Task.CompletedTask;
 
+        var resumeSignedInSession = IsSignedIn &&
+            _activeProvider?.Id.Equals(provider.Id, StringComparison.OrdinalIgnoreCase) == true;
+
         _activeProvider = provider;
         HasInteractiveLogin = provider is ITrackerInteractiveAuthentication;
         ActiveTrackerName = provider.DisplayName;
@@ -107,8 +110,16 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
             UseTrackerProxy = false;
         }
         ErrorMessage = string.Empty;
-        Status = string.Empty;
-        ShowInteractiveLogin();
+        if (resumeSignedInSession)
+        {
+            Status = Localizer.Get("Tracker_Ready", "Ready");
+            ShowSearch();
+        }
+        else
+        {
+            Status = string.Empty;
+            ShowInteractiveLogin();
+        }
         return Task.CompletedTask;
     }
 

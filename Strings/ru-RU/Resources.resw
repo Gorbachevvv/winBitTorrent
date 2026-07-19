@@ -196,7 +196,7 @@
   <data name="Setting_preallocate_all" xml:space="preserve"><value>Предварительно выделять место на диске</value></data>
   <data name="Setting_listen_port" xml:space="preserve"><value>Порт входящих соединений</value></data>
   <data name="Setting_upnp" xml:space="preserve"><value>Использовать переадресацию портов UPnP / NAT-PMP</value></data>
-  <data name="Setting_random_port" xml:space="preserve"><value>Использовать другой порт при каждом запуске</value></data>
+  <data name="Setting_random_port" xml:space="preserve"><value>Автоматически выбирать свободный порт при запуске</value></data>
   <data name="Setting_proxy_type" xml:space="preserve"><value>Тип прокси</value></data>
   <data name="Setting_proxy_ip" xml:space="preserve"><value>Сервер прокси</value></data>
   <data name="Setting_proxy_port" xml:space="preserve"><value>Порт прокси</value></data>
@@ -233,7 +233,7 @@
   <data name="DetailsTrackers.Header" xml:space="preserve"><value>Трекеры</value></data>
   <data name="DetailsPeers.Header" xml:space="preserve"><value>Пиры</value></data>
   <data name="DetailsHttpSources.Header" xml:space="preserve"><value>HTTP-источники</value></data>
-  <data name="DetailsContent.Header" xml:space="preserve"><value>Содержимое</value></data>
+  <data name="DetailsContent.Header" xml:space="preserve"><value>Файлы</value></data>
   <data name="DetailsSpeed.Header" xml:space="preserve"><value>Скорость</value></data>
   <data name="DetailsProgress.Text" xml:space="preserve"><value>Прогресс</value></data>
   <data name="DetailsAvailability.Text" xml:space="preserve"><value>Доступность</value></data>
@@ -360,7 +360,7 @@
   <data name="AddTorrent_MetadataFailed" xml:space="preserve"><value>Не удалось загрузить метаданные торрента.</value></data>
   <data name="AddTorrent_SourceRequired" xml:space="preserve"><value>Добавьте хотя бы один .torrent-файл, URL или magnet-ссылку.</value></data>
   <data name="AddTorrent_ClearUnwantedFiles" xml:space="preserve"><value>Снимите отметки с файлов, которые не нужно загружать.</value></data>
-  <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Приоритеты файлов из загруженного .torrent можно изменить на вкладке «Содержимое» после добавления.</value></data>
+  <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Приоритеты файлов из загруженного .torrent можно изменить на вкладке «Файлы» после добавления.</value></data>
   <data name="AddTorrent_File" xml:space="preserve"><value>файл</value></data>
   <data name="AddTorrent_Files" xml:space="preserve"><value>файлов</value></data>
   <data name="Common_Apply" xml:space="preserve"><value>Применить</value></data>
@@ -403,7 +403,7 @@
   <data name="Dialog_AddHttpSources" xml:space="preserve"><value>Добавить HTTP-источники</value></data>
   <data name="Dialog_UrlPerLine" xml:space="preserve"><value>Один URL на строку</value></data>
   <data name="Dialog_PreviewUnavailable" xml:space="preserve"><value>Предпросмотр недоступен</value></data>
-  <data name="Dialog_SelectDownloadedFile" xml:space="preserve"><value>Сначала выберите загруженный файл на вкладке «Содержимое».</value></data>
+  <data name="Dialog_SelectDownloadedFile" xml:space="preserve"><value>Сначала выберите загруженный файл на вкладке «Файлы».</value></data>
   <data name="Dialog_DownloadedFileNotFound" xml:space="preserve"><value>Загруженный файл не найден на этом компьютере.</value></data>
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Ожидаемый путь</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Также удалить файлы с диска</value></data>
@@ -557,4 +557,64 @@
   <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Торрент «{0}» уже есть в списке передач. Объединить трекеры из нового источника?</value></data>
   <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Торрент «{0}» является приватным. Его трекеры нельзя объединить.</value></data>
   <data name="Connection_NotConnected" xml:space="preserve"><value>Нет подключения к qBittorrent.</value></data>
+  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>Нет подключения к qBittorrent</value></data>
+  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Подключитесь к профилю qBittorrent, чтобы просматривать и изменять эти настройки.</value></data>
+  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Настройки применены и проверены через qBittorrent.</value></data>
+  <data name="Settings_VerificationFailed" xml:space="preserve"><value>qBittorrent не применил следующие настройки: {0}</value></data>
+  <data name="SettingsConnection_ProtocolTitle" xml:space="preserve"><value>Протокол и порт прослушивания</value></data>
+  <data name="SettingsConnection_ProtocolDescription" xml:space="preserve"><value>Определяет, как пиры подключаются к клиенту. Значение порта 0 позволяет системе выбрать свободный порт.</value></data>
+  <data name="SettingsConnection_LimitsTitle" xml:space="preserve"><value>Ограничения соединений</value></data>
+  <data name="SettingsConnection_LimitsDescription" xml:space="preserve"><value>Значение -1 отключает ограничение. Умеренные лимиты снижают нагрузку на роутер и память.</value></data>
+  <data name="SettingsConnection_ProxyTitle" xml:space="preserve"><value>Прокси-сервер</value></data>
+  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Выберите, какой трафик qBittorrent должен направлять через прокси.</value></data>
+  <data name="SettingsConnection_I2pTitle" xml:space="preserve"><value>I2P (экспериментально)</value></data>
+  <data name="SettingsConnection_I2pDescription" xml:space="preserve"><value>Требуется запущенный I2P-роутер с включённым SAM-мостом.</value></data>
+  <data name="SettingsConnection_FilterTitle" xml:space="preserve"><value>Фильтрация IP</value></data>
+  <data name="SettingsConnection_FilterDescription" xml:space="preserve"><value>Загрузите совместимый список фильтрации или заблокируйте отдельные адреса вручную.</value></data>
+  <data name="SettingsConnection_RandomPort" xml:space="preserve"><value>Случайный порт</value></data>
+  <data name="Setting_bittorrent_protocol" xml:space="preserve"><value>Протокол подключения пиров</value></data>
+  <data name="Setting_max_connec" xml:space="preserve"><value>Общий максимум соединений (-1 — без ограничения)</value></data>
+  <data name="Setting_max_connec_per_torrent" xml:space="preserve"><value>Максимум соединений на торрент (-1 — без ограничения)</value></data>
+  <data name="Setting_max_uploads" xml:space="preserve"><value>Общий максимум слотов отдачи (-1 — без ограничения)</value></data>
+  <data name="Setting_max_uploads_per_torrent" xml:space="preserve"><value>Максимум слотов отдачи на торрент (-1 — без ограничения)</value></data>
+  <data name="Setting_proxy_hostname_lookup" xml:space="preserve"><value>Разрешать имена хостов через прокси</value></data>
+  <data name="Setting_proxy_auth_enabled" xml:space="preserve"><value>Прокси требует аутентификацию</value></data>
+  <data name="Setting_proxy_username" xml:space="preserve"><value>Имя пользователя прокси</value></data>
+  <data name="Setting_proxy_password" xml:space="preserve"><value>Пароль прокси</value></data>
+  <data name="Setting_proxy_bittorrent" xml:space="preserve"><value>Использовать прокси для BitTorrent-трафика</value></data>
+  <data name="Setting_proxy_peer_connections" xml:space="preserve"><value>Использовать прокси для соединений с пирами</value></data>
+  <data name="Setting_proxy_rss" xml:space="preserve"><value>Использовать прокси для RSS</value></data>
+  <data name="Setting_proxy_misc" xml:space="preserve"><value>Использовать прокси для общего трафика</value></data>
+  <data name="Setting_i2p_enabled" xml:space="preserve"><value>Включить I2P</value></data>
+  <data name="Setting_i2p_address" xml:space="preserve"><value>Хост SAM-моста I2P</value></data>
+  <data name="Setting_i2p_port" xml:space="preserve"><value>Порт SAM-моста I2P</value></data>
+  <data name="Setting_i2p_mixed_mode" xml:space="preserve"><value>Разрешать обычных пиров для I2P-торрентов (смешанный режим)</value></data>
+  <data name="Setting_ip_filter_enabled" xml:space="preserve"><value>Включить IP-фильтр</value></data>
+  <data name="Setting_ip_filter_path" xml:space="preserve"><value>Файл IP-фильтра (.dat, .p2p, .p2b)</value></data>
+  <data name="Setting_ip_filter_trackers" xml:space="preserve"><value>Применять IP-фильтр к трекерам</value></data>
+  <data name="Setting_banned_IPs" xml:space="preserve"><value>Заблокированные вручную IP-адреса (по одному в строке)</value></data>
+  <data name="Setting_random_port_Description" xml:space="preserve"><value>При запуске встроенного backend фиксированный порт заменяется автоматически выбранным.</value></data>
+  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>qBittorrent хранит этот пароль в незашифрованном виде.</value></data>
+  <data name="Setting_proxy_peer_connections_Description" xml:space="preserve"><value>Включите, чтобы исключить прямые соединения с пирами при активном BitTorrent-прокси.</value></data>
+  <data name="Setting_i2p_mixed_mode_Description" xml:space="preserve"><value>Смешанный режим допускает обычные IP-соединения и поэтому не обеспечивает анонимность I2P.</value></data>
+  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Укажите путь, доступный на удалённом сервере qBittorrent.</value></data>
+  <data name="Choice_ProtocolBoth" xml:space="preserve"><value>TCP и µTP</value></data>
+  <data name="Choice_ProtocolTcp" xml:space="preserve"><value>Только TCP</value></data>
+  <data name="Choice_ProtocolUtp" xml:space="preserve"><value>Только µTP</value></data>
+  <data name="AddTorrent_PriorityMixed" xml:space="preserve"><value>Смешанный</value></data>
+  <data name="FilesExpandAll.Content" xml:space="preserve"><value>Развернуть всё</value></data>
+  <data name="FilesCollapseAll.Content" xml:space="preserve"><value>Свернуть всё</value></data>
+  <data name="FilesPriority.Content" xml:space="preserve"><value>Приоритет</value></data>
+  <data name="FilesRemaining.Text" xml:space="preserve"><value>Осталось</value></data>
+  <data name="FilesAvailability.Text" xml:space="preserve"><value>Доступность</value></data>
+  <data name="FilesOpen.Text" xml:space="preserve"><value>Открыть</value></data>
+  <data name="FilesOpenDestination.Text" xml:space="preserve"><value>Открыть папку назначения</value></data>
+  <data name="Files_PriorityMixed" xml:space="preserve"><value>Смешанный</value></data>
+  <data name="Files_SelectItemsFirst" xml:space="preserve"><value>Сначала выберите один или несколько файлов либо папок.</value></data>
+  <data name="Files_PriorityUpdated" xml:space="preserve"><value>Приоритет обновлён для файлов: {0}.</value></data>
+  <data name="Files_LocalItemUnavailable" xml:space="preserve"><value>Выбранный файл или папка пока недоступны локально.</value></data>
+  <data name="Files_SelectionUpdated" xml:space="preserve"><value>Выбор загрузки обновлён для файлов: {0}.</value></data>
+  <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>Торрент добавлен, но список его файлов пока недоступен.</value></data>
+  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торрент добавлен, но qBittorrent не вернул совместимый список файлов для применения приоритетов.</value></data>
+  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торрент добавлен, но qBittorrent не применил все выбранные приоритеты файлов.</value></data>
 </root>

@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,13 +17,22 @@ namespace WinBitTorrent.Views;
 
 public sealed partial class TransfersView : UserControl
 {
+    private static readonly int[] FilePriorityValues = [0, 1, 6, 7];
+    private readonly ObservableCollection<TorrentFileTreeNode> _fileTreeRoots = [];
+    private readonly DispatcherTimer _filesRefreshTimer = new() { Interval = TimeSpan.FromSeconds(2) };
+    private bool _fileEventsAttached;
+    private bool _fileTreeRefreshQueued;
+    private bool _isRefreshingFiles;
+
     public TransfersView()
     {
         InitializeComponent();
         RestoreLayout();
         DataContext = App.Services.GetRequiredService<MainViewModel>();
+        ContentFilesTree.ItemsSource = _fileTreeRoots;
+        _filesRefreshTimer.Tick += FilesRefreshTimer_Tick;
         Loaded += TransfersView_Loaded;
-        Unloaded += (_, _) => SaveLayout();
+        Unloaded += TransfersView_Unloaded;
     }
 
     private MainViewModel ViewModel => (MainViewModel)DataContext;
@@ -64,20 +75,10 @@ public sealed partial class TransfersView : UserControl
             return;
         }
 
-        var selectedFile = ContentFilesList.SelectedItems.OfType<TorrentFile>().FirstOrDefault();
-        var filePath = ResolveLocalFilePath(selected, selectedFile);
-        if (filePath is not null && File.Exists(filePath))
-        {
-            var startInfo = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
-            startInfo.ArgumentList.Add($"/select,{filePath}");
-            Process.Start(startInfo);
-            return;
-        }
-
         var folderPath = ResolveLocalDirectoryPath(selected);
         if (folderPath is not null && Directory.Exists(folderPath))
         {
-            await Windows.System.Launcher.LaunchFolderPathAsync(folderPath);
+            SelectInExplorer(folderPath);
             return;
         }
 
@@ -86,9 +87,60 @@ public sealed partial class TransfersView : UserControl
             $"{Localizer.Get("Dialog_ReportedSavePath", "qBittorrent reported save path")}: {selected.Model.SavePath}\n{Localizer.Get("Dialog_DownloadPath", "Download path")}: {selected.Model.DownloadPath}\n\n{Localizer.Get("Dialog_PathUnavailableReason", "The path may not exist yet, or the torrent metadata has not finished syncing.")}");
     }
 
+    private static void SelectInExplorer(string path)
+    {
+        var startInfo = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+        startInfo.ArgumentList.Add($"/select,{path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)}");
+        Process.Start(startInfo);
+    }
+
     private void TransfersView_Loaded(object sender, RoutedEventArgs e)
     {
         StatusList.SelectedIndex = 0;
+        if (!_fileEventsAttached)
+        {
+            ViewModel.SelectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
+            _fileEventsAttached = true;
+        }
+        _filesRefreshTimer.Start();
+        QueueFileTreeRefresh();
+    }
+
+    private void TransfersView_Unloaded(object sender, RoutedEventArgs e)
+    {
+        SaveLayout();
+        _filesRefreshTimer.Stop();
+        if (!_fileEventsAttached)
+            return;
+        ViewModel.SelectedFiles.CollectionChanged -= SelectedFiles_CollectionChanged;
+        _fileEventsAttached = false;
+    }
+
+    private void SelectedFiles_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        => QueueFileTreeRefresh();
+
+    private void QueueFileTreeRefresh()
+    {
+        if (_fileTreeRefreshQueued)
+            return;
+        _fileTreeRefreshQueued = true;
+        if (!DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            _fileTreeRefreshQueued = false;
+            RebuildFileTree();
+        }))
+            _fileTreeRefreshQueued = false;
+    }
+
+    private void RebuildFileTree()
+    {
+        _fileTreeRoots.Clear();
+        var filter = ContentFilesFilterBox.Text?.Trim();
+        foreach (var root in TorrentFileTreeBuilder.Build(
+            ViewModel.SelectedTorrent?.Name,
+            ViewModel.SelectedFiles,
+            filter))
+            _fileTreeRoots.Add(root);
     }
 
     private void RestoreLayout()
@@ -310,11 +362,11 @@ public sealed partial class TransfersView : UserControl
     {
         if (!ViewModel.CanUseLocalFiles || ViewModel.SelectedTorrent is null)
             return;
-        var file = ContentFilesList.SelectedItems.OfType<TorrentFile>().FirstOrDefault(static file => file.Progress > 0)
+        var file = SelectedContentFiles().FirstOrDefault(static file => file.Progress > 0)
             ?? ViewModel.SelectedFiles.FirstOrDefault(static file => file.Progress > 0);
         if (file is null)
         {
-            await ShowInfoAsync(Localizer.Get("Dialog_PreviewUnavailable", "Preview is not available"), Localizer.Get("Dialog_SelectDownloadedFile", "Select a downloaded file in the Content tab first."));
+            await ShowInfoAsync(Localizer.Get("Dialog_PreviewUnavailable", "Preview is not available"), Localizer.Get("Dialog_SelectDownloadedFile", "Select a downloaded file in the Files tab first."));
             return;
         }
 
@@ -328,14 +380,311 @@ public sealed partial class TransfersView : UserControl
         await ShowInfoAsync(Localizer.Get("Dialog_PreviewUnavailable", "Preview is not available"), $"{Localizer.Get("Dialog_DownloadedFileNotFound", "The downloaded file was not found locally.")}\n\n{Localizer.Get("Dialog_ExpectedPath", "Expected path")}: {path ?? ViewModel.SelectedTorrent.Model.SavePath}");
     }
 
-    private async void FilePriority_Click(object sender, RoutedEventArgs e)
+    private void ContentFilesFilter_TextChanged(object sender, TextChangedEventArgs e)
+        => RebuildFileTree();
+
+    private async void FilesSelectAll_Click(object sender, RoutedEventArgs e)
+        => await ApplyFileSelectionAsync(AllFileTreeRoots(), true);
+
+    private async void FilesSelectNone_Click(object sender, RoutedEventArgs e)
+        => await ApplyFileSelectionAsync(AllFileTreeRoots(), false);
+
+    private IReadOnlyList<TorrentFileTreeNode> AllFileTreeRoots()
+        => TorrentFileTreeBuilder.Build(ViewModel.SelectedTorrent?.Name, ViewModel.SelectedFiles);
+
+    private void FilesExpandAll_Click(object sender, RoutedEventArgs e)
+        => SetExpanded(_fileTreeRoots, true);
+
+    private void FilesCollapseAll_Click(object sender, RoutedEventArgs e)
+        => SetExpanded(_fileTreeRoots, false);
+
+    private async void FilesRefresh_Click(object sender, RoutedEventArgs e)
     {
-        if (ViewModel.Api is null || ViewModel.SelectedTorrent is null || sender is not MenuFlyoutItem { Tag: string value })
+        try
+        {
+            await ViewModel.RefreshSelectedFilesAsync();
+            RefreshFileTreeValues();
+        }
+        catch (Exception exception)
+        {
+            ShowFilesMessage(exception.Message, InfoBarSeverity.Error);
+        }
+    }
+
+    private async void FilesRefreshTimer_Tick(object? sender, object e)
+    {
+        if (_isRefreshingFiles
+            || !ViewModel.IsConnected
+            || ViewModel.SelectedTorrent is null
+            || !ReferenceEquals(DetailsTabs.SelectedItem, FilesTab))
             return;
-        var ids = string.Join('|', ContentFilesList.SelectedItems.OfType<TorrentFile>().Select(static file => file.Index));
-        if (string.IsNullOrEmpty(ids))
+
+        _isRefreshingFiles = true;
+        try
+        {
+            await ViewModel.RefreshSelectedFilesAsync();
+            RefreshFileTreeValues();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+            // The main connection loop reports connection failures. A transient details
+            // refresh should not cover the file list with repeated error messages.
+        }
+        finally
+        {
+            _isRefreshingFiles = false;
+        }
+    }
+
+    private void RefreshFileTreeValues()
+    {
+        foreach (var node in _fileTreeRoots)
+            node.RefreshDisplayedValues();
+    }
+
+    private static void SetExpanded(IEnumerable<TorrentFileTreeNode> nodes, bool expanded)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.IsFolder)
+                node.IsExpanded = expanded;
+            SetExpanded(node.Children, expanded);
+        }
+    }
+
+    private async void SelectedFilesPriority_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuFlyoutItem { Tag: string value } || !int.TryParse(value, out var priority))
             return;
-        await ViewModel.Api.Torrents.PostAsync("filePrio", new Dictionary<string, string?> { ["hash"] = ViewModel.SelectedTorrent.Hash, ["id"] = ids, ["priority"] = value });
+        if (ContentFilesTree.SelectedItem is not TorrentFileTreeNode node)
+        {
+            ShowFilesMessage(
+                Localizer.Get("Files_SelectItemsFirst", "Select a file or folder first."),
+                InfoBarSeverity.Informational);
+            return;
+        }
+        await ApplyFilePriorityAsync([node], priority);
+    }
+
+    private async void ContentFileCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox { Tag: TorrentFileTreeNode node } checkBox)
+            return;
+
+        var newValue = node.IsChecked != true;
+        checkBox.IsChecked = newValue;
+        await ApplyFileSelectionAsync([node], newValue);
+    }
+
+    private async void ContextFilePriority_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuFlyoutItem { Tag: TorrentFileTreeNode node, CommandParameter: string value }
+            || !int.TryParse(value, out var priority))
+            return;
+        await ApplyFilePriorityAsync([node], priority);
+    }
+
+    private async void FilePriorityCombo_DropDownClosed(object sender, object e)
+    {
+        if (sender is not ComboBox { Tag: TorrentFileTreeNode node } combo
+            || combo.SelectedIndex < 0
+            || combo.SelectedIndex >= FilePriorityValues.Length)
+            return;
+        var priority = FilePriorityValues[combo.SelectedIndex];
+        if (node.DescendantFiles().All(file => file.Priority == priority))
+            return;
+        await ApplyFilePriorityAsync([node], priority);
+    }
+
+    private async Task ApplyFilePriorityAsync(IEnumerable<TorrentFileTreeNode> nodes, int priority)
+    {
+        if (ViewModel.Api is null || ViewModel.SelectedTorrent is null)
+            return;
+        var nodeList = nodes.ToList();
+        var files = nodeList
+            .SelectMany(static node => node.DescendantFiles())
+            .DistinctBy(static file => file.Index)
+            .ToList();
+        if (files.Count == 0)
+            return;
+
+        var previousPriorities = files.ToDictionary(static file => file.Index, static file => file.Priority);
+        foreach (var node in nodeList)
+            node.SetPriority(priority);
+        FilesInfoBar.IsOpen = false;
+        try
+        {
+            await ViewModel.Api.Torrents.PostAsync("filePrio", new Dictionary<string, string?>
+            {
+                ["hash"] = ViewModel.SelectedTorrent.Hash,
+                ["id"] = string.Join('|', files.Select(static file => file.Index)),
+                ["priority"] = priority.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            });
+            await ViewModel.RefreshSelectedFilesAsync();
+            RefreshFileTreeValues();
+            ShowFilesMessage(
+                string.Format(Localizer.Get("Files_PriorityUpdated", "Priority updated for {0} files."), files.Count),
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            foreach (var file in files)
+                file.Priority = previousPriorities[file.Index];
+            RebuildFileTree();
+            ShowFilesMessage(exception.Message, InfoBarSeverity.Error);
+        }
+    }
+
+    private async Task ApplyFileSelectionAsync(IEnumerable<TorrentFileTreeNode> nodes, bool selected)
+    {
+        if (ViewModel.Api is null || ViewModel.SelectedTorrent is null)
+            return;
+        var nodeList = nodes.ToList();
+        var files = nodeList
+            .SelectMany(static node => node.DescendantFiles())
+            .DistinctBy(static file => file.Index)
+            .ToList();
+        var changedFiles = files
+            .Where(file => selected ? file.Priority == 0 : file.Priority != 0)
+            .ToList();
+        if (changedFiles.Count == 0)
+        {
+            RefreshFileTreeValues();
+            return;
+        }
+
+        var previousPriorities = changedFiles.ToDictionary(static file => file.Index, static file => file.Priority);
+        foreach (var node in nodeList)
+            node.SetSelection(selected);
+        FilesInfoBar.IsOpen = false;
+        var priority = selected ? 1 : 0;
+        try
+        {
+            await ViewModel.Api.Torrents.PostAsync("filePrio", new Dictionary<string, string?>
+            {
+                ["hash"] = ViewModel.SelectedTorrent.Hash,
+                ["id"] = string.Join('|', changedFiles.Select(static file => file.Index)),
+                ["priority"] = priority.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            });
+            await ViewModel.RefreshSelectedFilesAsync();
+            RefreshFileTreeValues();
+            ShowFilesMessage(
+                string.Format(Localizer.Get("Files_SelectionUpdated", "Download selection updated for {0} files."), changedFiles.Count),
+                InfoBarSeverity.Success);
+        }
+        catch (Exception exception)
+        {
+            foreach (var file in changedFiles)
+                file.Priority = previousPriorities[file.Index];
+            RebuildFileTree();
+            ShowFilesMessage(exception.Message, InfoBarSeverity.Error);
+        }
+    }
+
+    private void ShowFilesMessage(string message, InfoBarSeverity severity)
+    {
+        FilesInfoBar.Message = message;
+        FilesInfoBar.Severity = severity;
+        FilesInfoBar.IsOpen = true;
+    }
+
+    private IReadOnlyList<TorrentFile> SelectedContentFiles()
+        => ContentFilesTree.SelectedItem is TorrentFileTreeNode node
+            ? node.DescendantFiles()
+            : [];
+
+    private async void OpenContentNode_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem { Tag: TorrentFileTreeNode node })
+            await OpenContentNodeAsync(node);
+    }
+
+    private async void OpenContentNodeDestination_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem { Tag: TorrentFileTreeNode node })
+            await OpenContentNodeDestinationAsync(node);
+    }
+
+    private void ContentFileRow_RightTapped(object sender, Microsoft.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { ContextFlyout: MenuFlyout flyout } element)
+            return;
+        e.Handled = true;
+        flyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
+    }
+
+    private async void ContentFileRow_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: TorrentFileTreeNode node })
+            await OpenContentNodeAsync(node);
+    }
+
+    private async Task OpenContentNodeAsync(TorrentFileTreeNode node)
+    {
+        var torrent = ViewModel.SelectedTorrent;
+        if (torrent is null)
+            return;
+        if (!ViewModel.CanUseLocalFiles)
+        {
+            await ShowInfoAsync(
+                Localizer.Get("Dialog_LocalFilesUnavailableTitle", "Local files are unavailable"),
+                Localizer.Get("Dialog_LocalFilesUnavailableMessage", "This torrent belongs to a remote profile. WinBitTorrent can only open folders for the managed local backend."));
+            return;
+        }
+
+        if (ResolveLocalNodePath(torrent, node) is { } path)
+        {
+            if (node.File is not null)
+                await Windows.System.Launcher.LaunchFileAsync(await StorageFile.GetFileFromPathAsync(path));
+            else
+                await Windows.System.Launcher.LaunchFolderPathAsync(path);
+            return;
+        }
+
+        await ShowInfoAsync(
+            Localizer.Get("Dialog_DestinationUnavailableTitle", "Destination folder is not available"),
+            Localizer.Get("Files_LocalItemUnavailable", "The selected file or folder is not available locally yet."));
+    }
+
+    private async Task OpenContentNodeDestinationAsync(TorrentFileTreeNode node)
+    {
+        var torrent = ViewModel.SelectedTorrent;
+        if (torrent is null)
+            return;
+        if (!ViewModel.CanUseLocalFiles)
+        {
+            await ShowInfoAsync(
+                Localizer.Get("Dialog_LocalFilesUnavailableTitle", "Local files are unavailable"),
+                Localizer.Get("Dialog_LocalFilesUnavailableMessage", "This torrent belongs to a remote profile. WinBitTorrent can only open folders for the managed local backend."));
+            return;
+        }
+
+        if (ResolveLocalNodePath(torrent, node) is { } path)
+        {
+            SelectInExplorer(path);
+            return;
+        }
+
+        await ShowInfoAsync(
+            Localizer.Get("Dialog_DestinationUnavailableTitle", "Destination folder is not available"),
+            Localizer.Get("Files_LocalItemUnavailable", "The selected file or folder is not available locally yet."));
+    }
+
+    private static string? ResolveLocalNodePath(TorrentRowViewModel torrent, TorrentFileTreeNode node)
+    {
+        if (node.File is not null)
+        {
+            var filePath = ResolveLocalFilePath(torrent, node.File);
+            return filePath is not null && File.Exists(filePath) ? filePath : null;
+        }
+
+        if (ResolveLocalDirectoryPath(torrent) is not { } basePath)
+            return null;
+        var folderPath = Path.Combine(basePath, node.FullPath.Replace('/', Path.DirectorySeparatorChar));
+        return Directory.Exists(folderPath) ? folderPath : null;
     }
 
     private async void BanPeers_Click(object sender, RoutedEventArgs e)

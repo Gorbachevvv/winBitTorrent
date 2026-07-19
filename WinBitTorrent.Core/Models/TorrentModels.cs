@@ -501,8 +501,7 @@ public sealed record TorrentAddRequest(
     bool AutomaticTorrentManagement = false,
     bool SkipChecking = false,
     int? UploadLimit = null,
-    int? DownloadLimit = null,
-    IReadOnlyList<int>? FilePriorities = null);
+    int? DownloadLimit = null);
 
 public enum TorrentCommand
 {

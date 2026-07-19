@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json.Nodes;
 using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Infrastructure.Api;
@@ -63,21 +64,62 @@ public sealed class QbittorrentApiTests
     }
 
     [Fact]
-    public async Task AddsSelectedMetadataFilePriorities()
+    public async Task SetsPrioritiesForExistingTorrentFiles()
     {
-        var requestBody = string.Empty;
+        string? requestPath = null;
+        string? requestBody = null;
         var handler = new RecordingHandler(request =>
         {
+            requestPath = request.RequestUri!.AbsolutePath;
             requestBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
             return Text(string.Empty);
         });
         await using var api = QbittorrentApi.Create(ServerProfile.CreateLocal(new Uri("http://127.0.0.1:1/")), handler: handler);
-        var source = "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567";
 
-        await api.Torrents.AddAsync(new TorrentAddRequest([source], [], FilePriorities: [1, 0, 1]));
+        await api.Torrents.PostAsync("filePrio", new Dictionary<string, string?>
+        {
+            ["hash"] = "abc",
+            ["id"] = "1|3|8",
+            ["priority"] = "0"
+        });
 
-        Assert.Contains("name=filePriorities", requestBody, StringComparison.Ordinal);
-        Assert.Contains("1,0,1", requestBody, StringComparison.Ordinal);
+        Assert.Equal("/api/v2/torrents/filePrio", requestPath);
+        Assert.Contains("hash=abc", requestBody, StringComparison.Ordinal);
+        Assert.Contains("id=1%7C3%7C8", requestBody, StringComparison.Ordinal);
+        Assert.Contains("priority=0", requestBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task SerializesConnectionPreferencesWithQbittorrentTypes()
+    {
+        string? requestPath = null;
+        string? requestBody = null;
+        var handler = new RecordingHandler(request =>
+        {
+            requestPath = request.RequestUri!.AbsolutePath;
+            requestBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return Text(string.Empty);
+        });
+        await using var api = QbittorrentApi.Create(ServerProfile.CreateLocal(new Uri("http://127.0.0.1:1/")), handler: handler);
+
+        await api.Application.SetPreferencesAsync(new JsonObject
+        {
+            ["bittorrent_protocol"] = 1,
+            ["max_connec"] = 250,
+            ["proxy_type"] = "SOCKS5",
+            ["proxy_auth_enabled"] = true,
+            ["proxy_peer_connections"] = true
+        });
+
+        Assert.Equal("/api/v2/app/setPreferences", requestPath);
+        Assert.NotNull(requestBody);
+        var encodedJson = requestBody!.Split('=', 2)[1].Replace('+', ' ');
+        var sent = JsonNode.Parse(WebUtility.UrlDecode(encodedJson))!.AsObject();
+        Assert.Equal(1, sent["bittorrent_protocol"]!.GetValue<int>());
+        Assert.Equal(250, sent["max_connec"]!.GetValue<int>());
+        Assert.Equal("SOCKS5", sent["proxy_type"]!.GetValue<string>());
+        Assert.True(sent["proxy_auth_enabled"]!.GetValue<bool>());
+        Assert.True(sent["proxy_peer_connections"]!.GetValue<bool>());
     }
 
     private static HttpResponseMessage Text(string value) => new(HttpStatusCode.OK) { Content = new StringContent(value, Encoding.UTF8, "text/plain") };

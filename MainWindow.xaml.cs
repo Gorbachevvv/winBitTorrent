@@ -10,6 +10,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using WinBitTorrent.Core.Models;
 
 namespace WinBitTorrent;
@@ -28,6 +29,7 @@ public sealed partial class MainWindow : Window
         ViewModel = viewModel;
         InitializeComponent();
         RootGrid.DataContext = viewModel;
+        RestoreWorkspaceTabs();
         RootGrid.RequestedTheme = (ClientSettings.GetValue("ui.theme") as string) switch
         {
             "Light" => ElementTheme.Light,
@@ -200,6 +202,7 @@ public sealed partial class MainWindow : Window
             return;
         tab.Visibility = Visibility.Visible;
         WorkspaceTabs.SelectedItem = tab;
+        SaveWorkspaceTabs();
     }
 
     private void WorkspaceTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
@@ -215,9 +218,50 @@ public sealed partial class MainWindow : Window
             if (sender.TabItems[candidateIndex] is TabViewItem { Visibility: Visibility.Visible } candidate)
             {
                 sender.SelectedItem = candidate;
-                return;
+                break;
             }
         }
+        SaveWorkspaceTabs();
+    }
+
+    private void WorkspaceTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        => SaveWorkspaceTabs();
+
+    private void RestoreWorkspaceTabs()
+    {
+        var tabs = WorkspaceTabs.TabItems.OfType<TabViewItem>().ToList();
+        if (ClientSettings.GetValue("workspace.hiddenTabs") is string hiddenJson)
+        {
+            try
+            {
+                var hiddenTags = JsonSerializer.Deserialize<List<string>>(hiddenJson) ?? [];
+                foreach (var tab in tabs)
+                    if (tab.Tag?.ToString() is { } tag && hiddenTags.Contains(tag))
+                        tab.Visibility = Visibility.Collapsed;
+            }
+            catch (JsonException)
+            {
+            }
+        }
+
+        var selectedTag = ClientSettings.GetValue("workspace.selectedTab") as string;
+        var selected = tabs.FirstOrDefault(tab => tab.Visibility == Visibility.Visible
+            && string.Equals(tab.Tag?.ToString(), selectedTag, StringComparison.Ordinal))
+            ?? tabs.FirstOrDefault(static tab => tab.Visibility == Visibility.Visible);
+        if (selected is not null)
+            WorkspaceTabs.SelectedItem = selected;
+    }
+
+    private void SaveWorkspaceTabs()
+    {
+        var hiddenTags = WorkspaceTabs.TabItems
+            .OfType<TabViewItem>()
+            .Where(static tab => tab.Visibility == Visibility.Collapsed)
+            .Select(static tab => tab.Tag?.ToString() ?? string.Empty)
+            .ToList();
+        ClientSettings.SetValue("workspace.hiddenTabs", JsonSerializer.Serialize(hiddenTags));
+        if (WorkspaceTabs.SelectedItem is TabViewItem { Tag: { } selectedTag })
+            ClientSettings.SetValue("workspace.selectedTab", selectedTag.ToString());
     }
 
     private async void Documentation_Click(object sender, RoutedEventArgs e)

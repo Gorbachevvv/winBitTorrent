@@ -7,7 +7,6 @@ using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Core.Services;
 using WinBitTorrent.Services;
@@ -20,8 +19,9 @@ public sealed partial class AddTorrentWindow : Window
     private readonly MainViewModel _viewModel;
     private readonly List<string> _files;
     private readonly ObservableCollection<MetadataFileSelection> _metadataFiles = [];
-    private readonly ObservableCollection<MetadataFileSelection> _visibleMetadataFiles = [];
+    private readonly ObservableCollection<MetadataTreeNode> _visibleMetadataTree = [];
     private string? _metadataSource;
+    private string? _metadataName;
     private JsonObject? _metadata;
     private bool _initialized;
 
@@ -32,7 +32,7 @@ public sealed partial class AddTorrentWindow : Window
         this.ConfigureOwned(1120, 720);
         _viewModel = App.Services.GetRequiredService<MainViewModel>();
         _files = torrentFiles.ToList();
-        MetadataFilesList.ItemsSource = _visibleMetadataFiles;
+        MetadataFilesTree.ItemsSource = _visibleMetadataTree;
         SavePathBox.Text = DefaultDownloadsPath();
         SourcesBox.Text = string.Join(Environment.NewLine, torrentFiles.Concat(urls));
         Activated += AddTorrentWindow_Activated;
@@ -128,9 +128,10 @@ public sealed partial class AddTorrentWindow : Window
         catch (Exception exception)
         {
             _metadataSource = null;
+            _metadataName = null;
             _metadata = null;
             _metadataFiles.Clear();
-            _visibleMetadataFiles.Clear();
+            ClearMetadataTree();
             ClearTorrentInfo();
             MetadataSummary.Text = Localizer.Get("AddTorrent_MetadataFailed", "Torrent metadata could not be loaded.");
             ShowError(exception);
@@ -157,8 +158,13 @@ public sealed partial class AddTorrentWindow : Window
         {
             int? downloadLimit = double.IsNaN(DownloadLimitBox.Value) || DownloadLimitBox.Value <= 0 ? null : checked((int)DownloadLimitBox.Value * 1024);
             int? uploadLimit = double.IsNaN(UploadLimitBox.Value) || UploadLimitBox.Value <= 0 ? null : checked((int)UploadLimitBox.Value * 1024);
-            var filePriorities = GetRequestedFilePriorities(files, urls);
-            var request = CreateAddRequest(files, urls, uploadLimit, downloadLimit, filePriorities);
+            var requestedFilePriorities = GetRequestedFilePriorities(files, urls);
+            // File selection is applied through /torrents/filePrio after qBittorrent has
+            // created the torrent and assigned stable file indexes.
+            var request = CreateAddRequest(files, urls, uploadLimit, downloadLimit);
+            var startAfterPriorities = requestedFilePriorities is not null && request.StartTorrent;
+            if (startAfterPriorities)
+                request = request with { StartTorrent = false };
 
             var pendingFiles = files.ToList();
             var pendingUrls = urls.Distinct(StringComparer.Ordinal).ToList();
@@ -181,21 +187,15 @@ public sealed partial class AddTorrentWindow : Window
 
             if (pendingFiles.Count > 0 || pendingUrls.Count > 0)
             {
-                var pendingPriorities = pendingFiles.Count + pendingUrls.Count == 1 ? filePriorities : null;
+                var pendingPriorities = pendingFiles.Count + pendingUrls.Count == 1 ? requestedFilePriorities : null;
                 var pendingRequest = request with
                 {
                     TorrentFiles = pendingFiles,
-                    Urls = pendingUrls,
-                    FilePriorities = pendingPriorities
+                    Urls = pendingUrls
                 };
-                try
-                {
-                    await _viewModel.AddAsync(pendingFiles, pendingUrls, pendingRequest);
-                }
-                catch (QbittorrentApiException exception) when (pendingPriorities is not null && IsFilePrioritiesRejectedForSeeding(exception))
-                {
-                    await _viewModel.AddAsync(pendingFiles, pendingUrls, pendingRequest with { FilePriorities = null });
-                }
+                await _viewModel.AddAsync(pendingFiles, pendingUrls, pendingRequest);
+                if (pendingPriorities is not null)
+                    await ApplyAddedFilePrioritiesAsync(pendingFiles, pendingUrls, pendingPriorities, startAfterPriorities);
             }
             Close();
         }
@@ -216,8 +216,7 @@ public sealed partial class AddTorrentWindow : Window
         IReadOnlyList<string> files,
         IReadOnlyList<string> urls,
         int? uploadLimit,
-        int? downloadLimit,
-        IReadOnlyList<int>? filePriorities)
+        int? downloadLimit)
         => new(
             urls,
             files,
@@ -231,8 +230,7 @@ public sealed partial class AddTorrentWindow : Window
             AutomaticTorrentManagement: AutoTmmModeBox.SelectedIndex == 1,
             SkipChecking: SkipCheckingBox.IsChecked == true,
             UploadLimit: uploadLimit,
-            DownloadLimit: downloadLimit,
-            FilePriorities: filePriorities);
+            DownloadLimit: downloadLimit);
 
     private IReadOnlyList<int>? GetRequestedFilePriorities(IReadOnlyList<string> files, IReadOnlyList<string> urls)
     {
@@ -243,12 +241,76 @@ public sealed partial class AddTorrentWindow : Window
         return priorities.Any(static priority => priority != 1) ? priorities : null;
     }
 
-    private static bool IsFilePrioritiesRejectedForSeeding(QbittorrentApiException exception)
-        => exception.StatusCode == 400
-            && exception.Message.Contains("filePriorities", StringComparison.OrdinalIgnoreCase)
-            && (exception.Message.Contains("seeding", StringComparison.OrdinalIgnoreCase)
-                || exception.Message.Contains("разда", StringComparison.OrdinalIgnoreCase)
-                || exception.Message.Contains("отда", StringComparison.OrdinalIgnoreCase));
+    private async Task ApplyAddedFilePrioritiesAsync(
+        IReadOnlyList<string> files,
+        IReadOnlyList<string> urls,
+        IReadOnlyList<int> priorities,
+        bool startAfterApplying)
+    {
+        var api = _viewModel.Api
+            ?? throw new InvalidOperationException(Localizer.Get("Connection_NotConnected", "Not connected to qBittorrent."));
+        var hashes = ResolveAddedTorrentHashes(files, urls);
+        TorrentRowViewModel? torrent = null;
+        for (var attempt = 0; attempt < 24 && torrent is null; attempt++)
+        {
+            torrent = _viewModel.FindDuplicateTorrent(hashes);
+            if (torrent is null)
+                await Task.Delay(250);
+        }
+        if (torrent is null)
+            throw new InvalidOperationException(Localizer.Get("AddTorrent_PriorityTorrentNotFound", "The torrent was added, but its file list is not available yet."));
+
+        IReadOnlyList<TorrentFile> torrentFiles = [];
+        for (var attempt = 0; attempt < 24; attempt++)
+        {
+            torrentFiles = await api.Torrents.GetFilesAsync(torrent.Hash);
+            if (torrentFiles.Count > 0)
+                break;
+            await Task.Delay(250);
+        }
+        if (torrentFiles.Count == 0 || torrentFiles.Any(file => file.Index < 0 || file.Index >= priorities.Count))
+            throw new InvalidOperationException(Localizer.Get("AddTorrent_PriorityFilesUnavailable", "The torrent was added, but qBittorrent did not return a compatible file list for applying priorities."));
+
+        var requested = torrentFiles
+            .Select(file => (File: file, Priority: priorities[file.Index]))
+            .Where(static item => item.Priority != 1)
+            .ToList();
+        foreach (var group in requested.GroupBy(static item => item.Priority))
+        {
+            await api.Torrents.PostAsync("filePrio", new Dictionary<string, string?>
+            {
+                ["hash"] = torrent.Hash,
+                ["id"] = string.Join('|', group.Select(static item => item.File.Index)),
+                ["priority"] = group.Key.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            });
+        }
+
+        for (var attempt = 0; attempt < 12; attempt++)
+        {
+            var applied = await api.Torrents.GetFilesAsync(torrent.Hash);
+            if (requested.All(item => applied.FirstOrDefault(file => file.Index == item.File.Index)?.Priority == item.Priority))
+            {
+                if (startAfterApplying)
+                    await api.Torrents.ExecuteAsync(TorrentCommand.Start, torrent.Hash);
+                return;
+            }
+            await Task.Delay(200);
+        }
+
+        throw new InvalidOperationException(Localizer.Get("AddTorrent_PriorityVerificationFailed", "The torrent was added, but qBittorrent did not apply all selected file priorities."));
+    }
+
+    private IReadOnlySet<string> ResolveAddedTorrentHashes(IReadOnlyList<string> files, IReadOnlyList<string> urls)
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (_metadata is not null && IsMetadataSource(files, urls))
+            result.UnionWith(TorrentIdentity.FromMetadata(_metadata));
+        if (files.FirstOrDefault() is { } file)
+            result.UnionWith(TorrentIdentity.FromTorrentFile(file));
+        if (urls.FirstOrDefault() is { } url)
+            result.UnionWith(TorrentIdentity.FromMagnet(url));
+        return result;
+    }
 
     private IReadOnlyList<DuplicateSource> FindDuplicateSources(
         IReadOnlyList<string> files,
@@ -332,8 +394,7 @@ public sealed partial class AddTorrentWindow : Window
             var duplicateRequest = request with
             {
                 TorrentFiles = files,
-                Urls = urls,
-                FilePriorities = null
+                Urls = urls
             };
             await _viewModel.AddAsync(files, urls, duplicateRequest);
         }
@@ -364,6 +425,7 @@ public sealed partial class AddTorrentWindow : Window
         var name = MetadataPath(info["name"] ?? metadata["name"]);
         if (name == "(unnamed)")
             name = Path.GetFileName(source);
+        _metadataName = name;
         var totalLength = MetadataLength(info["length"] ?? info["size"]);
         if (totalLength <= 0)
             totalLength = _metadataFiles.Sum(static file => file.Length);
@@ -395,12 +457,23 @@ public sealed partial class AddTorrentWindow : Window
     private void RefreshVisibleMetadataFiles()
     {
         var filter = FilesFilterBox.Text?.Trim();
-        _visibleMetadataFiles.Clear();
-        foreach (var file in _metadataFiles)
-        {
-            if (string.IsNullOrWhiteSpace(filter) || file.Path.Contains(filter, StringComparison.CurrentCultureIgnoreCase))
-                _visibleMetadataFiles.Add(file);
-        }
+        IEnumerable<MetadataFileSelection> visibleFiles = string.IsNullOrWhiteSpace(filter)
+            || (_metadataName?.Contains(filter, StringComparison.CurrentCultureIgnoreCase) ?? false)
+            ? _metadataFiles
+            : _metadataFiles
+                .Where(file => file.Path.Contains(filter, StringComparison.CurrentCultureIgnoreCase))
+                .ToList();
+
+        ClearMetadataTree();
+        foreach (var root in MetadataTreeBuilder.Build(_metadataName, visibleFiles))
+            _visibleMetadataTree.Add(root);
+    }
+
+    private void ClearMetadataTree()
+    {
+        foreach (var node in _visibleMetadataTree)
+            node.Dispose();
+        _visibleMetadataTree.Clear();
     }
 
     private static string MetadataPath(JsonNode? node)
@@ -529,11 +602,20 @@ public sealed partial class AddTorrentWindow : Window
     private void SelectAll_Click(object sender, RoutedEventArgs e) => SetAllMetadataFiles(true);
     private void SelectNone_Click(object sender, RoutedEventArgs e) => SetAllMetadataFiles(false);
 
+    private void MetadataFileCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox { Tag: MetadataTreeNode node } checkBox)
+            return;
+
+        var newValue = node.IsChecked != true;
+        checkBox.IsChecked = newValue;
+        node.IsChecked = newValue;
+    }
+
     private void SetAllMetadataFiles(bool selected)
     {
         foreach (var file in _metadataFiles)
             file.PriorityIndex = selected ? 1 : 0;
-        RefreshVisibleMetadataFiles();
     }
 
     private static string? NullIfWhiteSpace(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -584,4 +666,247 @@ public sealed class MetadataFileSelection(string path, long length) : INotifyPro
 
     private void OnPropertyChanged(string propertyName)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+public sealed class MetadataTreeNode : INotifyPropertyChanged, IDisposable
+{
+    private readonly MetadataFileSelection? _file;
+    private MetadataTreeNode? _parent;
+    private bool _isExpanded;
+    private bool _disposed;
+
+    private MetadataTreeNode(string name, string fullPath, MetadataFileSelection? file)
+    {
+        Name = name;
+        FullPath = fullPath;
+        _file = file;
+        if (_file is not null)
+            _file.PropertyChanged += File_PropertyChanged;
+    }
+
+    public string Name { get; }
+    public string FullPath { get; }
+    public bool IsFolder => _file is null;
+    public string IconGlyph => IsFolder ? "\uE8B7" : "\uE7C3";
+    public Windows.UI.Text.FontWeight FontWeight => IsFolder
+        ? Microsoft.UI.Text.FontWeights.SemiBold
+        : Microsoft.UI.Text.FontWeights.Normal;
+    public string MixedPriorityText => Localizer.Get("AddTorrent_PriorityMixed", "Mixed");
+    public ObservableCollection<MetadataTreeNode> Children { get; } = [];
+    public long Length => _file?.Length ?? Children.Sum(static child => child.Length);
+    public string SizeText => ValueFormatter.Size(Length);
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (_isExpanded == value)
+                return;
+            _isExpanded = value;
+            OnPropertyChanged(nameof(IsExpanded));
+        }
+    }
+
+    public int PriorityIndex
+    {
+        get
+        {
+            if (_file is not null)
+                return _file.PriorityIndex;
+            if (Children.Count == 0)
+                return 1;
+
+            var priority = Children[0].PriorityIndex;
+            return priority >= 0 && Children.Skip(1).All(child => child.PriorityIndex == priority)
+                ? priority
+                : -1;
+        }
+        set
+        {
+            if (value < 0)
+                return;
+            if (_file is not null)
+            {
+                _file.PriorityIndex = value;
+                return;
+            }
+
+            foreach (var child in Children)
+                child.PriorityIndex = value;
+            RaiseStateChanged();
+        }
+    }
+
+    public bool? IsChecked
+    {
+        get
+        {
+            if (_file is not null)
+                return _file.IsSelected;
+            if (Children.Count == 0)
+                return false;
+
+            var selectedCount = Children.Count(static child => child.IsChecked == true);
+            if (selectedCount == Children.Count)
+                return true;
+            return selectedCount == 0 && Children.All(static child => child.IsChecked == false)
+                ? false
+                : null;
+        }
+        set
+        {
+            if (!value.HasValue)
+                return;
+            SetSelected(value.Value);
+            RaiseStateChanged();
+        }
+    }
+
+    internal static MetadataTreeNode Folder(string name, string fullPath)
+        => new(name, fullPath, null);
+
+    internal static MetadataTreeNode File(string name, string fullPath, MetadataFileSelection file)
+        => new(name, fullPath, file);
+
+    internal void AddChild(MetadataTreeNode child)
+    {
+        child._parent = this;
+        Children.Add(child);
+    }
+
+    private void SetSelected(bool selected)
+    {
+        if (_file is not null)
+        {
+            if (!selected)
+                _file.PriorityIndex = 0;
+            else if (_file.PriorityIndex == 0)
+                _file.PriorityIndex = 1;
+            return;
+        }
+
+        foreach (var child in Children)
+            child.SetSelected(selected);
+    }
+
+    private void File_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(MetadataFileSelection.PriorityIndex)
+            or nameof(MetadataFileSelection.Priority)
+            or nameof(MetadataFileSelection.IsSelected))
+            RaiseStateChanged();
+    }
+
+    private void RaiseStateChanged()
+    {
+        OnPropertyChanged(nameof(PriorityIndex));
+        OnPropertyChanged(nameof(IsChecked));
+        _parent?.RaiseStateChanged();
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+        if (_file is not null)
+            _file.PropertyChanged -= File_PropertyChanged;
+        foreach (var child in Children)
+            child.Dispose();
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged(string propertyName)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+internal static class MetadataTreeBuilder
+{
+    public static IReadOnlyList<MetadataTreeNode> Build(
+        string? torrentName,
+        IEnumerable<MetadataFileSelection> files)
+    {
+        var fileList = files.ToList();
+        if (fileList.Count == 0)
+            return [];
+
+        var paths = fileList
+            .Select(file => (File: file, Parts: SplitPath(file.Path)))
+            .ToList();
+        var normalizedTorrentName = string.IsNullOrWhiteSpace(torrentName) ? null : torrentName.Trim();
+        var shouldAddTorrentRoot = fileList.Count > 1
+            && normalizedTorrentName is not null
+            && paths.All(path => path.Parts.Length == 0
+                || !path.Parts[0].Equals(normalizedTorrentName, StringComparison.CurrentCultureIgnoreCase));
+
+        var roots = new List<MetadataTreeNode>();
+        MetadataTreeNode? torrentRoot = null;
+        if (shouldAddTorrentRoot)
+        {
+            torrentRoot = MetadataTreeNode.Folder(normalizedTorrentName!, normalizedTorrentName!);
+            torrentRoot.IsExpanded = true;
+            roots.Add(torrentRoot);
+        }
+
+        foreach (var (file, rawParts) in paths)
+        {
+            var parts = rawParts.Length == 0 ? [file.Path] : rawParts;
+            IList<MetadataTreeNode> siblings = torrentRoot is null ? roots : torrentRoot.Children;
+            MetadataTreeNode? parent = torrentRoot;
+            var currentPath = torrentRoot?.FullPath ?? string.Empty;
+
+            for (var index = 0; index < parts.Length - 1; index++)
+            {
+                var part = parts[index];
+                currentPath = CombinePath(currentPath, part);
+                var folder = siblings.FirstOrDefault(node => node.IsFolder
+                    && node.Name.Equals(part, StringComparison.CurrentCultureIgnoreCase));
+                if (folder is null)
+                {
+                    folder = MetadataTreeNode.Folder(part, currentPath);
+                    folder.IsExpanded = parent is null || parent == torrentRoot;
+                    if (parent is null)
+                        roots.Add(folder);
+                    else
+                        parent.AddChild(folder);
+                }
+
+                parent = folder;
+                siblings = folder.Children;
+            }
+
+            var fileName = parts[^1];
+            var filePath = CombinePath(currentPath, fileName);
+            var fileNode = MetadataTreeNode.File(fileName, filePath, file);
+            if (parent is null)
+                roots.Add(fileNode);
+            else
+                parent.AddChild(fileNode);
+        }
+
+        SortNodes(roots);
+        return roots;
+    }
+
+    private static void SortNodes(IList<MetadataTreeNode> nodes)
+    {
+        foreach (var node in nodes)
+            SortNodes(node.Children);
+
+        var ordered = nodes
+            .OrderByDescending(static node => node.IsFolder)
+            .ThenBy(static node => node.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        nodes.Clear();
+        foreach (var node in ordered)
+            nodes.Add(node);
+    }
+
+    private static string[] SplitPath(string path)
+        => path.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static string CombinePath(string parent, string name)
+        => string.IsNullOrEmpty(parent) ? name : $"{parent}/{name}";
 }

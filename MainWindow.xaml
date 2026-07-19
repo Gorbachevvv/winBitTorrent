@@ -127,7 +127,8 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             IsAddTabButtonVisible="False"
-            TabCloseRequested="WorkspaceTabs_TabCloseRequested">
+            TabCloseRequested="WorkspaceTabs_TabCloseRequested"
+            SelectionChanged="WorkspaceTabs_SelectionChanged">
             <TabViewItem x:Uid="TransfersTab" Tag="0" Header="Transfers" IconSource="{StaticResource TransfersIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <views:TransfersView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </TabViewItem>
