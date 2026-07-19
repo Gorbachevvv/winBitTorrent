@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
-using Windows.Globalization;
 using WinBitTorrent.Infrastructure;
 using WinBitTorrent.Services;
 using WinBitTorrent.ViewModels;
@@ -21,8 +20,7 @@ public partial class App : Application
     {
         UnhandledException += (_, args) => WriteCrash(args.Exception);
         AppDomain.CurrentDomain.UnhandledException += (_, args) => WriteCrash(args.ExceptionObject as Exception);
-        if (HasPackageIdentity())
-            ApplicationLanguages.PrimaryLanguageOverride = ClientSettings.GetValue("ui.language") as string ?? string.Empty;
+        ApplyLanguageOverride(ClientSettings.GetValue("ui.language") as string ?? string.Empty);
         InitializeComponent();
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.AddDebug().SetMinimumLevel(LogLevel.Information));
@@ -49,10 +47,15 @@ public partial class App : Application
         }
     }
 
-    internal static bool HasPackageIdentity()
+    internal static void ApplyLanguageOverride(string language)
     {
-        try { return Windows.ApplicationModel.Package.Current.Id is not null; }
-        catch (InvalidOperationException) { return false; }
+        try
+        {
+            Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = language;
+        }
+        catch
+        {
+        }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)

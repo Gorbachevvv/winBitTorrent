@@ -1,4 +1,4 @@
-using Windows.ApplicationModel.Resources;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace WinBitTorrent.Services;
 
@@ -10,13 +10,13 @@ public static class Localizer
     {
         try
         {
-            _loader ??= ResourceLoader.GetForViewIndependentUse();
+            _loader ??= new ResourceLoader();
             var value = _loader.GetString(key);
             return string.IsNullOrWhiteSpace(value) ? fallback : value;
         }
         catch
         {
-            // Unit tests and unpackaged tooling may not have an MRT resource context.
+            // Unit tests and hosts without a WindowsAppRuntime bootstrap have no resource context.
             return fallback;
         }
     }

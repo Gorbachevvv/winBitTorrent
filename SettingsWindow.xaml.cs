@@ -3,7 +3,6 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Windows.Globalization;
 using Windows.Storage.Pickers;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Core.Services;
@@ -510,8 +509,7 @@ public sealed partial class SettingsWindow : Window
             foreach (var (key, value) in _localValues)
                 ClientSettings.SetValue(key, value);
             var language = _localValues.GetValueOrDefault("ui.language") as string;
-            if (App.HasPackageIdentity())
-                ApplicationLanguages.PrimaryLanguageOverride = language ?? string.Empty;
+            App.ApplyLanguageOverride(language ?? string.Empty);
 
             if (mismatched.Count > 0)
             {

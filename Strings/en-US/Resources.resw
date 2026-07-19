@@ -38,6 +38,12 @@
   <data name="StatisticsMenu.Text" xml:space="preserve"><value>Statistics</value></data>
   <data name="DocumentationMenu.Text" xml:space="preserve"><value>Documentation</value></data>
   <data name="AboutMenu.Text" xml:space="preserve"><value>About</value></data>
+  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Native WinUI 3 client for qBittorrent 5.2.3 / Web API 2.15.1</value></data>
+  <data name="Dialog_AboutConnectedBackend" xml:space="preserve"><value>Connected backend: {0}</value></data>
+  <data name="Dialog_AboutRepository" xml:space="preserve"><value>GitHub repository</value></data>
+  <data name="Dialog_AboutReportIssue" xml:space="preserve"><value>Report an issue</value></data>
+  <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app.</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
   <data name="ToolbarAddTorrent.Label" xml:space="preserve"><value>Add torrent</value></data>
   <data name="ToolbarAddLink.Label" xml:space="preserve"><value>Add link</value></data>
   <data name="ToolbarStart.Label" xml:space="preserve"><value>Start</value></data>

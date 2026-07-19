@@ -1,6 +1,7 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.Windows.AppLifecycle;
 using WinBitTorrent.ViewModels;
 using WinBitTorrent.Services;
@@ -17,6 +18,9 @@ namespace WinBitTorrent;
 
 public sealed partial class MainWindow : Window
 {
+    private static readonly Uri RepositoryUri = new("https://github.com/Gorbachevvv/winBitTorrent");
+    private static readonly Uri RepositoryIssuesUri = new("https://github.com/Gorbachevvv/winBitTorrent/issues");
+
     private readonly AppWindow _appWindow;
     private readonly IntPtr _windowHandle;
     private readonly TrayIconService _trayIcon;
@@ -274,18 +278,64 @@ public sealed partial class MainWindow : Window
         {
             try
             {
-                backend = $"\nBackend: {await ViewModel.Api.Application.GetVersionAsync()} / Web API {await ViewModel.Api.Application.GetWebApiVersionAsync()}";
+                backend = $"qBittorrent {await ViewModel.Api.Application.GetVersionAsync()} / Web API {await ViewModel.Api.Application.GetWebApiVersionAsync()}";
             }
             catch
             {
             }
         }
+
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
+        var header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+        header.Children.Add(new Image
+        {
+            Width = 40,
+            Height = 40,
+            Source = new BitmapImage(new Uri("ms-appx:///Assets/Square44x44Logo.targetsize-24_altform-unplated.png"))
+        });
+        var titleColumn = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        titleColumn.Children.Add(new TextBlock { Text = "WinBitTorrent", FontSize = 18, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        if (version is not null)
+            titleColumn.Children.Add(new TextBlock { Text = $"v{version.Major}.{version.Minor}.{version.Build}", FontSize = 12, Opacity = 0.7 });
+        header.Children.Add(titleColumn);
+
+        var description = Localizer.Get("Dialog_AboutDescription", "Native WinUI 3 client for qBittorrent 5.2.3 / Web API 2.15.1");
+        if (!string.IsNullOrEmpty(backend))
+            description += $"\n{string.Format(Localizer.Get("Dialog_AboutConnectedBackend", "Connected backend: {0}"), backend)}";
+
+        var links = new StackPanel { Spacing = 2 };
+        links.Children.Add(new HyperlinkButton
+        {
+            NavigateUri = RepositoryUri,
+            Content = Localizer.Get("Dialog_AboutRepository", "GitHub repository"),
+            Padding = new Thickness(0)
+        });
+        links.Children.Add(new HyperlinkButton
+        {
+            NavigateUri = RepositoryIssuesUri,
+            Content = Localizer.Get("Dialog_AboutReportIssue", "Report an issue"),
+            Padding = new Thickness(0)
+        });
+
+        var body = new StackPanel { Spacing = 14, Width = 340 };
+        body.Children.Add(header);
+        body.Children.Add(new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap });
+        body.Children.Add(links);
+        body.Children.Add(new TextBlock
+        {
+            Text = Localizer.Get("Dialog_AboutLicense", "qBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app."),
+            FontSize = 11,
+            Opacity = 0.7,
+            TextWrapping = TextWrapping.Wrap
+        });
+
         var dialog = new ContentDialog
         {
             XamlRoot = RootGrid.XamlRoot,
             Title = "WinBitTorrent",
-            Content = $"Native WinUI 3 client for qBittorrent 5.2.3\nWeb API 2.15.1{backend}\n\nqBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app.",
-            CloseButtonText = "Close"
+            Content = body,
+            CloseButtonText = Localizer.Get("Common_Close", "Close")
         };
         await dialog.ShowAsync();
     }
