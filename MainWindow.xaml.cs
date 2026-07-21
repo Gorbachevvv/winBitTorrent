@@ -360,8 +360,6 @@ public sealed partial class MainWindow : Window
             }
         }
 
-        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-
         var header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
         header.Children.Add(new Image
         {
@@ -371,8 +369,7 @@ public sealed partial class MainWindow : Window
         });
         var titleColumn = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         titleColumn.Children.Add(new TextBlock { Text = "WinBitTorrent", FontSize = 18, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-        if (version is not null)
-            titleColumn.Children.Add(new TextBlock { Text = $"v{version.Major}.{version.Minor}.{version.Build}", FontSize = 12, Opacity = 0.7 });
+        titleColumn.Children.Add(new TextBlock { Text = $"v{AppVersion.Display}", FontSize = 12, Opacity = 0.7 });
         header.Children.Add(titleColumn);
 
         var description = Localizer.Get("Dialog_AboutDescription", "Native WinUI 3 client for qBittorrent 5.2.3 / Web API 2.15.1");

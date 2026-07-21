@@ -44,6 +44,21 @@
   <data name="Dialog_AboutReportIssue" xml:space="preserve"><value>Report an issue</value></data>
   <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Check for updates…</value></data>
+  <data name="Update_DialogTitle" xml:space="preserve"><value>Update available</value></data>
+  <data name="Update_AvailableHeadline" xml:space="preserve"><value>WinBitTorrent {0} is available.</value></data>
+  <data name="Update_CurrentVersionLine" xml:space="preserve"><value>You have version {0}.</value></data>
+  <data name="Update_WhatsNew" xml:space="preserve"><value>What's new</value></data>
+  <data name="Update_UpdateNow" xml:space="preserve"><value>Update now</value></data>
+  <data name="Update_Later" xml:space="preserve"><value>Later</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Downloading update…</value></data>
+  <data name="Update_DownloadingPercent" xml:space="preserve"><value>Downloading update… {0:P0}</value></data>
+  <data name="Update_UpToDateTitle" xml:space="preserve"><value>You're up to date</value></data>
+  <data name="Update_UpToDateMessage" xml:space="preserve"><value>WinBitTorrent {0} is the latest version.</value></data>
+  <data name="Update_CheckFailed" xml:space="preserve"><value>Could not check for updates right now. Please try again later.</value></data>
+  <data name="Update_FailedTitle" xml:space="preserve"><value>Update failed</value></data>
+  <data name="Update_DownloadFailed" xml:space="preserve"><value>The update could not be downloaded.</value></data>
+  <data name="Update_LaunchFailed" xml:space="preserve"><value>The installer could not be started.</value></data>
   <data name="ToolbarAddTorrent.Label" xml:space="preserve"><value>Add torrent</value></data>
   <data name="ToolbarAddLink.Label" xml:space="preserve"><value>Add link</value></data>
   <data name="ToolbarStart.Label" xml:space="preserve"><value>Start</value></data>

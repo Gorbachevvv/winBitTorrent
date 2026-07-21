@@ -77,6 +77,8 @@
                 <MenuFlyoutItem x:Uid="StatisticsMenu" Text="Statistics…" Click="Statistics_Click" />
             </MenuBarItem>
             <MenuBarItem x:Uid="HelpMenu" Title="Help">
+                <MenuFlyoutItem x:Uid="CheckUpdatesMenu" Text="Check for updates…" Icon="Sync" Click="CheckForUpdates_Click" />
+                <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="DocumentationMenu" Text="qBittorrent documentation" Icon="Help" Click="Documentation_Click" />
                 <MenuFlyoutItem x:Uid="AboutMenu" Text="About WinBitTorrent" Icon="Help" Click="About_Click" />
             </MenuBarItem>

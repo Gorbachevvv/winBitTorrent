@@ -87,7 +87,10 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 ; Register the .torrent / magnet associations right away, as the current user, so
 ; they work immediately after install instead of only after the first manual launch.
 Filename: "{app}\{#AppExe}"; Parameters: "--register-associations"; Flags: runasoriginaluser runhidden waituntilterminated; StatusMsg: "Registering file associations..."
+; Normal (interactive) install: offer to launch on the Finished page.
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; In-app update (installer started with /RELAUNCH, silently): relaunch automatically.
+Filename: "{app}\{#AppExe}"; Flags: nowait postinstall; Check: WantsRelaunch
 
 [UninstallRun]
 ; Remove the associations before the executable is deleted.
@@ -98,3 +101,11 @@ Filename: "{app}\{#AppExe}"; Parameters: "--unregister-associations"; Flags: run
 ; Remove the (now empty) application folder on uninstall. User data in
 ; %LOCALAPPDATA%\WinBitTorrent is intentionally left untouched.
 Type: dirifempty; Name: "{app}"
+
+[Code]
+// True when the in-app updater started this installer with /RELAUNCH, so the app
+// is relaunched automatically after a silent update.
+function WantsRelaunch: Boolean;
+begin
+  Result := Pos('/RELAUNCH', UpperCase(GetCmdTail)) > 0;
+end;

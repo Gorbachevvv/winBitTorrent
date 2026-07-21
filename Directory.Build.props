@@ -1,4 +1,15 @@
 <Project>
+  <!--
+    Single source of truth for the application version.
+    Bump this value to publish a new release; the running app reads it back to
+    compare against the latest GitHub release, and build/release.ps1 reads it to
+    name the portable folder and the installer.
+  -->
+  <PropertyGroup>
+    <Version>0.9.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>

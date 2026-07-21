@@ -44,6 +44,21 @@
   <data name="Dialog_AboutReportIssue" xml:space="preserve"><value>Сообщить о проблеме</value></data>
   <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent распространяется по лицензии GPL-2.0-or-later. Уведомления о стороннем ПО и предложение о предоставлении исходного кода включены в приложение.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Проверить обновления…</value></data>
+  <data name="Update_DialogTitle" xml:space="preserve"><value>Доступно обновление</value></data>
+  <data name="Update_AvailableHeadline" xml:space="preserve"><value>Доступна WinBitTorrent {0}.</value></data>
+  <data name="Update_CurrentVersionLine" xml:space="preserve"><value>У вас установлена версия {0}.</value></data>
+  <data name="Update_WhatsNew" xml:space="preserve"><value>Что нового</value></data>
+  <data name="Update_UpdateNow" xml:space="preserve"><value>Обновиться сейчас</value></data>
+  <data name="Update_Later" xml:space="preserve"><value>Позже</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Загрузка обновления…</value></data>
+  <data name="Update_DownloadingPercent" xml:space="preserve"><value>Загрузка обновления… {0:P0}</value></data>
+  <data name="Update_UpToDateTitle" xml:space="preserve"><value>Установлена последняя версия</value></data>
+  <data name="Update_UpToDateMessage" xml:space="preserve"><value>WinBitTorrent {0} — это последняя версия.</value></data>
+  <data name="Update_CheckFailed" xml:space="preserve"><value>Не удалось проверить обновления. Попробуйте позже.</value></data>
+  <data name="Update_FailedTitle" xml:space="preserve"><value>Не удалось обновить</value></data>
+  <data name="Update_DownloadFailed" xml:space="preserve"><value>Не удалось загрузить обновление.</value></data>
+  <data name="Update_LaunchFailed" xml:space="preserve"><value>Не удалось запустить установщик.</value></data>
   <data name="ToolbarAddTorrent.Label" xml:space="preserve"><value>Добавить торрент</value></data>
   <data name="ToolbarAddLink.Label" xml:space="preserve"><value>Добавить ссылку</value></data>
   <data name="ToolbarStart.Label" xml:space="preserve"><value>Запустить</value></data>

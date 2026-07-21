@@ -69,7 +69,6 @@ function Write-Ok($message) { Write-Host "    $message" -ForegroundColor Green }
 # 1. Load settings (defaults) and apply any parameter overrides.
 # ---------------------------------------------------------------------------
 $settings = [ordered]@{
-    version           = '1.0.0'
     configuration     = 'Release'
     platform          = 'x64'
     createPortableZip = $false
@@ -80,7 +79,16 @@ if (Test-Path $settingsPath) {
     foreach ($property in $loaded.PSObject.Properties) { $settings[$property.Name] = $property.Value }
 }
 
-$effectiveVersion = if ($Version) { $Version } else { $settings.version }
+# The version is the single source of truth in Directory.Build.props.
+function Get-ProjectVersion {
+    $propsPath = Join-Path $repoRoot 'Directory.Build.props'
+    if (-not (Test-Path $propsPath)) { throw "Directory.Build.props not found; cannot determine version." }
+    $match = Select-String -Path $propsPath -Pattern '<Version>\s*([0-9]+(\.[0-9]+){1,3})\s*</Version>' | Select-Object -First 1
+    if (-not $match) { throw "No <Version> element found in Directory.Build.props." }
+    return $match.Matches[0].Groups[1].Value
+}
+
+$effectiveVersion = if ($Version) { $Version } else { Get-ProjectVersion }
 $buildPortable = -not $Installer.IsPresent -or $Portable.IsPresent
 $buildInstaller = -not $Portable.IsPresent -or $Installer.IsPresent
 $makeZip = $Zip.IsPresent -or [bool]$settings.createPortableZip

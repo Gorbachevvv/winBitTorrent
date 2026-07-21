@@ -4,6 +4,7 @@ using WinBitTorrent.Infrastructure.Backend;
 using WinBitTorrent.Infrastructure.Connection;
 using WinBitTorrent.Infrastructure.Storage;
 using WinBitTorrent.Infrastructure.Trackers;
+using WinBitTorrent.Infrastructure.Updates;
 
 namespace WinBitTorrent.Infrastructure;
 
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddSingleton<IServerProfileStore, JsonServerProfileStore>();
         services.AddSingleton<IManagedBackendHost, ManagedBackendHost>();
         services.AddSingleton<IConnectionCoordinator, ConnectionCoordinator>();
+        services.AddSingleton<IUpdateService, GitHubUpdateService>();
         return services;
     }
 }

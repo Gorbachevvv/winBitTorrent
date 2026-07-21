@@ -93,6 +93,7 @@ public partial class App : Application
         {
             mainWindow.HandleActivation(current.GetActivatedEventArgs(), isInitialLaunch: true);
             _ = mainWindow.ViewModel.InitializeAsync();
+            mainWindow.ScheduleStartupUpdateCheck();
         }
     }
 

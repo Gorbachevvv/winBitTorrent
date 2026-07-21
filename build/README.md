@@ -26,11 +26,16 @@ build\release.ps1 -SkipPublish    # repackage without recompiling .NET (fast)
 
 ### Default settings
 
-Edit `release.settings.json` to change the routine defaults:
+**Version** is the single source of truth in `Directory.Build.props`
+(`<Version>` at the repo root). Bump it there to publish a new release — the
+running app reads it back to compare against the latest GitHub release, and
+`release.ps1` reads it to name the portable folder and the installer. (`-Version`
+still overrides it for a one-off build.)
+
+Edit `release.settings.json` to change the routine build defaults:
 
 | Key | Meaning |
 |-----|---------|
-| `version` | Version stamped into file names, the assembly and the installer |
 | `configuration` | Build configuration (default `Release`) |
 | `platform` | Target platform (default `x64`) |
 | `createPortableZip` | Also produce a `.zip` of the portable folder |
