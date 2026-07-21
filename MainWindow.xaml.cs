@@ -69,20 +69,95 @@ public sealed partial class MainWindow : Window
         SetForegroundWindow(_windowHandle);
     }
 
-    public void HandleActivation(AppActivationArguments args)
+    public void HandleActivation(AppActivationArguments args, bool isInitialLaunch = false)
     {
         switch (args.Kind)
         {
             case ExtendedActivationKind.File when args.Data is IFileActivatedEventArgs fileArgs:
                 var files = fileArgs.Files.OfType<StorageFile>().Where(file => file.FileType.Equals(".torrent", StringComparison.OrdinalIgnoreCase)).Select(file => file.Path).ToList();
                 if (files.Count > 0)
-                    DispatcherQueue.TryEnqueue(() => new AddTorrentWindow(files, []).Activate());
+                    OpenAddTorrent(files, []);
                 break;
             case ExtendedActivationKind.Protocol when args.Data is IProtocolActivatedEventArgs protocolArgs:
-                DispatcherQueue.TryEnqueue(() => new AddTorrentWindow([], [protocolArgs.Uri.AbsoluteUri]).Activate());
+                OpenAddTorrent([], [protocolArgs.Uri.AbsoluteUri]);
+                break;
+            case ExtendedActivationKind.Launch:
+                HandleLaunchActivation(args, isInitialLaunch);
                 break;
         }
     }
+
+    private void HandleLaunchActivation(AppActivationArguments args, bool isInitialLaunch)
+    {
+        // Prefer the arguments carried by THIS activation. When a second instance is
+        // redirected into the running app, args holds the new file/link; the running
+        // process's own Environment.GetCommandLineArgs() would still be the one it was
+        // originally started with (the "previous torrent" bug). Only fall back to the
+        // process command line on the very first launch, where it is the correct value.
+        // Both forms include the executable path as the first token, so skip it.
+        var launchArguments = (args.Data as ILaunchActivatedEventArgs)?.Arguments;
+        IEnumerable<string> tokens;
+        if (!string.IsNullOrWhiteSpace(launchArguments))
+            tokens = SplitArguments(launchArguments);
+        else if (isInitialLaunch)
+            tokens = Environment.GetCommandLineArgs();
+        else
+            return;
+
+        var payload = tokens
+            .Skip(1)
+            .Select(NormalizeActivationArgument)
+            .FirstOrDefault(value => value is not null
+                && (value.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase)
+                    || (value.EndsWith(".torrent", StringComparison.OrdinalIgnoreCase) && File.Exists(value))));
+        if (payload is null)
+            return;
+
+        if (payload.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase))
+            OpenAddTorrent([], [payload]);
+        else
+            OpenAddTorrent([payload], []);
+    }
+
+    private static string NormalizeActivationArgument(string token)
+    {
+        var value = token.Trim().Trim('"');
+        // Rich activation wraps the payload in a "----ms-protocol:" / "----ms-file:"
+        // marker; strip it if a token still carries one.
+        foreach (var prefix in (string[])["----ms-protocol:", "----ms-file:"])
+        {
+            if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                value = value[prefix.Length..].Trim().Trim('"');
+        }
+
+        return value;
+    }
+
+    private static List<string> SplitArguments(string commandLine)
+    {
+        // Minimal quote-aware tokenizer: magnet URIs are a single space-free token,
+        // and file paths that contain spaces arrive quoted.
+        var tokens = new List<string>();
+        var current = new System.Text.StringBuilder();
+        var inQuotes = false;
+        foreach (var character in commandLine)
+        {
+            if (character == '"')
+                inQuotes = !inQuotes;
+            else if (char.IsWhiteSpace(character) && !inQuotes)
+            {
+                if (current.Length > 0) { tokens.Add(current.ToString()); current.Clear(); }
+            }
+            else
+                current.Append(character);
+        }
+        if (current.Length > 0)
+            tokens.Add(current.ToString());
+        return tokens;
+    }
+
+    private void OpenAddTorrent(IReadOnlyList<string> files, IReadOnlyList<string> urls)
+        => DispatcherQueue.TryEnqueue(() => new AddTorrentWindow(files, urls).Activate());
 
     private async void AddTorrentFile_Click(object sender, RoutedEventArgs e)
     {

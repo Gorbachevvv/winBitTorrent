@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "configuration": "Release",
+  "platform": "x64",
+  "createPortableZip": false,
+  "openOutputFolder": true
+}

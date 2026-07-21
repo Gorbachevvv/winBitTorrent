@@ -60,6 +60,23 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // Installer hooks: register/unregister the file & protocol associations without
+        // starting the UI, so they exist immediately after install (not only after the
+        // first manual launch).
+        var commandLine = Environment.GetCommandLineArgs();
+        if (commandLine.Any(a => a.Equals("--register-associations", StringComparison.OrdinalIgnoreCase)))
+        {
+            RegisterActivation();
+            Environment.Exit(0);
+            return;
+        }
+        if (commandLine.Any(a => a.Equals("--unregister-associations", StringComparison.OrdinalIgnoreCase)))
+        {
+            UnregisterActivation();
+            Environment.Exit(0);
+            return;
+        }
+
         var current = AppInstance.GetCurrent();
         _mainInstance = AppInstance.FindOrRegisterForKey("WinBitTorrent.Main");
         if (!_mainInstance.IsCurrent)
@@ -68,12 +85,13 @@ public partial class App : Application
             return;
         }
 
+        RegisterActivation();
         _mainInstance.Activated += OnActivated;
         _window = Services.GetRequiredService<MainWindow>();
         _window.Activate();
         if (_window is MainWindow mainWindow)
         {
-            mainWindow.HandleActivation(current.GetActivatedEventArgs());
+            mainWindow.HandleActivation(current.GetActivatedEventArgs(), isInitialLaunch: true);
             _ = mainWindow.ViewModel.InitializeAsync();
         }
     }
@@ -95,5 +113,42 @@ public partial class App : Application
     {
         await target.RedirectActivationToAsync(args);
         Environment.Exit(0);
+    }
+
+    private static readonly string[] AssociatedFileTypes = [".torrent"];
+    private const string MagnetScheme = "magnet";
+
+    internal static void RegisterActivation()
+    {
+        try
+        {
+            var icon = $"{Path.Combine(AppContext.BaseDirectory, "Assets", "WinBitTorrent.ico")},0";
+            ActivationRegistrationManager.RegisterForFileTypeActivation(
+                AssociatedFileTypes,
+                icon,
+                "Torrent file",
+                [],
+                string.Empty);
+            ActivationRegistrationManager.RegisterForProtocolActivation(
+                MagnetScheme,
+                icon,
+                "Magnet link",
+                string.Empty);
+        }
+        catch
+        {
+        }
+    }
+
+    internal static void UnregisterActivation()
+    {
+        try
+        {
+            ActivationRegistrationManager.UnregisterForFileTypeActivation(AssociatedFileTypes, string.Empty);
+            ActivationRegistrationManager.UnregisterForProtocolActivation(MagnetScheme, string.Empty);
+        }
+        catch
+        {
+        }
     }
 }

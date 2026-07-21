@@ -3,6 +3,9 @@
 [Oo]bj/
 [Aa]rtifacts/
 artifacts/
+
+# Packaged distribution output (portable zip, installer exe, staged payload)
+/dist/
 [Dd]ebug/
 [Rr]elease/
 x64/
