@@ -17,7 +17,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
     private readonly IReadOnlyDictionary<string, ITrackerSearchProvider> _providers;
     private CancellationTokenSource? _searchLifetime;
     private ITrackerSearchProvider? _activeProvider;
-    private (string Title, int? Year)? _pendingCatalogQuery;
+    private (string Title, int? Year, int? Season)? _pendingCatalogQuery;
 
     public event Action? BackToCatalogRequested;
 
@@ -166,13 +166,13 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         BackToCatalogRequested?.Invoke();
     }
 
-    public async Task SearchForCatalogTitleAsync(string title, int? year, CancellationToken cancellationToken = default)
+    public async Task SearchForCatalogTitleAsync(string title, int? year, int? season = null, CancellationToken cancellationToken = default)
     {
         var provider = _activeProvider ?? _providers.Values.FirstOrDefault();
         if (provider is null)
             return;
 
-        _pendingCatalogQuery = (title, year);
+        _pendingCatalogQuery = (title, year, season);
         if (_activeProvider?.Id != provider.Id || !IsSignedIn)
             await SelectTrackerAsync(provider.Id);
 
@@ -189,9 +189,16 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
             return;
 
         _pendingCatalogQuery = null;
-        Query = pending.Year is null ? pending.Title : $"{pending.Title} {pending.Year}";
+        Query = BuildCatalogQueryText(pending.Title, pending.Year, pending.Season);
         IsSearchOriginatedFromCatalog = true;
         await SearchAsync();
+    }
+
+    private static string BuildCatalogQueryText(string title, int? year, int? season)
+    {
+        if (season is { } seasonNumber)
+            return $"{title} {string.Format(Localizer.Get("Tracker_SeasonQuerySuffix", "season {0}"), seasonNumber)}";
+        return year is null ? title : $"{title} {year}";
     }
 
     public Uri? StartInteractiveLogin()
@@ -256,7 +263,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         var token = _searchLifetime.Token;
         ErrorMessage = string.Empty;
         IsBusy = true;
-        Status = Localizer.Get("Tracker_Searching", "Searching RuTracker…");
+        Status = string.Format(Localizer.Get("Tracker_SearchingNamed", "Searching {0}…"), ActiveTrackerName);
         Results.Clear();
         SelectedResult = null;
         try

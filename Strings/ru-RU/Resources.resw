@@ -567,7 +567,8 @@
   <data name="Tracker_WaitingForBrowserLogin" xml:space="preserve"><value>Ожидание входа в RuTracker…</value></data>
   <data name="Tracker_BrowserSessionReadFailed" xml:space="preserve"><value>Не удалось проверить сессию RuTracker: {0}</value></data>
   <data name="Tracker_Ready" xml:space="preserve"><value>Готово</value></data>
-  <data name="Tracker_Searching" xml:space="preserve"><value>Поиск на RuTracker…</value></data>
+  <data name="Tracker_SearchingNamed" xml:space="preserve"><value>Поиск в {0}…</value></data>
+  <data name="Tracker_SeasonQuerySuffix" xml:space="preserve"><value>сезон {0}</value></data>
   <data name="Tracker_ResultCount" xml:space="preserve"><value>Результатов: {0}</value></data>
   <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Перед скачиванием подключитесь к qBittorrent.</value></data>
   <data name="Tracker_Downloading" xml:space="preserve"><value>Загрузка torrent-файла…</value></data>
@@ -575,7 +576,6 @@
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent-файл загружен. Проверьте параметры добавления.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Вы вышли из аккаунта. Войдите под другой учётной записью.</value></data>
   <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Поиск по фильмам</value></data>
-  <data name="CatalogFeaturedSubtitle.Text" xml:space="preserve"><value>Каталог фильмов и сериалов TMDB — находите и скачивайте в пару кликов.</value></data>
   <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Трекеры</value></data>
   <data name="CatalogBackToSourcesText.Text" xml:space="preserve"><value>Источники</value></data>
   <data name="TrackerBackToTitle.Content" xml:space="preserve"><value>Назад к фильму</value></data>
@@ -591,6 +591,9 @@
   <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Похожее</value></data>
   <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Режиссёр</value></data>
   <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Создатели</value></data>
+  <data name="CatalogSeasonLabel.Text" xml:space="preserve"><value>Сезон</value></data>
+  <data name="Catalog_SeasonLabel" xml:space="preserve"><value>Сезон {0}</value></data>
+  <data name="Catalog_EpisodeCountShort" xml:space="preserve"><value>{0} эп.</value></data>
   <data name="CatalogBackText.Text" xml:space="preserve"><value>Каталог</value></data>
   <data name="CatalogCastLabel.Text" xml:space="preserve"><value>В ролях:</value></data>
   <data name="CatalogDownload.Content" xml:space="preserve"><value>Скачать</value></data>

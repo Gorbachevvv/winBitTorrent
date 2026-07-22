@@ -26,31 +26,30 @@
 
                     <Button
                         Margin="0,22,0,4"
-                        Padding="22"
+                        Padding="20"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
-                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                        BorderThickness="1.5"
                         Command="{Binding ShowCatalogCommand}"
                         CornerRadius="12">
-                        <Grid ColumnSpacing="20">
+                        <Grid ColumnSpacing="18">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <Border
-                                Width="56"
-                                Height="56"
-                                Background="#26FFFFFF"
-                                CornerRadius="12">
-                                <FontIcon FontSize="26" Foreground="White" Glyph="&#xE714;" />
+                                Width="52"
+                                Height="52"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="10">
+                                <FontIcon FontSize="22" Foreground="White" Glyph="&#xE714;" />
                             </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                                <TextBlock x:Uid="CatalogFeaturedTitle" FontSize="20" FontWeight="SemiBold" Foreground="White" Text="Search by movies" />
-                                <TextBlock
-                                    x:Uid="CatalogFeaturedSubtitle"
-                                    Foreground="White"
-                                    Opacity="0.85"
-                                    Text="Browse the TMDB movie and TV catalog, then download in a couple of clicks."
-                                    TextWrapping="Wrap" />
-                            </StackPanel>
-                            <FontIcon Grid.Column="2" VerticalAlignment="Center" Foreground="White" Glyph="&#xE76C;" />
+                            <TextBlock
+                                x:Uid="CatalogFeaturedTitle"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="18"
+                                FontWeight="SemiBold"
+                                Text="Search by movies" />
+                            <FontIcon Grid.Column="2" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" />
                         </Grid>
                     </Button>
 

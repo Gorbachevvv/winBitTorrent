@@ -138,6 +138,18 @@
                                 <TextBlock x:Uid="CatalogCastLabel" FontWeight="SemiBold" Text="Cast:" />
                                 <TextBlock Text="{Binding SelectedCastText}" TextWrapping="Wrap" />
                             </StackPanel>
+                            <StackPanel
+                                Margin="0,10,0,0"
+                                Orientation="Horizontal"
+                                Spacing="10"
+                                Visibility="{Binding HasSeasons, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock x:Uid="CatalogSeasonLabel" VerticalAlignment="Center" FontWeight="SemiBold" Text="Season" />
+                                <ComboBox
+                                    MinWidth="220"
+                                    DisplayMemberPath="DisplayName"
+                                    ItemsSource="{Binding Seasons}"
+                                    SelectedItem="{Binding SelectedSeason, Mode=TwoWay}" />
+                            </StackPanel>
                             <StackPanel Margin="0,10,0,0" Orientation="Horizontal" Spacing="10">
                                 <Button x:Uid="CatalogDownload" Command="{Binding DownloadCommand}" Content="Download" Style="{StaticResource AccentButtonStyle}" />
                                 <Button x:Uid="CatalogWatch" Command="{Binding WatchCommand}" Content="Watch" IsEnabled="{Binding CanWatch}" ToolTipService.ToolTip="{Binding WatchUnavailableReason}" />

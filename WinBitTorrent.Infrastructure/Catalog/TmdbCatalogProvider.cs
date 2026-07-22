@@ -117,7 +117,14 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
             Cast: details.Credits?.Cast?.Take(8).Select(static member => member.Name ?? string.Empty).Where(static name => name.Length > 0).ToArray() ?? [],
             Tagline: string.IsNullOrWhiteSpace(details.Tagline) ? null : details.Tagline,
             Directors: directors,
-            Countries: details.ProductionCountries?.Select(static country => country.Name ?? string.Empty).Where(static name => name.Length > 0).ToArray() ?? []);
+            Countries: details.ProductionCountries?.Select(static country => country.Name ?? string.Empty).Where(static name => name.Length > 0).ToArray() ?? [],
+            Seasons: kind == CatalogKind.TvShow
+                ? details.Seasons?
+                    .Where(static season => season.SeasonNumber is not null && season.EpisodeCount is > 0)
+                    .OrderBy(static season => season.SeasonNumber)
+                    .Select(static season => new CatalogSeason(season.SeasonNumber!.Value, season.Name ?? string.Empty, season.EpisodeCount!.Value))
+                    .ToArray() ?? []
+                : []);
     }
 
     private static CatalogKind ParseMediaKind(string? mediaType)
@@ -265,6 +272,21 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
 
         [JsonPropertyName("production_countries")]
         public List<TmdbCountry>? ProductionCountries { get; set; }
+
+        [JsonPropertyName("seasons")]
+        public List<TmdbSeason>? Seasons { get; set; }
+    }
+
+    private sealed class TmdbSeason
+    {
+        [JsonPropertyName("season_number")]
+        public int? SeasonNumber { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("episode_count")]
+        public int? EpisodeCount { get; set; }
     }
 
     private sealed class TmdbGenre

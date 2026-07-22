@@ -42,6 +42,7 @@ public sealed partial class CatalogViewModel : ObservableObject
     public ObservableCollection<CatalogSectionViewModel> Sections { get; } = [];
     public ObservableCollection<CatalogCardViewModel> SearchResults { get; } = [];
     public ObservableCollection<CatalogCardViewModel> SimilarItems { get; } = [];
+    public ObservableCollection<CatalogSeasonOption> Seasons { get; } = [];
 
     [ObservableProperty]
     private bool _isSearchActive;
@@ -78,6 +79,12 @@ public sealed partial class CatalogViewModel : ObservableObject
 
     [ObservableProperty]
     private string _selectedCrewText = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasSeasons;
+
+    [ObservableProperty]
+    private CatalogSeasonOption? _selectedSeason;
 
     [ObservableProperty]
     private bool _canWatch;
@@ -196,6 +203,12 @@ public sealed partial class CatalogViewModel : ObservableObject
             SelectedCrewText = BuildCrewText(details);
             IsDetailsVisible = true;
 
+            Seasons.Clear();
+            foreach (var season in details.Seasons)
+                Seasons.Add(new CatalogSeasonOption(season.SeasonNumber, BuildSeasonLabel(season)));
+            HasSeasons = Seasons.Count > 0;
+            SelectedSeason = Seasons.FirstOrDefault(static season => season.SeasonNumber == 1) ?? Seasons.FirstOrDefault();
+
             SimilarItems.Clear();
             try
             {
@@ -225,6 +238,9 @@ public sealed partial class CatalogViewModel : ObservableObject
     {
         IsDetailsVisible = false;
         SelectedDetails = null;
+        Seasons.Clear();
+        HasSeasons = false;
+        SelectedSeason = null;
     }
 
     [RelayCommand]
@@ -233,7 +249,7 @@ public sealed partial class CatalogViewModel : ObservableObject
         if (SelectedDetails is null)
             return;
 
-        await _trackerSearch.SearchForCatalogTitleAsync(SelectedDetails.Title, SelectedDetails.Year);
+        await _trackerSearch.SearchForCatalogTitleAsync(SelectedDetails.Title, SelectedDetails.Year, SelectedSeason?.SeasonNumber);
     }
 
     [RelayCommand]
@@ -350,6 +366,16 @@ public sealed partial class CatalogViewModel : ObservableObject
         return $"{label}: {string.Join(", ", details.Directors)}";
     }
 
+    private static string BuildSeasonLabel(CatalogSeason season)
+    {
+        var name = string.IsNullOrWhiteSpace(season.Name)
+            ? string.Format(Localizer.Get("Catalog_SeasonLabel", "Season {0}"), season.SeasonNumber)
+            : season.Name;
+        return season.EpisodeCount > 0
+            ? $"{name} · {string.Format(Localizer.Get("Catalog_EpisodeCountShort", "{0} ep."), season.EpisodeCount)}"
+            : name;
+    }
+
     private static string Normalize(string value)
         => new(value.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
 
@@ -362,6 +388,8 @@ public sealed partial class CatalogViewModel : ObservableObject
         return IsConfigured;
     }
 }
+
+public sealed record CatalogSeasonOption(int SeasonNumber, string DisplayName);
 
 public sealed class CatalogSectionViewModel(string title)
 {

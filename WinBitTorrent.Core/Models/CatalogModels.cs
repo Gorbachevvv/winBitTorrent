@@ -43,4 +43,7 @@ public sealed record CatalogItemDetails(
     IReadOnlyList<string> Cast,
     string? Tagline,
     IReadOnlyList<string> Directors,
-    IReadOnlyList<string> Countries);
+    IReadOnlyList<string> Countries,
+    IReadOnlyList<CatalogSeason> Seasons);
+
+public sealed record CatalogSeason(int SeasonNumber, string Name, int EpisodeCount);

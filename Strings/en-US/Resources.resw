@@ -567,7 +567,8 @@
   <data name="Tracker_WaitingForBrowserLogin" xml:space="preserve"><value>Waiting for RuTracker sign-in…</value></data>
   <data name="Tracker_BrowserSessionReadFailed" xml:space="preserve"><value>Could not check the RuTracker session: {0}</value></data>
   <data name="Tracker_Ready" xml:space="preserve"><value>Ready</value></data>
-  <data name="Tracker_Searching" xml:space="preserve"><value>Searching RuTracker…</value></data>
+  <data name="Tracker_SearchingNamed" xml:space="preserve"><value>Searching {0}…</value></data>
+  <data name="Tracker_SeasonQuerySuffix" xml:space="preserve"><value>season {0}</value></data>
   <data name="Tracker_ResultCount" xml:space="preserve"><value>Results: {0}</value></data>
   <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Connect to qBittorrent before downloading.</value></data>
   <data name="Tracker_Downloading" xml:space="preserve"><value>Downloading torrent file…</value></data>
@@ -575,7 +576,6 @@
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent file downloaded. Review add options.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Signed out. Sign in with another account.</value></data>
   <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Search by movies</value></data>
-  <data name="CatalogFeaturedSubtitle.Text" xml:space="preserve"><value>Browse the TMDB movie and TV catalog, then download in a couple of clicks.</value></data>
   <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Trackers</value></data>
   <data name="CatalogBackToSourcesText.Text" xml:space="preserve"><value>Sources</value></data>
   <data name="TrackerBackToTitle.Content" xml:space="preserve"><value>Back to title</value></data>
@@ -591,6 +591,9 @@
   <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Similar titles</value></data>
   <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Director</value></data>
   <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Creators</value></data>
+  <data name="CatalogSeasonLabel.Text" xml:space="preserve"><value>Season</value></data>
+  <data name="Catalog_SeasonLabel" xml:space="preserve"><value>Season {0}</value></data>
+  <data name="Catalog_EpisodeCountShort" xml:space="preserve"><value>{0} ep.</value></data>
   <data name="CatalogBackText.Text" xml:space="preserve"><value>Catalog</value></data>
   <data name="CatalogCastLabel.Text" xml:space="preserve"><value>Cast:</value></data>
   <data name="CatalogDownload.Content" xml:space="preserve"><value>Download</value></data>
