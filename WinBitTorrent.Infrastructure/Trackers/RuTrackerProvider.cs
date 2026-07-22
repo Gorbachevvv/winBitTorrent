@@ -5,9 +5,9 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Win32;
 using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
+using WinBitTorrent.Infrastructure.Net;
 
 namespace WinBitTorrent.Infrastructure.Trackers;
 
@@ -609,63 +609,7 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
         return Encoding.GetEncoding(1251);
     }
 
-    private static IWebProxy CreateSystemProxy()
-    {
-        using (var internetSettings = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Internet Settings"))
-        {
-            var enabled = internetSettings?.GetValue("ProxyEnable") is int value && value != 0;
-            var configured = internetSettings?.GetValue("ProxyServer") as string;
-            var address = enabled ? ParseWindowsProxyAddress(configured) : null;
-            if (address is not null)
-            {
-                return new WebProxy(address)
-                {
-                    BypassProxyOnLocal = false,
-                    Credentials = CredentialCache.DefaultCredentials
-                };
-            }
-        }
-
-#pragma warning disable SYSLIB0014 // This is the Windows user proxy/PAC source; HttpClient's implicit proxy can use WinHTTP instead.
-        var proxy = WebRequest.GetSystemWebProxy();
-#pragma warning restore SYSLIB0014
-        proxy.Credentials = CredentialCache.DefaultCredentials;
-        var destination = Mirrors[0];
-        if (!proxy.IsBypassed(destination))
-        {
-            var address = proxy.GetProxy(destination);
-            if (address is not null && address != destination)
-            {
-                return new WebProxy(address)
-                {
-                    BypassProxyOnLocal = false,
-                    Credentials = CredentialCache.DefaultCredentials
-                };
-            }
-        }
-        return proxy;
-    }
-
-    private static Uri? ParseWindowsProxyAddress(string? configured)
-    {
-        if (string.IsNullOrWhiteSpace(configured))
-            return null;
-
-        var address = configured.Trim();
-        if (address.Contains(';', StringComparison.Ordinal))
-        {
-            var entries = address.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(static entry => entry.Split('=', 2, StringSplitOptions.TrimEntries))
-                .Where(static entry => entry.Length == 2)
-                .ToDictionary(static entry => entry[0], static entry => entry[1], StringComparer.OrdinalIgnoreCase);
-            if (!entries.TryGetValue("https", out address) && !entries.TryGetValue("http", out address))
-                return null;
-        }
-
-        if (!address.Contains("://", StringComparison.Ordinal))
-            address = "http://" + address;
-        return Uri.TryCreate(address, UriKind.Absolute, out var uri) ? uri : null;
-    }
+    private static IWebProxy CreateSystemProxy() => SystemProxyResolver.Create(Mirrors[0]);
 
     private void ResetClient()
     {

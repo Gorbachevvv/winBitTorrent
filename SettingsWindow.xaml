@@ -14,6 +14,7 @@
                 <NavigationViewItem x:Uid="SettingsSpeed" Content="Speed" Tag="Speed"><NavigationViewItem.Icon><FontIcon Glyph="&#xE945;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem x:Uid="SettingsBitTorrent" Content="BitTorrent" Tag="BitTorrent"><NavigationViewItem.Icon><FontIcon Glyph="&#xE968;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem x:Uid="SettingsSearch" Content="Search" Tag="Search"><NavigationViewItem.Icon><FontIcon Glyph="&#xE721;" /></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem x:Uid="SettingsCatalog" Content="Catalog" Tag="Catalog"><NavigationViewItem.Icon><FontIcon Glyph="&#xE8B9;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem x:Uid="SettingsRss" Content="RSS" Tag="RSS"><NavigationViewItem.Icon><FontIcon Glyph="&#xE95A;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem x:Uid="SettingsWebUi" Content="Web UI" Tag="WebUI"><NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem x:Uid="SettingsAdvanced" Content="Advanced" Tag="Advanced"><NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon></NavigationViewItem>

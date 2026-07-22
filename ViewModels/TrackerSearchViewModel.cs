@@ -17,6 +17,9 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
     private readonly IReadOnlyDictionary<string, ITrackerSearchProvider> _providers;
     private CancellationTokenSource? _searchLifetime;
     private ITrackerSearchProvider? _activeProvider;
+    private (string Title, int? Year)? _pendingCatalogQuery;
+
+    public event Action? BackToCatalogRequested;
 
     public TrackerSearchViewModel(
         MainViewModel main,
@@ -37,6 +40,9 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
     public ObservableCollection<TrackerResultViewModel> Results { get; } = [];
 
     [ObservableProperty]
+    private bool _isCatalogVisible;
+
+    [ObservableProperty]
     private bool _isPickerVisible = true;
 
     [ObservableProperty]
@@ -44,6 +50,9 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isBrowserLoginVisible;
+
+    [ObservableProperty]
+    private bool _isSearchOriginatedFromCatalog;
 
     [ObservableProperty]
     private bool _isBusy;
@@ -92,6 +101,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         var resumeSignedInSession = IsSignedIn &&
             _activeProvider?.Id.Equals(provider.Id, StringComparison.OrdinalIgnoreCase) == true;
 
+        IsSearchOriginatedFromCatalog = false;
         _activeProvider = provider;
         HasInteractiveLogin = provider is ITrackerInteractiveAuthentication;
         ActiveTrackerName = provider.DisplayName;
@@ -129,9 +139,59 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         _searchLifetime?.Cancel();
         ErrorMessage = string.Empty;
         Status = string.Empty;
+        IsSearchOriginatedFromCatalog = false;
+        IsCatalogVisible = false;
         IsPickerVisible = true;
         IsSearchVisible = false;
         IsBrowserLoginVisible = false;
+    }
+
+    [RelayCommand]
+    public void ShowCatalog()
+    {
+        _searchLifetime?.Cancel();
+        ErrorMessage = string.Empty;
+        Status = string.Empty;
+        IsSearchOriginatedFromCatalog = false;
+        IsCatalogVisible = true;
+        IsPickerVisible = false;
+        IsSearchVisible = false;
+        IsBrowserLoginVisible = false;
+    }
+
+    [RelayCommand]
+    public void BackToCatalog()
+    {
+        ShowCatalog();
+        BackToCatalogRequested?.Invoke();
+    }
+
+    public async Task SearchForCatalogTitleAsync(string title, int? year, CancellationToken cancellationToken = default)
+    {
+        var provider = _activeProvider ?? _providers.Values.FirstOrDefault();
+        if (provider is null)
+            return;
+
+        _pendingCatalogQuery = (title, year);
+        if (_activeProvider?.Id != provider.Id || !IsSignedIn)
+            await SelectTrackerAsync(provider.Id);
+
+        if (!IsSignedIn)
+            return;
+
+        ShowSearch();
+        await RunPendingCatalogQueryAsync();
+    }
+
+    private async Task RunPendingCatalogQueryAsync()
+    {
+        if (_pendingCatalogQuery is not { } pending)
+            return;
+
+        _pendingCatalogQuery = null;
+        Query = pending.Year is null ? pending.Title : $"{pending.Title} {pending.Year}";
+        IsSearchOriginatedFromCatalog = true;
+        await SearchAsync();
     }
 
     public Uri? StartInteractiveLogin()
@@ -141,6 +201,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
 
         ErrorMessage = string.Empty;
         Status = Localizer.Get("Tracker_BrowserLoginStatus", "Complete sign-in and any captcha in the browser below.");
+        IsCatalogVisible = false;
         IsPickerVisible = false;
         IsSearchVisible = false;
         IsBrowserLoginVisible = true;
@@ -169,6 +230,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
             SelectedResult = null;
             Status = Localizer.Get("Tracker_Ready", "Ready");
             ShowSearch();
+            await RunPendingCatalogQueryAsync();
             return true;
         }
         catch (Exception exception)
@@ -301,6 +363,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
 
     private void ShowInteractiveLogin()
     {
+        IsCatalogVisible = false;
         IsPickerVisible = false;
         IsSearchVisible = false;
         IsBrowserLoginVisible = true;
@@ -317,6 +380,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
 
     private void ShowSearch()
     {
+        IsCatalogVisible = false;
         IsPickerVisible = false;
         IsSearchVisible = true;
         IsBrowserLoginVisible = false;

@@ -574,6 +574,36 @@
   <data name="Tracker_Added" xml:space="preserve"><value>Торрент добавлен в qBittorrent.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent-файл загружен. Проверьте параметры добавления.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Вы вышли из аккаунта. Войдите под другой учётной записью.</value></data>
+  <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Поиск по фильмам</value></data>
+  <data name="CatalogFeaturedSubtitle.Text" xml:space="preserve"><value>Каталог фильмов и сериалов TMDB — находите и скачивайте в пару кликов.</value></data>
+  <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Трекеры</value></data>
+  <data name="CatalogBackToSourcesText.Text" xml:space="preserve"><value>Источники</value></data>
+  <data name="TrackerBackToTitle.Content" xml:space="preserve"><value>Назад к фильму</value></data>
+  <data name="CatalogQuery.PlaceholderText" xml:space="preserve"><value>Поиск фильмов и сериалов</value></data>
+  <data name="Catalog_Section_Trending" xml:space="preserve"><value>В тренде сегодня</value></data>
+  <data name="Catalog_Section_PopularMovies" xml:space="preserve"><value>Популярные фильмы</value></data>
+  <data name="Catalog_Section_PopularTv" xml:space="preserve"><value>Популярные сериалы</value></data>
+  <data name="Catalog_Section_TopRatedMovies" xml:space="preserve"><value>Лучшие фильмы</value></data>
+  <data name="Catalog_Section_TopRatedTv" xml:space="preserve"><value>Лучшие сериалы</value></data>
+  <data name="Catalog_Section_NowPlaying" xml:space="preserve"><value>Сейчас в кино</value></data>
+  <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Скоро выйдет</value></data>
+  <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>Сериалы в эфире</value></data>
+  <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Похожее</value></data>
+  <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Режиссёр</value></data>
+  <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Создатели</value></data>
+  <data name="CatalogBackText.Text" xml:space="preserve"><value>Каталог</value></data>
+  <data name="CatalogCastLabel.Text" xml:space="preserve"><value>В ролях:</value></data>
+  <data name="CatalogDownload.Content" xml:space="preserve"><value>Скачать</value></data>
+  <data name="CatalogWatch.Content" xml:space="preserve"><value>Смотреть</value></data>
+  <data name="Catalog_NotConfigured" xml:space="preserve"><value>Укажите ключ TMDB API в Настройках &gt; Каталог, чтобы загрузить каталог фильмов и сериалов.</value></data>
+  <data name="Catalog_WatchUnavailable" xml:space="preserve"><value>Сначала скачайте фильм, чтобы посмотреть его.</value></data>
+  <data name="Catalog_RuntimeMinutes" xml:space="preserve"><value>{0} мин</value></data>
+  <data name="Catalog_SeasonCount" xml:space="preserve"><value>Сезонов: {0}</value></data>
+  <data name="SettingsCatalog.Content" xml:space="preserve"><value>Каталог</value></data>
+  <data name="SettingsSection_Catalog" xml:space="preserve"><value>Каталог</value></data>
+  <data name="Setting_catalog_tmdb_apiKey" xml:space="preserve"><value>Ключ TMDB API</value></data>
+  <data name="Setting_catalog_tmdb_apiKey_Description" xml:space="preserve"><value>Бесплатный ключ с themoviedb.org, используется для загрузки каталога фильмов и сериалов. Зарегистрироваться на themoviedb.org и получить ключ нужно самостоятельно — WinBitTorrent не может сделать это за вас.</value></data>
+  <data name="Settings_GetTmdbKey" xml:space="preserve"><value>Получить ключ…</value></data>
   <data name="DuplicateTorrent_Title" xml:space="preserve"><value>Торрент уже добавлен</value></data>
   <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Торрент «{0}» уже есть в списке передач. Объединить трекеры из нового источника?</value></data>
   <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Торрент «{0}» является приватным. Его трекеры нельзя объединить.</value></data>

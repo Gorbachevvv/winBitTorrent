@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Storage.Pickers;
+using Windows.System;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Core.Services;
 using WinBitTorrent.Services;
@@ -72,6 +73,7 @@ public sealed partial class SettingsWindow : Window
         new("BitTorrent", "max_active_uploads", "Maximum active uploads", SettingKind.Number),
         new("Search", "search_enabled", "Enable Search Engine", SettingKind.Boolean),
         new("Search", "python_executable_path", "Python executable", SettingKind.Text),
+        new("Catalog", "catalog.tmdb.apiKey", "TMDB API key", SettingKind.Password, true),
         new("RSS", "rss_processing_enabled", "Enable fetching RSS feeds", SettingKind.Boolean),
         new("RSS", "rss_refresh_interval", "Feed refresh interval (minutes)", SettingKind.Number),
         new("RSS", "rss_max_articles_per_feed", "Maximum articles per feed", SettingKind.Number),
@@ -250,6 +252,8 @@ public sealed partial class SettingsWindow : Window
             view = EditorButtonGrid(editor, Localizer.Get("SettingsConnection_RandomPort", "Random port"), RandomPort_Click);
         else if (spec.Key == "ip_filter_path" && localManaged)
             view = EditorButtonGrid(editor, Localizer.Get("CommonBrowse.Content", "Browse…"), BrowseIpFilter_Click);
+        else if (spec.Key == "catalog.tmdb.apiKey")
+            view = EditorButtonGrid(editor, Localizer.Get("Settings_GetTmdbKey", "Get API key…"), GetTmdbKey_Click);
 
         var description = spec.Key switch
         {
@@ -258,6 +262,7 @@ public sealed partial class SettingsWindow : Window
             "proxy_peer_connections" => Localizer.Get("Setting_proxy_peer_connections_Description", "Enable this to prevent direct peer connections when BitTorrent proxying is active."),
             "i2p_mixed_mode" => Localizer.Get("Setting_i2p_mixed_mode_Description", "Mixed mode can connect to regular IP peers and therefore does not provide I2P anonymity."),
             "ip_filter_path" when !localManaged => Localizer.Get("Setting_ip_filter_path_RemoteDescription", "Enter a path that is accessible on the remote qBittorrent server."),
+            "catalog.tmdb.apiKey" => Localizer.Get("Setting_catalog_tmdb_apiKey_Description", "Free API key from themoviedb.org, used to load the movie/TV catalog. You need to register on themoviedb.org yourself and generate the key — WinBitTorrent cannot do this for you."),
             _ => string.Empty
         };
         if (string.IsNullOrWhiteSpace(description))
@@ -418,6 +423,9 @@ public sealed partial class SettingsWindow : Window
         if (file is not null && _editors.GetValueOrDefault("ip_filter_path") is TextBox path)
             path.Text = file.Path;
     }
+
+    private static async void GetTmdbKey_Click(object sender, RoutedEventArgs e)
+        => await Launcher.LaunchUriAsync(new Uri("https://www.themoviedb.org/settings/api"));
 
     private static bool ValuesEqual(object left, object? right)
         => string.Equals(Convert.ToString(left, CultureInfo.InvariantCulture), Convert.ToString(right, CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);

@@ -574,6 +574,36 @@
   <data name="Tracker_Added" xml:space="preserve"><value>Torrent added to qBittorrent.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent file downloaded. Review add options.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Signed out. Sign in with another account.</value></data>
+  <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Search by movies</value></data>
+  <data name="CatalogFeaturedSubtitle.Text" xml:space="preserve"><value>Browse the TMDB movie and TV catalog, then download in a couple of clicks.</value></data>
+  <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Trackers</value></data>
+  <data name="CatalogBackToSourcesText.Text" xml:space="preserve"><value>Sources</value></data>
+  <data name="TrackerBackToTitle.Content" xml:space="preserve"><value>Back to title</value></data>
+  <data name="CatalogQuery.PlaceholderText" xml:space="preserve"><value>Search movies and TV shows</value></data>
+  <data name="Catalog_Section_Trending" xml:space="preserve"><value>Trending today</value></data>
+  <data name="Catalog_Section_PopularMovies" xml:space="preserve"><value>Popular movies</value></data>
+  <data name="Catalog_Section_PopularTv" xml:space="preserve"><value>Popular TV shows</value></data>
+  <data name="Catalog_Section_TopRatedMovies" xml:space="preserve"><value>Top rated movies</value></data>
+  <data name="Catalog_Section_TopRatedTv" xml:space="preserve"><value>Top rated TV shows</value></data>
+  <data name="Catalog_Section_NowPlaying" xml:space="preserve"><value>Now in theaters</value></data>
+  <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Coming soon</value></data>
+  <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>TV shows on the air</value></data>
+  <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Similar titles</value></data>
+  <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Director</value></data>
+  <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Creators</value></data>
+  <data name="CatalogBackText.Text" xml:space="preserve"><value>Catalog</value></data>
+  <data name="CatalogCastLabel.Text" xml:space="preserve"><value>Cast:</value></data>
+  <data name="CatalogDownload.Content" xml:space="preserve"><value>Download</value></data>
+  <data name="CatalogWatch.Content" xml:space="preserve"><value>Watch</value></data>
+  <data name="Catalog_NotConfigured" xml:space="preserve"><value>Set a TMDB API key in Settings &gt; Catalog to load the movie/TV catalog.</value></data>
+  <data name="Catalog_WatchUnavailable" xml:space="preserve"><value>Download the title first to watch it.</value></data>
+  <data name="Catalog_RuntimeMinutes" xml:space="preserve"><value>{0} min</value></data>
+  <data name="Catalog_SeasonCount" xml:space="preserve"><value>{0} seasons</value></data>
+  <data name="SettingsCatalog.Content" xml:space="preserve"><value>Catalog</value></data>
+  <data name="SettingsSection_Catalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="Setting_catalog_tmdb_apiKey" xml:space="preserve"><value>TMDB API key</value></data>
+  <data name="Setting_catalog_tmdb_apiKey_Description" xml:space="preserve"><value>Free API key from themoviedb.org, used to load the movie/TV catalog. You need to register on themoviedb.org yourself and generate the key — WinBitTorrent cannot do this for you.</value></data>
+  <data name="Settings_GetTmdbKey" xml:space="preserve"><value>Get API key…</value></data>
   <data name="DuplicateTorrent_Title" xml:space="preserve"><value>Torrent is already present</value></data>
   <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Torrent '{0}' is already in the transfer list. Do you want to merge trackers from the new source?</value></data>
   <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Torrent '{0}' is private. Its trackers cannot be merged.</value></data>

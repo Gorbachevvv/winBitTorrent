@@ -14,6 +14,9 @@
             <converters:NonEmptyStringConverter x:Key="NonEmptyStringConverter" />
             <converters:ConnectionBrushConverter x:Key="ConnectionBrushConverter" />
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
             <converters:ProgressGridLengthConverter x:Key="ProgressGridLengthConverter" />
 
             <FontIconSource x:Key="TransfersIcon" Glyph="&#xE896;" />

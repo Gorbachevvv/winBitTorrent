@@ -29,6 +29,7 @@ public partial class App : Application
         services.AddSingleton<RssViewModel>();
         services.AddSingleton<SearchViewModel>();
         services.AddSingleton<TrackerSearchViewModel>();
+        services.AddSingleton<CatalogViewModel>();
         services.AddSingleton<LogViewModel>();
         services.AddSingleton<MainWindow>();
         Services = services.BuildServiceProvider();

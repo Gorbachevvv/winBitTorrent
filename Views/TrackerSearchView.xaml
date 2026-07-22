@@ -4,9 +4,12 @@
     x:Name="Root"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:tv="using:WinUI.TableView">
+    xmlns:tv="using:WinUI.TableView"
+    xmlns:views="using:WinBitTorrent.Views">
 
     <Grid>
+        <views:CatalogView Visibility="{Binding DataContext.IsCatalogVisible, ElementName=Root, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
         <Grid
             Padding="40,32"
             Visibility="{Binding IsPickerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -20,7 +23,45 @@
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         Text="Choose a tracker. More providers can be added later."
                         TextWrapping="Wrap" />
-                    <ItemsControl Margin="0,24,0,0" ItemsSource="{Binding Trackers}">
+
+                    <Button
+                        Margin="0,22,0,4"
+                        Padding="22"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        Command="{Binding ShowCatalogCommand}"
+                        CornerRadius="12">
+                        <Grid ColumnSpacing="20">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Border
+                                Width="56"
+                                Height="56"
+                                Background="#26FFFFFF"
+                                CornerRadius="12">
+                                <FontIcon FontSize="26" Foreground="White" Glyph="&#xE714;" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                <TextBlock x:Uid="CatalogFeaturedTitle" FontSize="20" FontWeight="SemiBold" Foreground="White" Text="Search by movies" />
+                                <TextBlock
+                                    x:Uid="CatalogFeaturedSubtitle"
+                                    Foreground="White"
+                                    Opacity="0.85"
+                                    Text="Browse the TMDB movie and TV catalog, then download in a couple of clicks."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <FontIcon Grid.Column="2" VerticalAlignment="Center" Foreground="White" Glyph="&#xE76C;" />
+                        </Grid>
+                    </Button>
+
+                    <TextBlock
+                        x:Uid="TrackersSectionTitle"
+                        Margin="0,26,0,0"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Trackers" />
+                    <ItemsControl Margin="0,10,0,0" ItemsSource="{Binding Trackers}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><ItemsWrapGrid Orientation="Horizontal" /></ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
@@ -110,6 +151,11 @@
                 </tv:TableView.Columns>
             </tv:TableView>
             <StackPanel Grid.Row="4" Margin="0,8,0,0" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                <Button
+                    x:Uid="TrackerBackToTitle"
+                    Command="{Binding BackToCatalogCommand}"
+                    Content="Back to title"
+                    Visibility="{Binding IsSearchOriginatedFromCatalog, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <Button x:Uid="TrackerOpenTopic" Content="Open topic" Click="OpenTopic_Click" />
                 <Button x:Uid="TrackerDownload" Content="Download" Click="Download_Click" />
             </StackPanel>
