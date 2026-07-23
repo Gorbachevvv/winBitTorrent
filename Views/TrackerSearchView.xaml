@@ -7,6 +7,15 @@
     xmlns:tv="using:WinUI.TableView"
     xmlns:views="using:WinBitTorrent.Views">
 
+    <UserControl.Resources>
+        <!-- Preserve TableView's native cell template but neutralize its per-cell hover/selection
+             brushes, so a click anywhere on a result highlights the whole row instead of a
+             single cell (matching the main torrents list). -->
+        <SolidColorBrush x:Key="TableViewCellBackgroundPointerOver" Color="Transparent" />
+        <SolidColorBrush x:Key="TableViewCellBackgroundSelected" Color="Transparent" />
+        <SolidColorBrush x:Key="TableViewCellSelectionBrush" Color="Transparent" />
+    </UserControl.Resources>
+
     <Grid>
         <views:CatalogView Visibility="{Binding DataContext.IsCatalogVisible, ElementName=Root, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
@@ -140,6 +149,8 @@
                 ItemsSource="{Binding Results}"
                 SelectedItem="{Binding SelectedResult, Mode=TwoWay}"
                 SelectionMode="Single"
+                SelectionUnit="Row"
+                Sorting="TrackerResultsTable_Sorting"
                 DoubleTapped="TrackerResultsTable_DoubleTapped">
                 <tv:TableView.Columns>
                     <tv:TableViewTextColumn x:Uid="ColumnName" Header="Name" Width="3*" MinWidth="320" Binding="{Binding Name}" />

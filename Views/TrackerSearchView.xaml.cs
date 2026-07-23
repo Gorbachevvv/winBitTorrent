@@ -81,6 +81,18 @@ public sealed partial class TrackerSearchView : UserControl
 
     private async void Download_Click(object sender, RoutedEventArgs e) => await OpenAddTorrentWindowForSelectedAsync();
     private async void TrackerResultsTable_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => await OpenAddTorrentWindowForSelectedAsync();
+
+    private void TrackerResultsTable_Sorting(object sender, WinUI.TableView.TableViewSortingEventArgs e)
+    {
+        // Sorting reorders the results in place; a user scrolled halfway down would otherwise be
+        // left in the middle of the newly ordered list. Bring them back to the top once the sort
+        // has re-laid out the rows (hence the queued, low-priority scroll).
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            if (TrackerResultsTable.Items.Count > 0)
+                TrackerResultsTable.ScrollRowIntoView(0);
+        });
+    }
     private async void OpenTopic_Click(object sender, RoutedEventArgs e) => await ViewModel.OpenSelectedAsync();
 
     private async Task OpenAddTorrentWindowForSelectedAsync()

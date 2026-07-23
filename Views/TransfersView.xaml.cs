@@ -3,11 +3,18 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.System;
+using Windows.UI;
+using Windows.UI.Core;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Services;
 using WinBitTorrent.ViewModels;
@@ -24,6 +31,14 @@ public sealed partial class TransfersView : UserControl
     private bool _fileTreeRefreshQueued;
     private bool _isRefreshingFiles;
 
+    // Rubber-band (marquee) selection state.
+    private const double RubberBandThreshold = 4;
+    private bool _rubberBanding;
+    private bool _rubberMoved;
+    private bool _rubberAdditive;
+    private Point _rubberOrigin;
+    private readonly HashSet<object> _rubberBaseSelection = [];
+
     public TransfersView()
     {
         InitializeComponent();
@@ -31,6 +46,12 @@ public sealed partial class TransfersView : UserControl
         DataContext = App.Services.GetRequiredService<MainViewModel>();
         ContentFilesTree.ItemsSource = _fileTreeRoots;
         _filesRefreshTimer.Tick += FilesRefreshTimer_Tick;
+        // TableViewRow marks pointer events as handled, so subscribe with handledEventsToo to
+        // still observe presses that start on empty space (where the marquee begins).
+        TorrentTable.AddHandler(PointerPressedEvent, new PointerEventHandler(TorrentTable_PointerPressed), true);
+        TorrentTable.AddHandler(PointerMovedEvent, new PointerEventHandler(TorrentTable_PointerMoved), true);
+        TorrentTable.AddHandler(PointerReleasedEvent, new PointerEventHandler(TorrentTable_PointerReleased), true);
+        TorrentTable.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(TorrentTable_PointerCaptureLost), true);
         Loaded += TransfersView_Loaded;
         Unloaded += TransfersView_Unloaded;
     }
@@ -48,6 +69,141 @@ public sealed partial class TransfersView : UserControl
         var rows = TorrentTable.SelectedItems.OfType<TorrentRowViewModel>().ToList();
         ViewModel.SetSelectedRows(rows);
     }
+
+    /// <summary>
+    /// Matches the desktop convention (and qBittorrent): right-clicking a row that is not part of
+    /// the current selection moves the selection to that single row before the menu opens, unless
+    /// Shift/Ctrl is held (which keeps the multi-selection so the action applies to all of them).
+    /// </summary>
+    private void TorrentTable_RowContextFlyoutOpening(object sender, TableViewRowContextFlyoutEventArgs args)
+    {
+        if (args.Item is not TorrentRowViewModel row)
+            return;
+        if (IsKeyDown(VirtualKey.Shift) || IsKeyDown(VirtualKey.Control) || TorrentTable.SelectedItems.Contains(row))
+            return;
+        TorrentTable.SelectedItems.Clear();
+        TorrentTable.SelectedItems.Add(row);
+    }
+
+    private void TorrentTable_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(TorrentTable);
+        // Only the left button starts a marquee, and only when the press lands on empty space -
+        // a press on a row or a column header keeps the table's native click behaviour.
+        if (point.PointerDeviceType != Microsoft.UI.Input.PointerDeviceType.Mouse
+            || !point.Properties.IsLeftButtonPressed
+            || IsOverRowOrHeader(e.OriginalSource))
+            return;
+
+        _rubberBanding = true;
+        _rubberMoved = false;
+        _rubberAdditive = IsKeyDown(VirtualKey.Control) || IsKeyDown(VirtualKey.Shift);
+        _rubberOrigin = e.GetCurrentPoint(SelectionOverlay).Position;
+        _rubberBaseSelection.Clear();
+        if (_rubberAdditive)
+            foreach (var item in TorrentTable.SelectedItems)
+                _rubberBaseSelection.Add(item);
+        TorrentTable.CapturePointer(e.Pointer);
+    }
+
+    private void TorrentTable_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_rubberBanding)
+            return;
+        var current = e.GetCurrentPoint(SelectionOverlay).Position;
+        if (!_rubberMoved)
+        {
+            if (Math.Abs(current.X - _rubberOrigin.X) < RubberBandThreshold
+                && Math.Abs(current.Y - _rubberOrigin.Y) < RubberBandThreshold)
+                return;
+            _rubberMoved = true;
+            SelectionRectangle.Visibility = Visibility.Visible;
+        }
+
+        var marquee = new Rect(
+            new Point(Math.Min(_rubberOrigin.X, current.X), Math.Min(_rubberOrigin.Y, current.Y)),
+            new Point(Math.Max(_rubberOrigin.X, current.X), Math.Max(_rubberOrigin.Y, current.Y)));
+        Canvas.SetLeft(SelectionRectangle, marquee.X);
+        Canvas.SetTop(SelectionRectangle, marquee.Y);
+        SelectionRectangle.Width = marquee.Width;
+        SelectionRectangle.Height = marquee.Height;
+        UpdateRubberSelection(marquee);
+    }
+
+    private void TorrentTable_PointerReleased(object sender, PointerRoutedEventArgs e)
+        => EndRubberBand(e.Pointer);
+
+    private void TorrentTable_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        => EndRubberBand(null);
+
+    private void EndRubberBand(Pointer? pointer)
+    {
+        if (!_rubberBanding)
+            return;
+        _rubberBanding = false;
+        SelectionRectangle.Visibility = Visibility.Collapsed;
+        if (pointer is not null)
+            TorrentTable.ReleasePointerCapture(pointer);
+        // A press-and-release on empty space with no drag clears the selection, like clicking the
+        // empty area of a file list. A modifier press leaves the selection untouched.
+        if (!_rubberMoved && !_rubberAdditive)
+            TorrentTable.SelectedItems.Clear();
+        _rubberBaseSelection.Clear();
+    }
+
+    private void UpdateRubberSelection(Rect marquee)
+    {
+        var target = new HashSet<object>(_rubberBaseSelection);
+        foreach (var row in EnumerateRows(TorrentTable))
+        {
+            if (TorrentTable.ItemFromContainer(row) is not { } item)
+                continue;
+            var bounds = row.TransformToVisual(SelectionOverlay)
+                .TransformBounds(new Rect(0, 0, row.ActualWidth, row.ActualHeight));
+            if (IntersectsVertically(marquee, bounds))
+                target.Add(item);
+        }
+
+        var selected = TorrentTable.SelectedItems;
+        for (var index = selected.Count - 1; index >= 0; index--)
+            if (!target.Contains(selected[index]))
+                selected.RemoveAt(index);
+        foreach (var item in target)
+            if (!selected.Contains(item))
+                selected.Add(item);
+    }
+
+    // Rows span the full table width, so a vertical overlap is enough to consider a row selected -
+    // this keeps the marquee forgiving horizontally, matching how list marquees usually feel.
+    private static bool IntersectsVertically(Rect marquee, Rect row)
+        => marquee.Top < row.Bottom && marquee.Bottom > row.Top;
+
+    private static bool IsOverRowOrHeader(object? source)
+    {
+        for (var node = source as DependencyObject; node is not null; node = VisualTreeHelper.GetParent(node))
+            if (node is TableViewRow or TableViewHeaderRow or TableViewColumnHeader)
+                return true;
+        return false;
+    }
+
+    private static IEnumerable<TableViewRow> EnumerateRows(DependencyObject root)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var index = 0; index < count; index++)
+        {
+            var child = VisualTreeHelper.GetChild(root, index);
+            if (child is TableViewRow row)
+            {
+                yield return row;
+                continue;
+            }
+            foreach (var descendant in EnumerateRows(child))
+                yield return descendant;
+        }
+    }
+
+    private static bool IsKeyDown(VirtualKey key)
+        => InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(CoreVirtualKeyStates.Down);
 
     private void DetailsSplitter_DragDelta(object sender, DragDeltaEventArgs e)
     {
@@ -221,7 +377,7 @@ public sealed partial class TransfersView : UserControl
 
     private async void ForceStart_Click(object sender, RoutedEventArgs e)
     {
-        var enabled = sender is ToggleMenuFlyoutItem { IsChecked: true };
+        var enabled = ViewModel.SelectedTorrent?.Model.ForceStart != true;
         await ExecuteMenuActionAsync(() => ViewModel.SetForceStartSelectedAsync(enabled));
     }
 
@@ -233,9 +389,51 @@ public sealed partial class TransfersView : UserControl
 
     private async void SuperSeeding_Click(object sender, RoutedEventArgs e)
     {
-        var enabled = sender is ToggleMenuFlyoutItem { IsChecked: true };
+        // The backend does not report super-seeding state, so the icon is always shown unchecked;
+        // treat a click as a request to enable it.
+        var enabled = SuperSeedingCheckIcon.Glyph == UncheckedCheckGlyph;
         await ExecuteMenuActionAsync(() => ViewModel.SetSuperSeedingSelectedAsync(enabled));
     }
+
+    private const string UncheckedCheckGlyph = "";
+    private const string CheckedCheckGlyph = "";
+
+    private static SolidColorBrush? _checkedBrush;
+    private static SolidColorBrush? _uncheckedBrush;
+
+    // Renders a menu item's leading icon as an empty or ticked checkbox in the shared icon column.
+    // Uses fixed colours (blue when checked, slate when not), like the other menu glyph icons -
+    // theme brushes fetched by key from Application.Resources don't resolve per-theme and showed
+    // up white in the light theme.
+    private static void SetCheckIcon(FontIcon icon, bool isChecked)
+    {
+        _checkedBrush ??= new SolidColorBrush(Color.FromArgb(0xFF, 0x25, 0x63, 0xEB));
+        _uncheckedBrush ??= new SolidColorBrush(Color.FromArgb(0xFF, 0x94, 0xA3, 0xB8));
+        icon.Glyph = isChecked ? CheckedCheckGlyph : UncheckedCheckGlyph;
+        icon.Foreground = isChecked ? _checkedBrush : _uncheckedBrush;
+    }
+
+    // The context menu lives in the TableView's RowContextFlyout, whose DataContext is the row's
+    // TorrentRowViewModel rather than the MainViewModel - so Command bindings to the MainViewModel
+    // commands silently fail to resolve. These commands are invoked through code-behind handlers
+    // (like the rest of the menu) so they always reach the MainViewModel.
+    private async void Start_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.StartSelectedAsync);
+
+    private async void Stop_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.StopSelectedAsync);
+
+    private async void ForceRecheck_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.RecheckSelectedAsync);
+
+    private async void Reannounce_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.ReannounceSelectedAsync);
+
+    private async void MoveUp_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.MoveUpSelectedAsync);
+
+    private async void MoveDown_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.MoveDownSelectedAsync);
 
     private async void QueueTop_Click(object sender, RoutedEventArgs e)
         => await ExecuteMenuActionAsync(ViewModel.MoveTopSelectedAsync);
@@ -256,12 +454,15 @@ public sealed partial class TransfersView : UserControl
         StartMenuItem.Visibility = anyStopped ? Visibility.Visible : Visibility.Collapsed;
         StopMenuItem.Visibility = anyRunning ? Visibility.Visible : Visibility.Collapsed;
 
-        // Reflect the per-torrent flags on the toggle items up front instead of binding, so the
-        // checkmark always matches the primary torrent and the click handler simply reads back
-        // the flipped state.
-        ForceStartMenuItem.IsChecked = model?.ForceStart == true;
-        SequentialMenuItem.IsChecked = model?.SequentialDownload == true;
-        FirstLastMenuItem.IsChecked = model?.FirstLastPiecePriority == true;
+        // Reflect the per-torrent flags on the checkbox items up front. These use a checkbox
+        // glyph in the shared icon column (rather than a ToggleMenuFlyoutItem, whose checkmark
+        // sits in a separate column and pushes everything right), so the click handler reads the
+        // current flag from the model and flips it. Super seeding state is not reported by the
+        // backend, so it always shows unchecked.
+        SetCheckIcon(ForceStartCheckIcon, model?.ForceStart == true);
+        SetCheckIcon(SequentialCheckIcon, model?.SequentialDownload == true);
+        SetCheckIcon(FirstLastCheckIcon, model?.FirstLastPiecePriority == true);
+        SetCheckIcon(SuperSeedingCheckIcon, false);
 
         // File-system actions only make sense for the local managed backend; hide (not just
         // disable) them for remote profiles, the way qBittorrent omits them over WebUI.

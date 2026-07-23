@@ -118,16 +118,19 @@
                 SelectionUnit="Row"
                 ItemsSource="{Binding Torrents}"
                 ColumnReordered="TorrentTable_ColumnReordered"
+                RowContextFlyoutOpening="TorrentTable_RowContextFlyoutOpening"
                 SelectionChanged="TorrentTable_SelectionChanged">
-                <tv:TableView.ContextFlyout>
+                <tv:TableView.RowContextFlyout>
                     <MenuFlyout Opening="TorrentContextMenu_Opening">
-                        <MenuFlyoutItem x:Name="StartMenuItem" x:Uid="Start" Text="Start" Command="{Binding StartSelectedCommand}">
+                        <MenuFlyoutItem x:Name="StartMenuItem" x:Uid="Start" Text="Start" Click="Start_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" Foreground="#16A34A" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Name="StopMenuItem" x:Uid="Stop" Text="Stop" Command="{Binding StopSelectedCommand}">
+                        <MenuFlyoutItem x:Name="StopMenuItem" x:Uid="Stop" Text="Stop" Click="Stop_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71A;" Foreground="#DC2626" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <ToggleMenuFlyoutItem x:Name="ForceStartMenuItem" x:Uid="ForceStart" Text="Force start" Click="ForceStart_Click" />
+                        <MenuFlyoutItem x:Uid="ForceStart" Text="Force start" Click="ForceStart_Click">
+                            <MenuFlyoutItem.Icon><FontIcon x:Name="ForceStartCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
                         <MenuFlyoutItem x:Uid="SetLocation" Text="Set location…" Click="SetLocation_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DE;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
@@ -149,19 +152,25 @@
                             <MenuFlyoutItem x:Uid="MoveTop" Text="Move to top" Click="QueueTop_Click">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="MoveUp" Text="Move up" Command="{Binding MoveUpSelectedCommand}">
+                            <MenuFlyoutItem x:Uid="MoveUp" Text="Move up" Click="MoveUp_Click">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="MoveDown" Text="Move down" Command="{Binding MoveDownSelectedCommand}">
+                            <MenuFlyoutItem x:Uid="MoveDown" Text="Move down" Click="MoveDown_Click">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem x:Uid="MoveBottom" Text="Move to bottom" Click="QueueBottom_Click">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
-                        <ToggleMenuFlyoutItem x:Name="SequentialMenuItem" x:Uid="SequentialDownload" Text="Download in sequential order" Click="Sequential_Click" />
-                        <ToggleMenuFlyoutItem x:Name="FirstLastMenuItem" x:Uid="FirstLastPriority" Text="Download first and last pieces first" Click="FirstLast_Click" />
-                        <ToggleMenuFlyoutItem x:Name="SuperSeedingMenuItem" x:Uid="SuperSeeding" Text="Super seeding mode" Click="SuperSeeding_Click" />
+                        <MenuFlyoutItem x:Uid="SequentialDownload" Text="Download in sequential order" Click="Sequential_Click">
+                            <MenuFlyoutItem.Icon><FontIcon x:Name="SequentialCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Uid="FirstLastPriority" Text="Download first and last pieces first" Click="FirstLast_Click">
+                            <MenuFlyoutItem.Icon><FontIcon x:Name="FirstLastCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Uid="SuperSeeding" Text="Super seeding mode" Click="SuperSeeding_Click">
+                            <MenuFlyoutItem.Icon><FontIcon x:Name="SuperSeedingCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutSubItem x:Uid="LimitRate" Text="Limit rate">
                             <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE9E9;" Foreground="#0D9488" /></MenuFlyoutSubItem.Icon>
                             <MenuFlyoutItem x:Uid="TransferLimits" Text="Download and upload limits…" Click="Limits_Click">
@@ -181,10 +190,10 @@
                             </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="ForceRecheck" Text="Force recheck" Command="{Binding RecheckSelectedCommand}">
+                        <MenuFlyoutItem x:Uid="ForceRecheck" Text="Force recheck" Click="ForceRecheck_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE72C;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="Reannounce" Text="Reannounce" Command="{Binding ReannounceSelectedCommand}">
+                        <MenuFlyoutItem x:Uid="Reannounce" Text="Reannounce" Click="Reannounce_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE789;" Foreground="#D97706" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
@@ -212,9 +221,21 @@
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" Foreground="#DC2626" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                     </MenuFlyout>
-                </tv:TableView.ContextFlyout>
+                </tv:TableView.RowContextFlyout>
                 <tv:TableView.Columns>
-                    <tv:TableViewTextColumn x:Uid="ColumnQueue" Header="#" Width="48" Binding="{Binding QueuePosition}" />
+                    <tv:TableViewTemplateColumn Header="" Width="40" MinWidth="34" CanResize="False">
+                        <tv:TableViewTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <FontIcon
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="15"
+                                    Glyph="{Binding StatusGlyph}"
+                                    Foreground="{Binding StatusBrush}"
+                                    ToolTipService.ToolTip="{Binding Status}" />
+                            </DataTemplate>
+                        </tv:TableViewTemplateColumn.CellTemplate>
+                    </tv:TableViewTemplateColumn>
                     <tv:TableViewTextColumn x:Uid="ColumnName" Header="Name" Width="2*" MinWidth="180" Binding="{Binding Name}" />
                     <tv:TableViewTextColumn x:Uid="ColumnSize" Header="Size" Width="90" Binding="{Binding Size}" />
                     <tv:TableViewTextColumn x:Uid="ColumnTotalSize" Header="Total size" Width="95" Visibility="Collapsed" Binding="{Binding TotalSize}" />
@@ -291,6 +312,19 @@
                     <tv:TableViewTextColumn x:Uid="ColumnCreatedOn" Header="Created on" Width="145" Visibility="Collapsed" Binding="{Binding CreatedOn}" />
                 </tv:TableView.Columns>
             </tv:TableView>
+
+            <!-- Rubber-band (marquee) selection overlay. Stays hit-test invisible so it never
+                 steals clicks from the table; the code-behind drives it from pointer handlers
+                 attached to the table itself. -->
+            <Canvas x:Name="SelectionOverlay" Grid.Row="0" IsHitTestVisible="False">
+                <Border
+                    x:Name="SelectionRectangle"
+                    Background="{ThemeResource AccentFillColorSelectedTextBackgroundBrush}"
+                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                    BorderThickness="1"
+                    Opacity="0.35"
+                    Visibility="Collapsed" />
+            </Canvas>
 
             <Thumb x:Name="DetailsSplitter" Grid.Row="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" DragDelta="DetailsSplitter_DragDelta" />
 
