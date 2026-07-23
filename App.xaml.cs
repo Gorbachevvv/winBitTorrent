@@ -18,7 +18,15 @@ public partial class App : Application
 
     public App()
     {
-        UnhandledException += (_, args) => WriteCrash(args.Exception);
+        UnhandledException += (_, args) =>
+        {
+            WriteCrash(args.Exception);
+            // Menu actions and dialogs run as "async void" handlers; an unexpected error in
+            // one of them (a rejected API call, a missing file, etc.) must not take down the
+            // whole app. The offending action simply fails - it's already logged above - and
+            // the user can retry instead of losing their whole torrent session.
+            args.Handled = true;
+        };
         AppDomain.CurrentDomain.UnhandledException += (_, args) => WriteCrash(args.ExceptionObject as Exception);
         ApplyLanguageOverride(ClientSettings.GetValue("ui.language") as string ?? string.Empty);
         InitializeComponent();

@@ -120,45 +120,97 @@
                 ColumnReordered="TorrentTable_ColumnReordered"
                 SelectionChanged="TorrentTable_SelectionChanged">
                 <tv:TableView.ContextFlyout>
-                    <MenuFlyout>
-                        <MenuFlyoutItem x:Uid="Start" Text="Start" Command="{Binding StartSelectedCommand}" />
-                        <MenuFlyoutItem x:Uid="Stop" Text="Stop" Command="{Binding StopSelectedCommand}" />
-                        <ToggleMenuFlyoutItem x:Uid="ForceStart" Text="Force start" IsChecked="{Binding SelectedTorrent.Model.ForceStart, Mode=OneWay}" Click="ForceStart_Click" />
+                    <MenuFlyout Opening="TorrentContextMenu_Opening">
+                        <MenuFlyoutItem x:Name="StartMenuItem" x:Uid="Start" Text="Start" Command="{Binding StartSelectedCommand}">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" Foreground="#16A34A" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="StopMenuItem" x:Uid="Stop" Text="Stop" Command="{Binding StopSelectedCommand}">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71A;" Foreground="#DC2626" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <ToggleMenuFlyoutItem x:Name="ForceStartMenuItem" x:Uid="ForceStart" Text="Force start" Click="ForceStart_Click" />
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="ForceRecheck" Text="Force recheck" Command="{Binding RecheckSelectedCommand}" />
-                        <MenuFlyoutItem x:Uid="Reannounce" Text="Reannounce" Command="{Binding ReannounceSelectedCommand}" />
+                        <MenuFlyoutItem x:Uid="SetLocation" Text="Set location…" Click="SetLocation_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DE;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Uid="RenameTorrent" Text="Rename…" Click="Rename_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE70F;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSubItem x:Name="CategorySubmenu" x:Uid="CategoryMenu" Text="Category">
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8EC;" Foreground="#D97706" /></MenuFlyoutSubItem.Icon>
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutSubItem x:Uid="TagsMenu" Text="Tags">
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8EC;" Foreground="#9333EA" /></MenuFlyoutSubItem.Icon>
+                            <MenuFlyoutItem x:Uid="AddTags" Text="Add tags…" Tag="add" Click="Tags_Click" />
+                            <MenuFlyoutItem x:Uid="RemoveTags" Text="Remove tags…" Tag="remove" Click="Tags_Click" />
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutSeparator />
                         <MenuFlyoutSubItem x:Uid="QueueMenu" Text="Queue">
-                            <MenuFlyoutItem x:Uid="MoveTop" Text="Move to top" Click="QueueTop_Click" />
-                            <MenuFlyoutItem x:Uid="MoveUp" Text="Move up" Command="{Binding MoveUpSelectedCommand}" />
-                            <MenuFlyoutItem x:Uid="MoveDown" Text="Move down" Command="{Binding MoveDownSelectedCommand}" />
-                            <MenuFlyoutItem x:Uid="MoveBottom" Text="Move to bottom" Click="QueueBottom_Click" />
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xEA37;" Foreground="#64748B" /></MenuFlyoutSubItem.Icon>
+                            <MenuFlyoutItem x:Uid="MoveTop" Text="Move to top" Click="QueueTop_Click">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MoveUp" Text="Move up" Command="{Binding MoveUpSelectedCommand}">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MoveDown" Text="Move down" Command="{Binding MoveDownSelectedCommand}">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MoveBottom" Text="Move to bottom" Click="QueueBottom_Click">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutSeparator />
-                        <ToggleMenuFlyoutItem x:Uid="SequentialDownload" Text="Download in sequential order" IsChecked="{Binding SelectedTorrent.Model.SequentialDownload, Mode=OneWay}" Click="Sequential_Click" />
-                        <ToggleMenuFlyoutItem x:Uid="FirstLastPriority" Text="Download first and last pieces first" IsChecked="{Binding SelectedTorrent.Model.FirstLastPiecePriority, Mode=OneWay}" Click="FirstLast_Click" />
-                        <ToggleMenuFlyoutItem x:Uid="SuperSeeding" Text="Super seeding mode" Click="SuperSeeding_Click" />
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="SetCategory" Text="Set category…" Click="SetCategory_Click" />
-                        <MenuFlyoutItem x:Uid="AddTags" Text="Add tags…" Tag="add" Click="Tags_Click" />
-                        <MenuFlyoutItem x:Uid="RemoveTags" Text="Remove tags…" Tag="remove" Click="Tags_Click" />
+                        <ToggleMenuFlyoutItem x:Name="SequentialMenuItem" x:Uid="SequentialDownload" Text="Download in sequential order" Click="Sequential_Click" />
+                        <ToggleMenuFlyoutItem x:Name="FirstLastMenuItem" x:Uid="FirstLastPriority" Text="Download first and last pieces first" Click="FirstLast_Click" />
+                        <ToggleMenuFlyoutItem x:Name="SuperSeedingMenuItem" x:Uid="SuperSeeding" Text="Super seeding mode" Click="SuperSeeding_Click" />
                         <MenuFlyoutSubItem x:Uid="LimitRate" Text="Limit rate">
-                            <MenuFlyoutItem x:Uid="TransferLimits" Text="Download and upload limits…" Click="Limits_Click" />
-                            <MenuFlyoutItem x:Uid="ShareLimits" Text="Share ratio and seeding time…" Click="ShareLimits_Click" />
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE9E9;" Foreground="#0D9488" /></MenuFlyoutSubItem.Icon>
+                            <MenuFlyoutItem x:Uid="TransferLimits" Text="Download and upload limits…" Click="Limits_Click">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9E9;" Foreground="#0D9488" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="ShareLimits" Text="Share ratio and seeding time…" Click="ShareLimits_Click">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9E9;" Foreground="#0D9488" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="RenameTorrent" Text="Rename…" Click="Rename_Click" />
-                        <MenuFlyoutItem x:Uid="SetLocation" Text="Set location…" Click="SetLocation_Click" />
                         <MenuFlyoutSubItem x:Uid="TrackersWebSeeds" Text="Trackers and web seeds">
-                            <MenuFlyoutItem x:Uid="AddTrackers" Text="Add trackers…" Click="AddTrackers_Click" />
-                            <MenuFlyoutItem x:Uid="AddWebSeeds" Text="Add web seeds…" Click="AddWebSeeds_Click" />
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE774;" Foreground="#2563EB" /></MenuFlyoutSubItem.Icon>
+                            <MenuFlyoutItem x:Uid="AddTrackers" Text="Add trackers…" Click="AddTrackers_Click">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE774;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="AddWebSeeds" Text="Add web seeds…" Click="AddWebSeeds_Click">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71B;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutItem x:Uid="ExportTorrent" Text="Export .torrent…" Click="Export_Click" />
-                        <MenuFlyoutItem x:Uid="ChooseColumns" Text="Choose columns…" Click="ChooseColumns_Click" />
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="OpenDestination" Text="Open destination folder" IsEnabled="{Binding CanUseLocalFiles}" Click="OpenDestination_Click" />
-                        <MenuFlyoutItem x:Uid="PreviewAvailableFile" Text="Preview first available file" IsEnabled="{Binding CanUseLocalFiles}" Click="PreviewFile_Click" />
+                        <MenuFlyoutItem x:Uid="ForceRecheck" Text="Force recheck" Command="{Binding RecheckSelectedCommand}">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE72C;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Uid="Reannounce" Text="Reannounce" Command="{Binding ReannounceSelectedCommand}">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE789;" Foreground="#D97706" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="Delete" Text="Delete…" Click="DeleteSelected_Click" />
+                        <MenuFlyoutItem x:Name="PreviewMenuItem" x:Uid="PreviewAvailableFile" Text="Preview first available file" Click="PreviewFile_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7B3;" Foreground="#0D9488" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="OpenDestinationMenuItem" x:Uid="OpenDestination" Text="Open destination folder" Click="OpenDestination_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE838;" Foreground="#D97706" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSubItem x:Uid="CopyMenu" Text="Copy">
+                            <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8C8;" Foreground="#64748B" /></MenuFlyoutSubItem.Icon>
+                            <MenuFlyoutItem x:Uid="CopyName" Text="Name" Tag="name" Click="CopyInfo_Click" />
+                            <MenuFlyoutItem x:Uid="CopyHashV1" Text="Info hash v1" Tag="hashv1" Click="CopyInfo_Click" />
+                            <MenuFlyoutItem x:Uid="CopyHashV2" Text="Info hash v2" Tag="hashv2" Click="CopyInfo_Click" />
+                            <MenuFlyoutItem x:Uid="CopyMagnet" Text="Magnet link" Tag="magnet" Click="CopyInfo_Click" />
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutItem x:Uid="ExportTorrent" Text="Export .torrent…" Click="Export_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74E;" Foreground="#64748B" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Uid="ChooseColumns" Text="Choose columns…" Click="ChooseColumns_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" Foreground="#64748B" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem x:Uid="Delete" Text="Delete…" Click="DeleteSelected_Click">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" Foreground="#DC2626" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                     </MenuFlyout>
                 </tv:TableView.ContextFlyout>
                 <tv:TableView.Columns>

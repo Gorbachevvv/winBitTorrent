@@ -55,6 +55,8 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string Reannounce => ValueFormatter.Duration(_model.Reannounce);
     public string Private => _model.IsPrivate ? Localizer.Get("Common_Yes", "Yes") : Localizer.Get("Common_No", "No");
     public bool IsActive => _model.DownloadSpeed > 0 || _model.UploadSpeed > 0 || _model.State.Contains("downloading", StringComparison.OrdinalIgnoreCase);
+    public bool IsStopped => _model.State.Contains("paused", StringComparison.OrdinalIgnoreCase)
+        || _model.State.Contains("stopped", StringComparison.OrdinalIgnoreCase);
 
     public void Update(TorrentInfo model)
     {

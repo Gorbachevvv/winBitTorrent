@@ -75,10 +75,10 @@ public sealed partial class TransfersView : UserControl
             return;
         }
 
-        var folderPath = ResolveLocalDirectoryPath(selected);
-        if (folderPath is not null && Directory.Exists(folderPath))
+        var target = ResolveDestinationTarget(selected);
+        if (target is not null)
         {
-            SelectInExplorer(folderPath);
+            SelectInExplorer(target);
             return;
         }
 
@@ -87,11 +87,33 @@ public sealed partial class TransfersView : UserControl
             $"{Localizer.Get("Dialog_ReportedSavePath", "qBittorrent reported save path")}: {selected.Model.SavePath}\n{Localizer.Get("Dialog_DownloadPath", "Download path")}: {selected.Model.DownloadPath}\n\n{Localizer.Get("Dialog_PathUnavailableReason", "The path may not exist yet, or the torrent metadata has not finished syncing.")}");
     }
 
+    /// <summary>
+    /// Resolves the single best path to reveal in Explorer for the whole torrent: its
+    /// content path (the exact file for single-file torrents, or the exact folder qBittorrent
+    /// is using for multi-file torrents - which may be a subfolder of the save path, or may
+    /// not exist as a subfolder at all). Falling back to the bare save/download path only
+    /// selects the shared downloads root, not the torrent's own folder, so it is a last resort.
+    /// </summary>
+    private static string? ResolveDestinationTarget(TorrentRowViewModel torrent)
+    {
+        var contentPath = torrent.Model.ContentPath;
+        if (!string.IsNullOrWhiteSpace(contentPath) && (Directory.Exists(contentPath) || File.Exists(contentPath)))
+            return contentPath;
+
+        var folderPath = ResolveLocalDirectoryPath(torrent);
+        return folderPath is not null && Directory.Exists(folderPath) ? folderPath : null;
+    }
+
     private static void SelectInExplorer(string path)
     {
-        var startInfo = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
-        startInfo.ArgumentList.Add($"/select,{path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)}");
-        Process.Start(startInfo);
+        // explorer.exe's "/select," switch is parsed as a single command-line token: the path
+        // must be quoted *inside* that token (/select,"C:\..."). Passing it via ArgumentList
+        // makes .NET quote the whole "/select,C:\..." argument whenever the path contains a
+        // space, which explorer cannot parse - it silently falls back to opening the Documents
+        // folder. Building the argument string by hand keeps the switch and the quoted path
+        // in the shape explorer expects.
+        var target = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{target}\"") { UseShellExecute = true });
     }
 
     private void TransfersView_Loaded(object sender, RoutedEventArgs e)
@@ -198,20 +220,121 @@ public sealed partial class TransfersView : UserControl
     private void TorrentTable_ColumnReordered(object sender, TableViewColumnReorderedEventArgs e) => SaveLayout();
 
     private async void ForceStart_Click(object sender, RoutedEventArgs e)
-        => await ViewModel.SetForceStartSelectedAsync(sender is ToggleMenuFlyoutItem { IsChecked: true });
-
-    private async void Sequential_Click(object sender, RoutedEventArgs e) => await ViewModel.ToggleSequentialSelectedAsync();
-    private async void FirstLast_Click(object sender, RoutedEventArgs e) => await ViewModel.ToggleFirstLastSelectedAsync();
-    private async void SuperSeeding_Click(object sender, RoutedEventArgs e)
-        => await ViewModel.SetSuperSeedingSelectedAsync(sender is ToggleMenuFlyoutItem { IsChecked: true });
-    private async void QueueTop_Click(object sender, RoutedEventArgs e) => await ViewModel.MoveTopSelectedAsync();
-    private async void QueueBottom_Click(object sender, RoutedEventArgs e) => await ViewModel.MoveBottomSelectedAsync();
-
-    private async void SetCategory_Click(object sender, RoutedEventArgs e)
     {
-        var value = await PromptAsync(Localizer.Get("Dialog_SetCategory", "Set category"), Localizer.Get("Dialog_CategoryClearHint", "Category name; leave empty to clear"), ViewModel.SelectedTorrent?.Category);
-        if (value is not null)
-            await ViewModel.SetCategorySelectedAsync(value);
+        var enabled = sender is ToggleMenuFlyoutItem { IsChecked: true };
+        await ExecuteMenuActionAsync(() => ViewModel.SetForceStartSelectedAsync(enabled));
+    }
+
+    private async void Sequential_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.ToggleSequentialSelectedAsync);
+
+    private async void FirstLast_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.ToggleFirstLastSelectedAsync);
+
+    private async void SuperSeeding_Click(object sender, RoutedEventArgs e)
+    {
+        var enabled = sender is ToggleMenuFlyoutItem { IsChecked: true };
+        await ExecuteMenuActionAsync(() => ViewModel.SetSuperSeedingSelectedAsync(enabled));
+    }
+
+    private async void QueueTop_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.MoveTopSelectedAsync);
+
+    private async void QueueBottom_Click(object sender, RoutedEventArgs e)
+        => await ExecuteMenuActionAsync(ViewModel.MoveBottomSelectedAsync);
+
+    private void TorrentContextMenu_Opening(object sender, object e)
+    {
+        var selection = ViewModel.SelectedTorrents;
+        var model = ViewModel.SelectedTorrent?.Model;
+
+        // Mirror qBittorrent: only offer the action that actually applies to the selection.
+        // Start is hidden once everything is running, Stop once everything is stopped; a mixed
+        // selection keeps both.
+        var anyStopped = selection.Any(static row => row.IsStopped);
+        var anyRunning = selection.Any(static row => !row.IsStopped);
+        StartMenuItem.Visibility = anyStopped ? Visibility.Visible : Visibility.Collapsed;
+        StopMenuItem.Visibility = anyRunning ? Visibility.Visible : Visibility.Collapsed;
+
+        // Reflect the per-torrent flags on the toggle items up front instead of binding, so the
+        // checkmark always matches the primary torrent and the click handler simply reads back
+        // the flipped state.
+        ForceStartMenuItem.IsChecked = model?.ForceStart == true;
+        SequentialMenuItem.IsChecked = model?.SequentialDownload == true;
+        FirstLastMenuItem.IsChecked = model?.FirstLastPiecePriority == true;
+
+        // File-system actions only make sense for the local managed backend; hide (not just
+        // disable) them for remote profiles, the way qBittorrent omits them over WebUI.
+        var localVisibility = ViewModel.CanUseLocalFiles ? Visibility.Visible : Visibility.Collapsed;
+        PreviewMenuItem.Visibility = localVisibility;
+        OpenDestinationMenuItem.Visibility = localVisibility;
+
+        CategorySubmenu.Items.Clear();
+        var currentCategory = ViewModel.SelectedTorrent?.Category ?? string.Empty;
+
+        var noneItem = new ToggleMenuFlyoutItem
+        {
+            Text = Localizer.Get("Category_Uncategorized", "Uncategorized"),
+            IsChecked = string.IsNullOrEmpty(currentCategory)
+        };
+        noneItem.Click += async (_, _) => await ExecuteMenuActionAsync(() => ViewModel.SetCategorySelectedAsync(string.Empty));
+        CategorySubmenu.Items.Add(noneItem);
+
+        var categories = ViewModel.Categories.Keys
+            .OrderBy(static name => name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        if (categories.Count > 0)
+            CategorySubmenu.Items.Add(new MenuFlyoutSeparator());
+
+        foreach (var category in categories)
+        {
+            var item = new ToggleMenuFlyoutItem
+            {
+                Text = category,
+                IsChecked = string.Equals(category, currentCategory, StringComparison.Ordinal)
+            };
+            item.Click += async (_, _) => await ExecuteMenuActionAsync(() => ViewModel.SetCategorySelectedAsync(category));
+            CategorySubmenu.Items.Add(item);
+        }
+
+        CategorySubmenu.Items.Add(new MenuFlyoutSeparator());
+        var newItem = new MenuFlyoutItem { Text = Localizer.Get("Category_New", "New category…") };
+        newItem.Click += async (_, _) => await ExecuteMenuActionAsync(CreateAndAssignCategoryAsync);
+        CategorySubmenu.Items.Add(newItem);
+    }
+
+    private async Task CreateAndAssignCategoryAsync()
+    {
+        if (ViewModel.Api is null)
+            return;
+        var name = new TextBox { Header = Localizer.Get("Dialog_CategoryName", "Category name") };
+        var path = new TextBox { Header = Localizer.Get("Dialog_DefaultSavePath", "Default save path") };
+        var panel = new StackPanel { Spacing = 12 };
+        panel.Children.Add(name);
+        panel.Children.Add(path);
+        if (await ShowFormAsync(Localizer.Get("Dialog_NewCategory", "New category"), panel) != ContentDialogResult.Primary
+            || string.IsNullOrWhiteSpace(name.Text))
+            return;
+
+        var categoryName = name.Text.Trim();
+        await ViewModel.Api.Torrents.PostAsync("createCategory", new Dictionary<string, string?> { ["category"] = categoryName, ["savePath"] = path.Text.Trim() });
+        await ViewModel.SetCategorySelectedAsync(categoryName);
+    }
+
+    /// <summary>
+    /// Runs a menu action and shows a friendly error instead of letting an API rejection
+    /// (e.g. an invalid category or tag name) or any other failure crash the app.
+    /// </summary>
+    private async Task ExecuteMenuActionAsync(Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception exception)
+        {
+            await ShowInfoAsync(Localizer.Get("Dialog_ActionFailedTitle", "Action failed"), exception.Message);
+        }
     }
 
     private async void CreateCategory_Click(object sender, RoutedEventArgs e)
@@ -221,8 +344,9 @@ public sealed partial class TransfersView : UserControl
         var name = new TextBox { Header = Localizer.Get("Dialog_CategoryName", "Category name") };
         var path = new TextBox { Header = Localizer.Get("Dialog_DefaultSavePath", "Default save path") };
         var panel = new StackPanel { Spacing = 12 }; panel.Children.Add(name); panel.Children.Add(path);
-        if (await ShowFormAsync(Localizer.Get("Dialog_NewCategory", "New category"), panel) == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(name.Text))
-            await ViewModel.Api.Torrents.PostAsync("createCategory", new Dictionary<string, string?> { ["category"] = name.Text.Trim(), ["savePath"] = path.Text.Trim() });
+        if (await ShowFormAsync(Localizer.Get("Dialog_NewCategory", "New category"), panel) != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(name.Text))
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.PostAsync("createCategory", new Dictionary<string, string?> { ["category"] = name.Text.Trim(), ["savePath"] = path.Text.Trim() }));
     }
 
     private async void EditCategory_Click(object sender, RoutedEventArgs e)
@@ -230,16 +354,18 @@ public sealed partial class TransfersView : UserControl
         if (ViewModel.Api is null || CategoriesList.SelectedItem is not FilterItemViewModel category || category.Key == "Uncategorized")
             return;
         var path = await PromptAsync(Localizer.Get("Dialog_EditCategory", "Edit category"), Localizer.Get("Dialog_DefaultSavePath", "Default save path"));
-        if (path is not null)
-            await ViewModel.Api.Torrents.PostAsync("editCategory", new Dictionary<string, string?> { ["category"] = category.Key, ["savePath"] = path.Trim() });
+        if (path is null)
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.PostAsync("editCategory", new Dictionary<string, string?> { ["category"] = category.Key, ["savePath"] = path.Trim() }));
     }
 
     private async void DeleteCategory_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel.Api is null || CategoriesList.SelectedItem is not FilterItemViewModel category || category.Key == "Uncategorized")
             return;
-        if (await ConfirmAsync(Localizer.Get("Dialog_DeleteCategory", "Delete category?"), string.Format(Localizer.Get("Dialog_DeleteCategoryMessage", "The torrents in “{0}” will become uncategorized."), category.Title)))
-            await ViewModel.Api.Torrents.PostAsync("removeCategories", new Dictionary<string, string?> { ["categories"] = category.Key });
+        if (!await ConfirmAsync(Localizer.Get("Dialog_DeleteCategory", "Delete category?"), string.Format(Localizer.Get("Dialog_DeleteCategoryMessage", "The torrents in “{0}” will become uncategorized."), category.Title)))
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.PostAsync("removeCategories", new Dictionary<string, string?> { ["categories"] = category.Key }));
     }
 
     private async void CreateTags_Click(object sender, RoutedEventArgs e)
@@ -247,16 +373,18 @@ public sealed partial class TransfersView : UserControl
         if (ViewModel.Api is null)
             return;
         var tags = await PromptAsync(Localizer.Get("Dialog_CreateTags", "Create tags"), Localizer.Get("Dialog_CommaSeparatedTags", "Comma-separated tag names"));
-        if (!string.IsNullOrWhiteSpace(tags))
-            await ViewModel.Api.Torrents.PostAsync("createTags", new Dictionary<string, string?> { ["tags"] = tags });
+        if (string.IsNullOrWhiteSpace(tags))
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.PostAsync("createTags", new Dictionary<string, string?> { ["tags"] = tags }));
     }
 
     private async void DeleteTag_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel.Api is null || TagsList.SelectedItem is not FilterItemViewModel tag)
             return;
-        if (await ConfirmAsync(Localizer.Get("Dialog_DeleteTag", "Delete tag?"), string.Format(Localizer.Get("Dialog_DeleteTagMessage", "Remove “{0}” from all torrents?"), tag.Title)))
-            await ViewModel.Api.Torrents.PostAsync("deleteTags", new Dictionary<string, string?> { ["tags"] = tag.Key });
+        if (!await ConfirmAsync(Localizer.Get("Dialog_DeleteTag", "Delete tag?"), string.Format(Localizer.Get("Dialog_DeleteTagMessage", "Remove “{0}” from all torrents?"), tag.Title)))
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.PostAsync("deleteTags", new Dictionary<string, string?> { ["tags"] = tag.Key }));
     }
 
     private async void Tags_Click(object sender, RoutedEventArgs e)
@@ -264,10 +392,8 @@ public sealed partial class TransfersView : UserControl
         var value = await PromptAsync(Localizer.Get("Dialog_TorrentTags", "Torrent tags"), Localizer.Get("Dialog_CommaSeparatedTags", "Comma-separated tags"));
         if (string.IsNullOrWhiteSpace(value))
             return;
-        if (sender is MenuFlyoutItem { Tag: "remove" })
-            await ViewModel.RemoveTagsSelectedAsync(value);
-        else
-            await ViewModel.AddTagsSelectedAsync(value);
+        var isRemove = sender is MenuFlyoutItem { Tag: "remove" };
+        await ExecuteMenuActionAsync(() => isRemove ? ViewModel.RemoveTagsSelectedAsync(value) : ViewModel.AddTagsSelectedAsync(value));
     }
 
     private async void Limits_Click(object sender, RoutedEventArgs e)
@@ -277,8 +403,11 @@ public sealed partial class TransfersView : UserControl
         var panel = new StackPanel { Spacing = 12 }; panel.Children.Add(download); panel.Children.Add(upload);
         if (await ShowFormAsync(Localizer.Get("Dialog_TorrentRateLimits", "Torrent rate limits"), panel) != ContentDialogResult.Primary)
             return;
-        await ViewModel.PostSelectedAsync("setDownloadLimit", new Dictionary<string, string?> { ["limit"] = ((long)Math.Max(0, download.Value) * 1024).ToString() });
-        await ViewModel.PostSelectedAsync("setUploadLimit", new Dictionary<string, string?> { ["limit"] = ((long)Math.Max(0, upload.Value) * 1024).ToString() });
+        await ExecuteMenuActionAsync(async () =>
+        {
+            await ViewModel.PostSelectedAsync("setDownloadLimit", new Dictionary<string, string?> { ["limit"] = ((long)Math.Max(0, download.Value) * 1024).ToString() });
+            await ViewModel.PostSelectedAsync("setUploadLimit", new Dictionary<string, string?> { ["limit"] = ((long)Math.Max(0, upload.Value) * 1024).ToString() });
+        });
     }
 
     private async void ShareLimits_Click(object sender, RoutedEventArgs e)
@@ -289,54 +418,60 @@ public sealed partial class TransfersView : UserControl
         var panel = new StackPanel { Spacing = 12 }; panel.Children.Add(ratio); panel.Children.Add(time); panel.Children.Add(inactive);
         if (await ShowFormAsync(Localizer.Get("Dialog_ShareLimits", "Share limits"), panel) != ContentDialogResult.Primary)
             return;
-        await ViewModel.PostSelectedAsync("setShareLimits", new Dictionary<string, string?>
+        await ExecuteMenuActionAsync(() => ViewModel.PostSelectedAsync("setShareLimits", new Dictionary<string, string?>
         {
             ["ratioLimit"] = ratio.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),
             ["seedingTimeLimit"] = ((int)time.Value).ToString(),
             ["inactiveSeedingTimeLimit"] = ((int)inactive.Value).ToString()
-        });
+        }));
     }
 
     private async void Rename_Click(object sender, RoutedEventArgs e)
     {
         var value = await PromptAsync(Localizer.Get("Dialog_RenameTorrent", "Rename torrent"), Localizer.Get("Dialog_NewName", "New name"), ViewModel.SelectedTorrent?.Name);
-        if (!string.IsNullOrWhiteSpace(value))
-            await ViewModel.RenameSelectedAsync(value.Trim());
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.RenameSelectedAsync(value.Trim()));
     }
 
     private async void SetLocation_Click(object sender, RoutedEventArgs e)
     {
         var value = await PromptAsync(Localizer.Get("Dialog_SetTorrentLocation", "Set torrent location"), Localizer.Get("Dialog_ServerPath", "Path on the qBittorrent server"), ViewModel.SelectedTorrent?.Model.SavePath);
-        if (!string.IsNullOrWhiteSpace(value))
-            await ViewModel.SetLocationSelectedAsync(value.Trim());
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.SetLocationSelectedAsync(value.Trim()));
     }
 
     private async void AddTrackers_Click(object sender, RoutedEventArgs e)
     {
         var urls = await PromptAsync(Localizer.Get("Dialog_AddTrackers", "Add trackers"), Localizer.Get("Dialog_TrackerPerLine", "One tracker URL per line"), multiline: true);
-        if (!string.IsNullOrWhiteSpace(urls))
-            await PostForSingleTorrentAsync("addTrackers", "urls", urls);
+        if (string.IsNullOrWhiteSpace(urls))
+            return;
+        await ExecuteMenuActionAsync(() => PostForSingleTorrentAsync("addTrackers", "urls", urls));
     }
 
     private async void RemoveTrackers_Click(object sender, RoutedEventArgs e)
     {
         var urls = string.Join('|', TrackersList.SelectedItems.OfType<TorrentTracker>().Select(static tracker => tracker.Url));
-        if (!string.IsNullOrEmpty(urls))
-            await PostForSingleTorrentAsync("removeTrackers", "urls", urls);
+        if (string.IsNullOrEmpty(urls))
+            return;
+        await ExecuteMenuActionAsync(() => PostForSingleTorrentAsync("removeTrackers", "urls", urls));
     }
 
     private async void AddWebSeeds_Click(object sender, RoutedEventArgs e)
     {
         var urls = await PromptAsync(Localizer.Get("Dialog_AddHttpSources", "Add HTTP sources"), Localizer.Get("Dialog_UrlPerLine", "One URL per line"), multiline: true);
-        if (!string.IsNullOrWhiteSpace(urls))
-            await PostForSingleTorrentAsync("addWebSeeds", "urls", urls);
+        if (string.IsNullOrWhiteSpace(urls))
+            return;
+        await ExecuteMenuActionAsync(() => PostForSingleTorrentAsync("addWebSeeds", "urls", urls));
     }
 
     private async void RemoveWebSeeds_Click(object sender, RoutedEventArgs e)
     {
         var urls = string.Join('|', WebSeedsList.SelectedItems.OfType<string>());
-        if (!string.IsNullOrEmpty(urls))
-            await PostForSingleTorrentAsync("removeWebSeeds", "urls", urls);
+        if (string.IsNullOrEmpty(urls))
+            return;
+        await ExecuteMenuActionAsync(() => PostForSingleTorrentAsync("removeWebSeeds", "urls", urls));
     }
 
     private async Task PostForSingleTorrentAsync(string action, string key, string value)
@@ -354,8 +489,40 @@ public sealed partial class TransfersView : UserControl
         picker.FileTypeChoices.Add("Torrent file", [".torrent"]);
         InitializePicker(picker);
         var file = await picker.PickSaveFileAsync();
-        if (file is not null)
-            await FileIO.WriteBytesAsync(file, await ViewModel.ExportSelectedAsync());
+        if (file is null)
+            return;
+        await ExecuteMenuActionAsync(async () => await FileIO.WriteBytesAsync(file, await ViewModel.ExportSelectedAsync()));
+    }
+
+    private void CopyInfo_Click(object sender, RoutedEventArgs e)
+    {
+        var torrent = ViewModel.SelectedTorrent;
+        if (torrent is null || sender is not MenuFlyoutItem { Tag: string kind })
+            return;
+
+        var text = kind switch
+        {
+            "name" => torrent.Name,
+            "hashv1" => torrent.Model.InfoHashV1,
+            "hashv2" => torrent.Model.InfoHashV2,
+            "magnet" => BuildMagnetLink(torrent),
+            _ => null
+        };
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        package.SetText(text);
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+    }
+
+    private static string BuildMagnetLink(TorrentRowViewModel torrent)
+    {
+        var hash = !string.IsNullOrEmpty(torrent.Model.InfoHashV1) ? torrent.Model.InfoHashV1 : torrent.Model.InfoHashV2;
+        if (string.IsNullOrEmpty(hash))
+            return string.Empty;
+        var magnet = $"magnet:?xt=urn:btih:{hash}";
+        return string.IsNullOrEmpty(torrent.Name) ? magnet : $"{magnet}&dn={Uri.EscapeDataString(torrent.Name)}";
     }
 
     private async void PreviewFile_Click(object sender, RoutedEventArgs e)
@@ -635,7 +802,7 @@ public sealed partial class TransfersView : UserControl
             return;
         }
 
-        if (ResolveLocalNodePath(torrent, node) is { } path)
+        if (ResolveLocalNodePath(torrent, node, _fileTreeRoots.Contains(node)) is { } path)
         {
             if (node.File is not null)
                 await Windows.System.Launcher.LaunchFileAsync(await StorageFile.GetFileFromPathAsync(path));
@@ -662,7 +829,7 @@ public sealed partial class TransfersView : UserControl
             return;
         }
 
-        if (ResolveLocalNodePath(torrent, node) is { } path)
+        if (ResolveLocalNodePath(torrent, node, _fileTreeRoots.Contains(node)) is { } path)
         {
             SelectInExplorer(path);
             return;
@@ -673,13 +840,20 @@ public sealed partial class TransfersView : UserControl
             Localizer.Get("Files_LocalItemUnavailable", "The selected file or folder is not available locally yet."));
     }
 
-    private static string? ResolveLocalNodePath(TorrentRowViewModel torrent, TorrentFileTreeNode node)
+    private static string? ResolveLocalNodePath(TorrentRowViewModel torrent, TorrentFileTreeNode node, bool isRootNode)
     {
         if (node.File is not null)
         {
             var filePath = ResolveLocalFilePath(torrent, node.File);
             return filePath is not null && File.Exists(filePath) ? filePath : null;
         }
+
+        // The root of the tree represents the whole torrent. Its FullPath may be a purely
+        // synthetic display name (built to group files that don't already share a common
+        // folder) that never existed on disk, so prefer the server-reported content path,
+        // which is always correct, over combining names ourselves.
+        if (isRootNode && ResolveDestinationTarget(torrent) is { } contentTarget && Directory.Exists(contentTarget))
+            return contentTarget;
 
         if (ResolveLocalDirectoryPath(torrent) is not { } basePath)
             return null;
@@ -692,8 +866,9 @@ public sealed partial class TransfersView : UserControl
         if (ViewModel.Api is null)
             return;
         var peers = PeersList.SelectedItems.OfType<PeerRowViewModel>().Select(static peer => peer.Address).ToList();
-        if (peers.Count > 0)
-            await ViewModel.Api.Transfer.BanPeersAsync(peers);
+        if (peers.Count == 0)
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.Api.Transfer.BanPeersAsync(peers));
     }
 
     private async void DeleteSelected_Click(object sender, RoutedEventArgs e)
@@ -702,13 +877,14 @@ public sealed partial class TransfersView : UserControl
             return;
         if (!ClientSettings.Get("ui.confirmDelete", true))
         {
-            await ViewModel.DeleteSelectedAsync(deleteFiles: false);
+            await ExecuteMenuActionAsync(() => ViewModel.DeleteSelectedAsync(deleteFiles: false));
             return;
         }
         var files = new CheckBox { Content = Localizer.Get("Dialog_AlsoDeleteFiles", "Also delete files from disk") };
         var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = Localizer.Get("Dialog_DeleteSelectedTorrents", "Delete selected torrents?"), Content = files, PrimaryButtonText = Localizer.Get("Common_Delete", "Delete"), CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"), DefaultButton = ContentDialogButton.Close };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-            await ViewModel.DeleteSelectedAsync(files.IsChecked == true);
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+        await ExecuteMenuActionAsync(() => ViewModel.DeleteSelectedAsync(files.IsChecked == true));
     }
 
     private async void ChooseColumns_Click(object sender, RoutedEventArgs e)

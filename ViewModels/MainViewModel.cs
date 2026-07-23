@@ -65,6 +65,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         SelectedFilter = StatusFilters[0];
     }
 
+    /// <summary>All categories currently known to the server, keyed by name (not just ones with torrents assigned).</summary>
+    public IReadOnlyDictionary<string, TorrentCategory> Categories => _mainData.Categories;
+
     public ObservableCollection<TorrentRowViewModel> Torrents { get; } = [];
     public ObservableCollection<FilterItemViewModel> StatusFilters { get; }
     public ObservableCollection<FilterItemViewModel> CategoryFilters { get; } = [];
