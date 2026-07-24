@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml.Media;
+using Windows.UI;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Core.Services;
 using WinBitTorrent.Services;
@@ -21,6 +23,8 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string Progress => ValueFormatter.Percentage(_model.Progress);
     public string State => _model.State;
     public string Status => TorrentStateText(_model.State);
+    public string StatusGlyph => StatusVisual(_model.State).Glyph;
+    public Brush StatusBrush => StatusVisual(_model.State).Brush;
     public string Seeds => $"{_model.Seeds} ({_model.TotalSeeds})";
     public string Peers => $"{_model.Peers} ({_model.TotalPeers})";
     public string DownloadSpeed => ValueFormatter.Speed(_model.DownloadSpeed);
@@ -55,6 +59,8 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string Reannounce => ValueFormatter.Duration(_model.Reannounce);
     public string Private => _model.IsPrivate ? Localizer.Get("Common_Yes", "Yes") : Localizer.Get("Common_No", "No");
     public bool IsActive => _model.DownloadSpeed > 0 || _model.UploadSpeed > 0 || _model.State.Contains("downloading", StringComparison.OrdinalIgnoreCase);
+    public bool IsStopped => _model.State.Contains("paused", StringComparison.OrdinalIgnoreCase)
+        || _model.State.Contains("stopped", StringComparison.OrdinalIgnoreCase);
 
     public void Update(TorrentInfo model)
     {
@@ -62,8 +68,55 @@ public sealed class TorrentRowViewModel : ObservableObject
         OnPropertyChanged(string.Empty);
     }
 
+    // Optimistic local updates so the context menu reflects a toggled flag immediately, without
+    // waiting for the next maindata delta to re-report this torrent (which may be a long time for
+    // an idle torrent). The next real refresh overwrites these with the server's truth.
+    public void ApplyForceStart(bool value) => SetFlag(() => _model.ForceStart = value);
+    public void ApplySequentialDownload(bool value) => SetFlag(() => _model.SequentialDownload = value);
+    public void ApplyFirstLastPiecePriority(bool value) => SetFlag(() => _model.FirstLastPiecePriority = value);
+
+    private void SetFlag(Action mutate)
+    {
+        mutate();
+        OnPropertyChanged(string.Empty);
+    }
+
     private static string FormatDate(long seconds)
         => ValueFormatter.UnixDate(seconds)?.LocalDateTime.ToString("g") ?? "—";
+
+    // Compact status icon shown in the leftmost column, in the spirit of qBittorrent's state
+    // glyphs: direction arrows for transfers (dimmed while stalled), a pause for stopped
+    // downloads, a filled check for finished torrents, a spinner for checking/moving, and a
+    // warning for errors.
+    private static (string Glyph, SolidColorBrush Brush) StatusVisual(string state) => state switch
+    {
+        "error" or "missingFiles" => ("", GetBrush(0xDC2626)),
+        "uploading" or "forcedUP" => ("", GetBrush(0x16A34A)),
+        "stalledUP" => ("", GetBrush(0x94A3B8)),
+        "pausedUP" or "stoppedUP" => ("", GetBrush(0x16A34A)),
+        "queuedUP" or "queuedDL" => ("", GetBrush(0x94A3B8)),
+        "downloading" or "forcedDL" or "metaDL" => ("", GetBrush(0x2563EB)),
+        "stalledDL" => ("", GetBrush(0x94A3B8)),
+        "pausedDL" or "stoppedDL" => ("", GetBrush(0x64748B)),
+        "checkingUP" or "checkingDL" or "checkingResumeData" => ("", GetBrush(0x2563EB)),
+        "moving" => ("", GetBrush(0x0D9488)),
+        "allocating" => ("", GetBrush(0x94A3B8)),
+        _ => ("", GetBrush(0x94A3B8))
+    };
+
+    // Icon brushes are shared across rows and created lazily on the UI thread (property getters
+    // run during binding), so there is one brush per colour rather than one per torrent.
+    private static readonly Dictionary<uint, SolidColorBrush> BrushCache = [];
+
+    private static SolidColorBrush GetBrush(uint rgb)
+    {
+        if (!BrushCache.TryGetValue(rgb, out var brush))
+        {
+            brush = new SolidColorBrush(Color.FromArgb(0xFF, (byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb));
+            BrushCache[rgb] = brush;
+        }
+        return brush;
+    }
 
     private static string TorrentStateText(string state) => state switch
     {

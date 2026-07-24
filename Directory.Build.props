@@ -5,8 +5,8 @@
     compare against the latest GitHub release, and build/release.ps1 reads it to
     name the portable folder and the installer.
   -->
-  <PropertyGroup>
-    <Version>1.1.0</Version>
+  <PropertyGroup>   
+    <Version>1.1.5</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 

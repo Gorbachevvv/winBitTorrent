@@ -96,6 +96,15 @@ public sealed class TorrentInfo
     [JsonPropertyName("save_path")]
     public string SavePath { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Root path of the torrent's actual content: the file itself for single-file
+    /// torrents, or the folder containing its files for multi-file torrents. Unlike
+    /// <see cref="SavePath"/>, this already accounts for any subfolder qBittorrent
+    /// created and for whether the torrent is still using its incomplete-download path.
+    /// </summary>
+    [JsonPropertyName("content_path")]
+    public string ContentPath { get; set; } = string.Empty;
+
     [JsonPropertyName("completed")]
     public long Completed { get; set; }
 
@@ -197,6 +206,7 @@ internal sealed class TorrentInfoJsonConverter : JsonConverter<TorrentInfo>
                 case "amount_left": torrent.AmountLeft = ReadInt64(ref reader); break;
                 case "time_active": torrent.TimeActive = ReadInt64(ref reader); break;
                 case "save_path": torrent.SavePath = ReadString(ref reader); break;
+                case "content_path": torrent.ContentPath = ReadString(ref reader); break;
                 case "completed": torrent.Completed = ReadInt64(ref reader); break;
                 case "ratio_limit": torrent.RatioLimit = ReadDouble(ref reader); break;
                 case "seen_complete": torrent.SeenComplete = ReadInt64(ref reader); break;
@@ -253,6 +263,7 @@ internal sealed class TorrentInfoJsonConverter : JsonConverter<TorrentInfo>
         writer.WriteNumber("amount_left", value.AmountLeft);
         writer.WriteNumber("time_active", value.TimeActive);
         writer.WriteString("save_path", value.SavePath);
+        writer.WriteString("content_path", value.ContentPath);
         writer.WriteNumber("completed", value.Completed);
         writer.WriteNumber("ratio_limit", value.RatioLimit);
         writer.WriteNumber("seen_complete", value.SeenComplete);

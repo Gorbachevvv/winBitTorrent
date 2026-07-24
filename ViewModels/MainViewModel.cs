@@ -65,6 +65,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         SelectedFilter = StatusFilters[0];
     }
 
+    /// <summary>All categories currently known to the server, keyed by name (not just ones with torrents assigned).</summary>
+    public IReadOnlyDictionary<string, TorrentCategory> Categories => _mainData.Categories;
+
     public ObservableCollection<TorrentRowViewModel> Torrents { get; } = [];
     public ObservableCollection<FilterItemViewModel> StatusFilters { get; }
     public ObservableCollection<FilterItemViewModel> CategoryFilters { get; } = [];
@@ -237,13 +240,43 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         await RefreshNowAsync();
     }
 
-    public Task ToggleSequentialSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.ToggleSequentialDownload);
-    public Task ToggleFirstLastSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.ToggleFirstLastPiecePriority);
+    public async Task ToggleSequentialSelectedAsync()
+    {
+        var targets = CaptureFlagTargets(static row => !row.Model.SequentialDownload);
+        await ExecuteSelectedAsync(TorrentCommand.ToggleSequentialDownload);
+        foreach (var (row, value) in targets)
+            row.ApplySequentialDownload(value);
+    }
+
+    public async Task ToggleFirstLastSelectedAsync()
+    {
+        var targets = CaptureFlagTargets(static row => !row.Model.FirstLastPiecePriority);
+        await ExecuteSelectedAsync(TorrentCommand.ToggleFirstLastPiecePriority);
+        foreach (var (row, value) in targets)
+            row.ApplyFirstLastPiecePriority(value);
+    }
+
     public Task MoveTopSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.TopPriority);
     public Task MoveBottomSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.BottomPriority);
 
-    public Task SetForceStartSelectedAsync(bool enabled)
-        => PostSelectedAsync("setForceStart", new Dictionary<string, string?> { ["value"] = enabled.ToString().ToLowerInvariant() });
+    public async Task SetForceStartSelectedAsync(bool enabled)
+    {
+        var targets = CaptureFlagTargets(_ => enabled);
+        await PostSelectedAsync("setForceStart", new Dictionary<string, string?> { ["value"] = enabled.ToString().ToLowerInvariant() });
+        foreach (var (row, value) in targets)
+            row.ApplyForceStart(value);
+    }
+
+    // Snapshots the effective selection together with the flag value each torrent should end up
+    // with, so the optimistic local update after the server call matches the same rows the action
+    // targeted.
+    private List<(TorrentRowViewModel Row, bool Value)> CaptureFlagTargets(Func<TorrentRowViewModel, bool> selector)
+    {
+        var rows = SelectedTorrents.Count > 0
+            ? (IReadOnlyList<TorrentRowViewModel>)SelectedTorrents
+            : SelectedTorrent is null ? [] : [SelectedTorrent];
+        return rows.Select(row => (row, selector(row))).ToList();
+    }
 
     public Task SetSuperSeedingSelectedAsync(bool enabled)
         => PostSelectedAsync("setSuperSeeding", new Dictionary<string, string?> { ["value"] = enabled.ToString().ToLowerInvariant() });

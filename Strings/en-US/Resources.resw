@@ -84,7 +84,7 @@
   <data name="SequentialDownload.Text" xml:space="preserve"><value>Download in sequential order</value></data>
   <data name="FirstLastPriority.Text" xml:space="preserve"><value>Download first and last pieces first</value></data>
   <data name="SuperSeeding.Text" xml:space="preserve"><value>Super seeding mode</value></data>
-  <data name="SetCategory.Text" xml:space="preserve"><value>Set category…</value></data>
+  <data name="CategoryMenu.Text" xml:space="preserve"><value>Category</value></data>
   <data name="AddTags.Text" xml:space="preserve"><value>Add tags…</value></data>
   <data name="RemoveTags.Text" xml:space="preserve"><value>Remove tags…</value></data>
   <data name="LimitRate.Text" xml:space="preserve"><value>Limit rate</value></data>
@@ -99,6 +99,12 @@
   <data name="ChooseColumns.Text" xml:space="preserve"><value>Choose columns…</value></data>
   <data name="OpenDestination.Text" xml:space="preserve"><value>Open destination folder</value></data>
   <data name="PreviewAvailableFile.Text" xml:space="preserve"><value>Preview first available file</value></data>
+  <data name="TagsMenu.Text" xml:space="preserve"><value>Tags</value></data>
+  <data name="CopyMenu.Text" xml:space="preserve"><value>Copy</value></data>
+  <data name="CopyName.Text" xml:space="preserve"><value>Name</value></data>
+  <data name="CopyHashV1.Text" xml:space="preserve"><value>Info hash v1</value></data>
+  <data name="CopyHashV2.Text" xml:space="preserve"><value>Info hash v2</value></data>
+  <data name="CopyMagnet.Text" xml:space="preserve"><value>Magnet link</value></data>
 
   <data name="ColumnQueue.Header" xml:space="preserve"><value>#</value></data>
   <data name="ColumnName.Header" xml:space="preserve"><value>Name</value></data>
@@ -395,8 +401,9 @@
   <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>qBittorrent reported save path</value></data>
   <data name="Dialog_DownloadPath" xml:space="preserve"><value>Download path</value></data>
   <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>The path may not exist yet, or the torrent metadata has not finished syncing.</value></data>
-  <data name="Dialog_SetCategory" xml:space="preserve"><value>Set category</value></data>
-  <data name="Dialog_CategoryClearHint" xml:space="preserve"><value>Category name; leave empty to clear</value></data>
+  <data name="Category_Uncategorized" xml:space="preserve"><value>Uncategorized</value></data>
+  <data name="Category_New" xml:space="preserve"><value>New category…</value></data>
+  <data name="Dialog_ActionFailedTitle" xml:space="preserve"><value>Action failed</value></data>
   <data name="Dialog_CategoryName" xml:space="preserve"><value>Category name</value></data>
   <data name="Dialog_DefaultSavePath" xml:space="preserve"><value>Default save path</value></data>
   <data name="Dialog_NewCategory" xml:space="preserve"><value>New category</value></data>

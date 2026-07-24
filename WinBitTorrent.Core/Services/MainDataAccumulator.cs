@@ -130,6 +130,7 @@ public sealed class MainDataAccumulator
                 case "amount_left": target.AmountLeft = patch.AmountLeft; break;
                 case "time_active": target.TimeActive = patch.TimeActive; break;
                 case "save_path": target.SavePath = patch.SavePath; break;
+                case "content_path": target.ContentPath = patch.ContentPath; break;
                 case "completed": target.Completed = patch.Completed; break;
                 case "ratio_limit": target.RatioLimit = patch.RatioLimit; break;
                 case "seen_complete": target.SeenComplete = patch.SeenComplete; break;

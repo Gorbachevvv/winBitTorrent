@@ -84,7 +84,7 @@
   <data name="SequentialDownload.Text" xml:space="preserve"><value>Последовательная загрузка</value></data>
   <data name="FirstLastPriority.Text" xml:space="preserve"><value>Сначала первая и последняя части</value></data>
   <data name="SuperSeeding.Text" xml:space="preserve"><value>Режим суперсида</value></data>
-  <data name="SetCategory.Text" xml:space="preserve"><value>Назначить категорию…</value></data>
+  <data name="CategoryMenu.Text" xml:space="preserve"><value>Категория</value></data>
   <data name="AddTags.Text" xml:space="preserve"><value>Добавить метки…</value></data>
   <data name="RemoveTags.Text" xml:space="preserve"><value>Удалить метки…</value></data>
   <data name="LimitRate.Text" xml:space="preserve"><value>Ограничение скорости</value></data>
@@ -99,6 +99,12 @@
   <data name="ChooseColumns.Text" xml:space="preserve"><value>Выбрать столбцы…</value></data>
   <data name="OpenDestination.Text" xml:space="preserve"><value>Открыть папку назначения</value></data>
   <data name="PreviewAvailableFile.Text" xml:space="preserve"><value>Открыть первый доступный файл</value></data>
+  <data name="TagsMenu.Text" xml:space="preserve"><value>Метки</value></data>
+  <data name="CopyMenu.Text" xml:space="preserve"><value>Копировать</value></data>
+  <data name="CopyName.Text" xml:space="preserve"><value>Имя</value></data>
+  <data name="CopyHashV1.Text" xml:space="preserve"><value>Инфо-хеш v1</value></data>
+  <data name="CopyHashV2.Text" xml:space="preserve"><value>Инфо-хеш v2</value></data>
+  <data name="CopyMagnet.Text" xml:space="preserve"><value>Magnet-ссылка</value></data>
 
   <data name="ColumnQueue.Header" xml:space="preserve"><value>№</value></data>
   <data name="ColumnName.Header" xml:space="preserve"><value>Имя</value></data>
@@ -395,8 +401,9 @@
   <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Путь сохранения, полученный от qBittorrent</value></data>
   <data name="Dialog_DownloadPath" xml:space="preserve"><value>Путь загрузки</value></data>
   <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>Возможно, путь ещё не существует или метаданные торрента ещё не синхронизированы.</value></data>
-  <data name="Dialog_SetCategory" xml:space="preserve"><value>Назначить категорию</value></data>
-  <data name="Dialog_CategoryClearHint" xml:space="preserve"><value>Название категории; оставьте пустым для удаления</value></data>
+  <data name="Category_Uncategorized" xml:space="preserve"><value>Без категории</value></data>
+  <data name="Category_New" xml:space="preserve"><value>Новая категория…</value></data>
+  <data name="Dialog_ActionFailedTitle" xml:space="preserve"><value>Не удалось выполнить действие</value></data>
   <data name="Dialog_CategoryName" xml:space="preserve"><value>Название категории</value></data>
   <data name="Dialog_DefaultSavePath" xml:space="preserve"><value>Путь сохранения по умолчанию</value></data>
   <data name="Dialog_NewCategory" xml:space="preserve"><value>Новая категория</value></data>
