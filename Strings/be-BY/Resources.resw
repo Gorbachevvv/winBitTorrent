@@ -1,0 +1,674 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="FileMenu.Title" xml:space="preserve"><value>Файл</value></data>
+  <data name="EditMenu.Title" xml:space="preserve"><value>Праўка</value></data>
+  <data name="ViewMenu.Title" xml:space="preserve"><value>Выгляд</value></data>
+  <data name="ToolsMenu.Title" xml:space="preserve"><value>Начынне</value></data>
+  <data name="HelpMenu.Title" xml:space="preserve"><value>Даведка</value></data>
+  <data name="AddTorrentFile.Text" xml:space="preserve"><value>Дадаць торэнт-файл…</value></data>
+  <data name="AddTorrentLink.Text" xml:space="preserve"><value>Дадаць спасылку…</value></data>
+  <data name="CreateTorrent.Text" xml:space="preserve"><value>Стварыць торэнт…</value></data>
+  <data name="Exit.Text" xml:space="preserve"><value>Выхад</value></data>
+  <data name="Start.Text" xml:space="preserve"><value>Запуск</value></data>
+  <data name="Stop.Text" xml:space="preserve"><value>Спыніць</value></data>
+  <data name="Delete.Text" xml:space="preserve"><value>Выдаліць…</value></data>
+  <data name="ForceRecheck.Text" xml:space="preserve"><value>Пераправерыць прымусова</value></data>
+  <data name="Reannounce.Text" xml:space="preserve"><value>Абнавіць анонс</value></data>
+  <data name="ServerProfiles.Text" xml:space="preserve"><value>Профілі сервераў…</value></data>
+  <data name="Options.Text" xml:space="preserve"><value>Налады…</value></data>
+  <data name="FilterTorrents.PlaceholderText" xml:space="preserve"><value>Фільтр торэнтаў</value></data>
+  <data name="TransfersTab.Header" xml:space="preserve"><value>Перадачы</value></data>
+  <data name="RssTab.Header" xml:space="preserve"><value>RSS-стужка</value></data>
+  <data name="SearchTab.Header" xml:space="preserve"><value>Пошук</value></data>
+  <data name="LogTab.Header" xml:space="preserve"><value>Часопіс выканання</value></data>
+  <data name="StatusFilter.Header" xml:space="preserve"><value>Стан</value></data>
+  <data name="CategoriesFilter.Header" xml:space="preserve"><value>Катэгорыя</value></data>
+  <data name="TagsFilter.Header" xml:space="preserve"><value>Меткі</value></data>
+  <data name="TrackersFilter.Header" xml:space="preserve"><value>Трэкеры</value></data>
+  <data name="AlternativeSpeedLimits.Text" xml:space="preserve"><value>Альтэрнатыўныя абмежаванні хуткасці</value></data>
+  <data name="TransfersMenu.Text" xml:space="preserve"><value>Перадачы</value></data>
+  <data name="RssMenu.Text" xml:space="preserve"><value>RSS-стужка</value></data>
+  <data name="SearchMenu.Text" xml:space="preserve"><value>Пошукавая сістэма</value></data>
+  <data name="LogMenu.Text" xml:space="preserve"><value>Часопіс выканання</value></data>
+  <data name="CookiesMenu.Text" xml:space="preserve"><value>Cookie-файлы…</value></data>
+  <data name="StatisticsMenu.Text" xml:space="preserve"><value>Статыстыка…</value></data>
+  <data name="DocumentationMenu.Text" xml:space="preserve"><value>Дакументацыя qBittorrent</value></data>
+  <data name="AboutMenu.Text" xml:space="preserve"><value>Аб WinBitTorrent</value></data>
+  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Натыўны кліент WinUI 3 для qBittorrent 5.2.3 / Web API 2.15.1</value></data>
+  <data name="Dialog_AboutConnectedBackend" xml:space="preserve"><value>Падлучаны бэкенд: {0}</value></data>
+  <data name="Dialog_AboutRepository" xml:space="preserve"><value>Рэпазітар на GitHub</value></data>
+  <data name="Dialog_AboutReportIssue" xml:space="preserve"><value>Паведаміць аб праблеме</value></data>
+  <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent распаўсюджваецца па ліцэнзіі GPL-2.0-or-later. Апавяшчэння аб іншым ПА і прапанова аб прадастаўленні зыходнага кода ўключаны ў дадатак.</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Закрыць</value></data>
+  <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Праверыць абнаўленні…</value></data>
+  <data name="Update_DialogTitle" xml:space="preserve"><value>Даступна абнаўленне</value></data>
+  <data name="Update_AvailableHeadline" xml:space="preserve"><value>Даступны WinBitTorrent {0}.</value></data>
+  <data name="Update_CurrentVersionLine" xml:space="preserve"><value>У вас усталявана версія {0}.</value></data>
+  <data name="Update_WhatsNew" xml:space="preserve"><value>Што новага</value></data>
+  <data name="Update_UpdateNow" xml:space="preserve"><value>Абнавіцца зараз</value></data>
+  <data name="Update_Later" xml:space="preserve"><value>Пазней</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Загрузка абнаўлення…</value></data>
+  <data name="Update_DownloadingPercent" xml:space="preserve"><value>Загрузка абнаўлення… {0:P0}</value></data>
+  <data name="Update_UpToDateTitle" xml:space="preserve"><value>Усталявана апошняя версія</value></data>
+  <data name="Update_UpToDateMessage" xml:space="preserve"><value>WinBitTorrent {0} — гэта апошняя версія.</value></data>
+  <data name="Update_CheckFailed" xml:space="preserve"><value>Не атрымалася праверыць абнаўленні. Паспрабуйце пазней.</value></data>
+  <data name="Update_FailedTitle" xml:space="preserve"><value>Не атрымалася абнавіць</value></data>
+  <data name="Update_DownloadFailed" xml:space="preserve"><value>Не атрымалася загрузіць абнаўленне.</value></data>
+  <data name="Update_LaunchFailed" xml:space="preserve"><value>Не атрымалася запусціць усталёўшчык.</value></data>
+  <data name="ToolbarAddTorrent.Label" xml:space="preserve"><value>Дадаць торэнт</value></data>
+  <data name="ToolbarAddLink.Label" xml:space="preserve"><value>Дадаць спасылку</value></data>
+  <data name="ToolbarStart.Label" xml:space="preserve"><value>Запусціць</value></data>
+  <data name="ToolbarStop.Label" xml:space="preserve"><value>Спыніць</value></data>
+  <data name="ToolbarDelete.Label" xml:space="preserve"><value>Выдаліць</value></data>
+  <data name="ToolbarQueueUp.Label" xml:space="preserve"><value>Падняць у чарзе</value></data>
+  <data name="ToolbarQueueDown.Label" xml:space="preserve"><value>Апусціць у чарзе</value></data>
+  <data name="ToolbarAlternativeLimits.Label" xml:space="preserve"><value>Альтэрнатыўныя абмежаванні</value></data>
+  <data name="RetryButton.Content" xml:space="preserve"><value>Паўтарыць</value></data>
+  <data name="TorrentDropText.Text" xml:space="preserve"><value>Перацягніце сюды .torrent-файлы</value></data>
+
+  <data name="NewCategory.Text" xml:space="preserve"><value>Новая катэгорыя…</value></data>
+  <data name="EditCategory.Text" xml:space="preserve"><value>Змяніць катэгорыю…</value></data>
+  <data name="DeleteCategory.Text" xml:space="preserve"><value>Выдаліць катэгорыю</value></data>
+  <data name="CreateTags.Text" xml:space="preserve"><value>Стварыць меткі…</value></data>
+  <data name="DeleteTag.Text" xml:space="preserve"><value>Выдаліць метку</value></data>
+  <data name="ForceStart.Text" xml:space="preserve"><value>Прымусовы запуск</value></data>
+  <data name="QueueMenu.Text" xml:space="preserve"><value>Чарга</value></data>
+  <data name="MoveTop.Text" xml:space="preserve"><value>У пачатак чаргі</value></data>
+  <data name="MoveUp.Text" xml:space="preserve"><value>Падняць</value></data>
+  <data name="MoveDown.Text" xml:space="preserve"><value>Апусціць</value></data>
+  <data name="MoveBottom.Text" xml:space="preserve"><value>У канец чаргі</value></data>
+  <data name="SequentialDownload.Text" xml:space="preserve"><value>Паслядоўная загрузка</value></data>
+  <data name="FirstLastPriority.Text" xml:space="preserve"><value>Спачатку першая і апошняя часткі</value></data>
+  <data name="SuperSeeding.Text" xml:space="preserve"><value>Рэжым суперсіда</value></data>
+  <data name="SetCategory.Text" xml:space="preserve"><value>Прызначыць катэгорыю…</value></data>
+  <data name="AddTags.Text" xml:space="preserve"><value>Дадаць меткі…</value></data>
+  <data name="RemoveTags.Text" xml:space="preserve"><value>Выдаліць меткі…</value></data>
+  <data name="LimitRate.Text" xml:space="preserve"><value>Абмежаванне хуткасці</value></data>
+  <data name="TransferLimits.Text" xml:space="preserve"><value>Абмежаванні загрузкі і аддачы…</value></data>
+  <data name="ShareLimits.Text" xml:space="preserve"><value>Рэйтынг і час раздачы…</value></data>
+  <data name="RenameTorrent.Text" xml:space="preserve"><value>Перайменаваць…</value></data>
+  <data name="SetLocation.Text" xml:space="preserve"><value>Змяніць размяшчэнне…</value></data>
+  <data name="TrackersWebSeeds.Text" xml:space="preserve"><value>Трэкеры і вэб-сіды</value></data>
+  <data name="AddTrackers.Text" xml:space="preserve"><value>Дадаць трэкеры…</value></data>
+  <data name="AddWebSeeds.Text" xml:space="preserve"><value>Дадаць вэб-сіды…</value></data>
+  <data name="ExportTorrent.Text" xml:space="preserve"><value>Экспартаваць .torrent…</value></data>
+  <data name="ChooseColumns.Text" xml:space="preserve"><value>Выбраць слупкі…</value></data>
+  <data name="OpenDestination.Text" xml:space="preserve"><value>Адкрыць папку прызначэння</value></data>
+  <data name="PreviewAvailableFile.Text" xml:space="preserve"><value>Адкрыць першы даступны файл</value></data>
+
+  <data name="ColumnQueue.Header" xml:space="preserve"><value>№</value></data>
+  <data name="ColumnName.Header" xml:space="preserve"><value>Імя</value></data>
+  <data name="ColumnSize.Header" xml:space="preserve"><value>Памер</value></data>
+  <data name="ColumnTotalSize.Header" xml:space="preserve"><value>Поўны памер</value></data>
+  <data name="ColumnProgress.Header" xml:space="preserve"><value>Прагрэс</value></data>
+  <data name="ColumnStatus.Header" xml:space="preserve"><value>Стан</value></data>
+  <data name="ColumnSeeds.Header" xml:space="preserve"><value>Сіды</value></data>
+  <data name="ColumnPeers.Header" xml:space="preserve"><value>Піры</value></data>
+  <data name="ColumnDownSpeed.Header" xml:space="preserve"><value>Хуткасць загрузкі</value></data>
+  <data name="ColumnUpSpeed.Header" xml:space="preserve"><value>Хуткасць аддачы</value></data>
+  <data name="ColumnEta.Header" xml:space="preserve"><value>Засталося</value></data>
+  <data name="ColumnRatio.Header" xml:space="preserve"><value>Рэйтынг</value></data>
+  <data name="ColumnPopularity.Header" xml:space="preserve"><value>Папулярнасць</value></data>
+  <data name="ColumnCategory.Header" xml:space="preserve"><value>Катэгорыя</value></data>
+  <data name="ColumnTags.Header" xml:space="preserve"><value>Меткі</value></data>
+  <data name="ColumnAddedOn.Header" xml:space="preserve"><value>Дададзены</value></data>
+  <data name="ColumnCompletedOn.Header" xml:space="preserve"><value>Завершаны</value></data>
+  <data name="ColumnTracker.Header" xml:space="preserve"><value>Трэкер</value></data>
+  <data name="ColumnDownLimit.Header" xml:space="preserve"><value>Ліміт загрузкі</value></data>
+  <data name="ColumnUpLimit.Header" xml:space="preserve"><value>Ліміт аддачы</value></data>
+  <data name="ColumnDownloaded.Header" xml:space="preserve"><value>Загружана</value></data>
+  <data name="ColumnUploaded.Header" xml:space="preserve"><value>Аддана</value></data>
+  <data name="ColumnDownloadedSession.Header" xml:space="preserve"><value>Загружана за сеанс</value></data>
+  <data name="ColumnUploadedSession.Header" xml:space="preserve"><value>Аддана за сеанс</value></data>
+  <data name="ColumnAmountLeft.Header" xml:space="preserve"><value>Засталося загрузіць</value></data>
+  <data name="ColumnTimeActive.Header" xml:space="preserve"><value>Актыўны</value></data>
+  <data name="ColumnSavePath.Header" xml:space="preserve"><value>Шлях захавання</value></data>
+  <data name="ColumnCompleted.Header" xml:space="preserve"><value>Завершана</value></data>
+  <data name="ColumnRatioLimit.Header" xml:space="preserve"><value>Ліміт рэйтынгу</value></data>
+  <data name="ColumnSeenComplete.Header" xml:space="preserve"><value>Апошняя поўная крыніца</value></data>
+  <data name="ColumnLastActivity.Header" xml:space="preserve"><value>Апошняя актыўнасць</value></data>
+  <data name="ColumnAvailability.Header" xml:space="preserve"><value>Даступнасць</value></data>
+  <data name="ColumnDownloadPath.Header" xml:space="preserve"><value>Шлях загрузкі</value></data>
+  <data name="ColumnInfoHashV1.Header" xml:space="preserve"><value>Інфо-хэш v1</value></data>
+  <data name="ColumnInfoHashV2.Header" xml:space="preserve"><value>Інфо-хэш v2</value></data>
+  <data name="ColumnReannounce.Header" xml:space="preserve"><value>Да анонсу</value></data>
+  <data name="ColumnPrivate.Header" xml:space="preserve"><value>Прыватны</value></data>
+  <data name="ColumnCreatedOn.Header" xml:space="preserve"><value>Створаны</value></data>
+
+  <data name="TorrentState_Error" xml:space="preserve"><value>Памылка</value></data>
+  <data name="TorrentState_Seeding" xml:space="preserve"><value>Раздаецца</value></data>
+  <data name="TorrentState_Completed" xml:space="preserve"><value>Завершаны</value></data>
+  <data name="TorrentState_QueuedUpload" xml:space="preserve"><value>У чарзе на раздачу</value></data>
+  <data name="TorrentState_StalledUpload" xml:space="preserve"><value>Раздача прастойвае</value></data>
+  <data name="TorrentState_Checking" xml:space="preserve"><value>Правяраецца</value></data>
+  <data name="TorrentState_Downloading" xml:space="preserve"><value>Загружаецца</value></data>
+  <data name="TorrentState_Stopped" xml:space="preserve"><value>Спынены</value></data>
+  <data name="TorrentState_QueuedDownload" xml:space="preserve"><value>У чарзе на загрузку</value></data>
+  <data name="TorrentState_StalledDownload" xml:space="preserve"><value>Загрузка прастойвае</value></data>
+  <data name="TorrentState_Allocating" xml:space="preserve"><value>Выдзяляецца месца</value></data>
+  <data name="TorrentState_Moving" xml:space="preserve"><value>Перамяшчаецца</value></data>
+  <data name="TorrentState_CheckingResumeData" xml:space="preserve"><value>Правяраюцца даныя аднаўлення</value></data>
+  <data name="TorrentState_Unknown" xml:space="preserve"><value>Невядома</value></data>
+  <data name="Filter_All" xml:space="preserve"><value>Усе</value></data>
+  <data name="Filter_Downloading" xml:space="preserve"><value>Загружаюцца</value></data>
+  <data name="Filter_Seeding" xml:space="preserve"><value>Раздаюцца</value></data>
+  <data name="Filter_Completed" xml:space="preserve"><value>Завершаны</value></data>
+  <data name="Filter_Stopped" xml:space="preserve"><value>Спынены</value></data>
+  <data name="Filter_Active" xml:space="preserve"><value>Актыўныя</value></data>
+  <data name="Filter_Inactive" xml:space="preserve"><value>Неактыўныя</value></data>
+  <data name="Filter_Stalled" xml:space="preserve"><value>Прастойваюць</value></data>
+  <data name="Filter_Errored" xml:space="preserve"><value>З памылкамі</value></data>
+  <data name="Common_Yes" xml:space="preserve"><value>Так</value></data>
+  <data name="Common_No" xml:space="preserve"><value>Не</value></data>
+
+  <data name="SettingsWindow.Title" xml:space="preserve"><value>Налады</value></data>
+  <data name="SettingsBehavior.Content" xml:space="preserve"><value>Паводзіны</value></data>
+  <data name="SettingsDownloads.Content" xml:space="preserve"><value>Загрузкі</value></data>
+  <data name="SettingsConnection.Content" xml:space="preserve"><value>Злучэнне</value></data>
+  <data name="SettingsSpeed.Content" xml:space="preserve"><value>Хуткасць</value></data>
+  <data name="SettingsBitTorrent.Content" xml:space="preserve"><value>BitTorrent</value></data>
+  <data name="SettingsSearch.Content" xml:space="preserve"><value>Пошук</value></data>
+  <data name="SettingsRss.Content" xml:space="preserve"><value>RSS</value></data>
+  <data name="SettingsWebUi.Content" xml:space="preserve"><value>Вэб-інтэрфейс</value></data>
+  <data name="SettingsAdvanced.Content" xml:space="preserve"><value>Дадаткова</value></data>
+  <data name="CommonCancel.Content" xml:space="preserve"><value>Адмена</value></data>
+  <data name="CommonApply.Content" xml:space="preserve"><value>Ужыць</value></data>
+  <data name="SettingsSection_Behavior" xml:space="preserve"><value>Паводзіны</value></data>
+  <data name="SettingsSection_Downloads" xml:space="preserve"><value>Загрузкі</value></data>
+  <data name="SettingsSection_Connection" xml:space="preserve"><value>Злучэнне</value></data>
+  <data name="SettingsSection_Speed" xml:space="preserve"><value>Хуткасць</value></data>
+  <data name="SettingsSection_BitTorrent" xml:space="preserve"><value>BitTorrent</value></data>
+  <data name="SettingsSection_Search" xml:space="preserve"><value>Пошук</value></data>
+  <data name="SettingsSection_RSS" xml:space="preserve"><value>RSS</value></data>
+  <data name="SettingsSection_WebUI" xml:space="preserve"><value>Вэб-інтэрфейс</value></data>
+  <data name="SettingsSection_Advanced" xml:space="preserve"><value>Дадаткова</value></data>
+  <data name="Settings_ManagedTooltip" xml:space="preserve"><value>Кіруецца WinBitTorrent і даступна толькі праз loopback.</value></data>
+  <data name="Settings_ManagedTitle" xml:space="preserve"><value>Кіраваны лакальны профіль</value></data>
+  <data name="Settings_ManagedMessage" xml:space="preserve"><value>Адрас, порт і аўтэнтыфікацыя вэб-інтэрфейса кіруюцца WinBitTorrent.</value></data>
+  <data name="Settings_Applied" xml:space="preserve"><value>Налады ўжытыя. Для змены мовы, тэмы ці шчыльнасці перазапусціце дадатак.</value></data>
+  <data name="Choice_System" xml:space="preserve"><value>Сістэмная мова</value></data>
+  <data name="Choice_English" xml:space="preserve"><value>English</value></data>
+  <data name="Choice_Russian" xml:space="preserve"><value>Руская</value></data>
+  <data name="Choice_SystemTheme" xml:space="preserve"><value>Сістэмная тэма</value></data>
+  <data name="Choice_Light" xml:space="preserve"><value>Светлая</value></data>
+  <data name="Choice_Dark" xml:space="preserve"><value>Цёмная</value></data>
+  <data name="Choice_None" xml:space="preserve"><value>Няма</value></data>
+  <data name="Choice_HttpProxy" xml:space="preserve"><value>HTTP</value></data>
+  <data name="Choice_Socks4" xml:space="preserve"><value>SOCKS4</value></data>
+  <data name="Choice_Socks5" xml:space="preserve"><value>SOCKS5</value></data>
+  <data name="Choice_EncryptionPrefer" xml:space="preserve"><value>Аддаваць перавагу шыфраванню</value></data>
+  <data name="Choice_EncryptionForce" xml:space="preserve"><value>Патрабаваць шыфраванне</value></data>
+  <data name="Choice_EncryptionDisable" xml:space="preserve"><value>Адключыць шыфраванне</value></data>
+  <data name="Choice_ResumeLegacy" xml:space="preserve"><value>Файлы fastresume</value></data>
+  <data name="Choice_ResumeSqlite" xml:space="preserve"><value>База даных SQLite</value></data>
+  <data name="Setting_ui_language" xml:space="preserve"><value>Мова</value></data>
+  <data name="Setting_ui_theme" xml:space="preserve"><value>Тэма дадатку</value></data>
+  <data name="Setting_ui_confirmDelete" xml:space="preserve"><value>Пацвярджаць выдаленне торэнтаў</value></data>
+  <data name="Setting_ui_compactDensity" xml:space="preserve"><value>Выкарыстоўваць кампактную шчыльнасць інтэрфейсу</value></data>
+  <data name="Setting_save_path" xml:space="preserve"><value>Шлях захавання па змаўчанні</value></data>
+  <data name="Setting_temp_path_enabled" xml:space="preserve"><value>Захоўваць незавершаныя торэнты ў асобнай папцы</value></data>
+  <data name="Setting_temp_path" xml:space="preserve"><value>Шлях для незавершаных торэнтаў</value></data>
+  <data name="Setting_create_subfolder_enabled" xml:space="preserve"><value>Ствараць падпапку для шматфайлавых торэнтаў</value></data>
+  <data name="Setting_auto_tmm_enabled" xml:space="preserve"><value>Аўтаматычнае кіраванне торэнтамі</value></data>
+  <data name="Setting_preallocate_all" xml:space="preserve"><value>Папярэдне выдзяляць месца на дыску</value></data>
+  <data name="Setting_listen_port" xml:space="preserve"><value>Порт уваходных злучэнняў</value></data>
+  <data name="Setting_upnp" xml:space="preserve"><value>Выкарыстоўваць пераадрасацыю партоў UPnP / NAT-PMP</value></data>
+  <data name="Setting_random_port" xml:space="preserve"><value>Аўтаматычна выбіраць вольны порт пры запуску</value></data>
+  <data name="Setting_proxy_type" xml:space="preserve"><value>Тып проксі</value></data>
+  <data name="Setting_proxy_ip" xml:space="preserve"><value>Сервер проксі</value></data>
+  <data name="Setting_proxy_port" xml:space="preserve"><value>Порт проксі</value></data>
+  <data name="Setting_dl_limit" xml:space="preserve"><value>Агульны ліміт загрузкі (КіБ/с, 0 — без абмежаванняў)</value></data>
+  <data name="Setting_up_limit" xml:space="preserve"><value>Агульны ліміт аддачы (КіБ/с, 0 — без абмежаванняў)</value></data>
+  <data name="Setting_alt_dl_limit" xml:space="preserve"><value>Альтэрнатыўны ліміт загрузкі (КіБ/с)</value></data>
+  <data name="Setting_alt_up_limit" xml:space="preserve"><value>Альтэрнатыўны ліміт аддачы (КіБ/с)</value></data>
+  <data name="Setting_scheduler_enabled" xml:space="preserve"><value>Расклад альтэрнатыўных лімітаў хуткасці</value></data>
+  <data name="Setting_dht" xml:space="preserve"><value>Уключыць DHT</value></data>
+  <data name="Setting_pex" xml:space="preserve"><value>Уключыць абмен пірамі (PeX)</value></data>
+  <data name="Setting_lsd" xml:space="preserve"><value>Уключыць выяўленне лакальных піраў</value></data>
+  <data name="Setting_encryption" xml:space="preserve"><value>Рэжым шыфравання</value></data>
+  <data name="Setting_queueing_enabled" xml:space="preserve"><value>Чарга торэнтаў</value></data>
+  <data name="Setting_max_active_downloads" xml:space="preserve"><value>Максімум актыўных загрузак</value></data>
+  <data name="Setting_max_active_uploads" xml:space="preserve"><value>Максімум актыўных раздач</value></data>
+  <data name="Setting_search_enabled" xml:space="preserve"><value>Уключыць пошукавую сістэму</value></data>
+  <data name="Setting_python_executable_path" xml:space="preserve"><value>Выканальны файл Python</value></data>
+  <data name="Setting_rss_processing_enabled" xml:space="preserve"><value>Уключыць атрыманне RSS-стужак</value></data>
+  <data name="Setting_rss_refresh_interval" xml:space="preserve"><value>Інтэрвал абнаўлення стужак (хвіліны)</value></data>
+  <data name="Setting_rss_max_articles_per_feed" xml:space="preserve"><value>Максімум артыкулаў на стужку</value></data>
+  <data name="Setting_rss_auto_downloading_enabled" xml:space="preserve"><value>Уключыць аўтаматычныя загрузкі з RSS</value></data>
+  <data name="Setting_web_ui_address" xml:space="preserve"><value>IP-адрас</value></data>
+  <data name="Setting_web_ui_port" xml:space="preserve"><value>Порт</value></data>
+  <data name="Setting_web_ui_username" xml:space="preserve"><value>Імя карыстальніка</value></data>
+  <data name="Setting_web_ui_upnp" xml:space="preserve"><value>Выкарыстоўваць UPnP / NAT-PMP</value></data>
+  <data name="Setting_web_ui_csrf_protection_enabled" xml:space="preserve"><value>Уключыць абарону CSRF</value></data>
+  <data name="Setting_resume_data_storage_type" xml:space="preserve"><value>Сховішча даных аднаўлення</value></data>
+  <data name="Setting_memory_working_set_limit" xml:space="preserve"><value>Ліміт фізічнай памяці (МіБ)</value></data>
+  <data name="Setting_disk_cache" xml:space="preserve"><value>Дыскавы кэш (МіБ, -1 — аўтаматычна)</value></data>
+  <data name="Setting_async_io_threads" xml:space="preserve"><value>Патокі асінхроннага ўводу-вываду</value></data>
+  <data name="Setting_recheck_completed_torrents" xml:space="preserve"><value>Пераправяраць торэнты пасля завяршэння</value></data>
+  <data name="Setting_anonymous_mode" xml:space="preserve"><value>Уключыць ананімны рэжым</value></data>
+  <data name="DetailsGeneral.Header" xml:space="preserve"><value>Агульныя</value></data>
+  <data name="DetailsTrackers.Header" xml:space="preserve"><value>Трэкеры</value></data>
+  <data name="DetailsPeers.Header" xml:space="preserve"><value>Піры</value></data>
+  <data name="DetailsHttpSources.Header" xml:space="preserve"><value>HTTP-крыніцы</value></data>
+  <data name="DetailsContent.Header" xml:space="preserve"><value>Файлы</value></data>
+  <data name="DetailsSpeed.Header" xml:space="preserve"><value>Хуткасць</value></data>
+  <data name="DetailsProgress.Text" xml:space="preserve"><value>Прагрэс</value></data>
+  <data name="DetailsAvailability.Text" xml:space="preserve"><value>Даступнасць</value></data>
+  <data name="DetailsTimeActive.Text" xml:space="preserve"><value>Час актыўнасці</value></data>
+  <data name="DetailsEta.Text" xml:space="preserve"><value>Засталося</value></data>
+  <data name="DetailsDownloaded.Text" xml:space="preserve"><value>Загружана</value></data>
+  <data name="DetailsUploaded.Text" xml:space="preserve"><value>Аддана</value></data>
+  <data name="DetailsDownSpeed.Text" xml:space="preserve"><value>Хуткасць загрузкі</value></data>
+  <data name="DetailsUpSpeed.Text" xml:space="preserve"><value>Хуткасць аддачы</value></data>
+  <data name="DetailsRatio.Text" xml:space="preserve"><value>Рэйтынг</value></data>
+  <data name="DetailsSavePath.Text" xml:space="preserve"><value>Шлях захавання</value></data>
+  <data name="DetailsInfoHash.Text" xml:space="preserve"><value>Інфо-хэш v1</value></data>
+  <data name="RemoveSelectedTrackers.Text" xml:space="preserve"><value>Выдаліць выбраныя трэкеры</value></data>
+  <data name="BanSelectedPeers.Text" xml:space="preserve"><value>Заблакаваць выбраных піраў</value></data>
+  <data name="RemoveSelectedWebSeeds.Text" xml:space="preserve"><value>Выдаліць выбраныя вэб-сіды</value></data>
+  <data name="DetailHeaderUrl.Text" xml:space="preserve"><value>URL</value></data>
+  <data name="DetailHeaderStatus.Text" xml:space="preserve"><value>Стан</value></data>
+  <data name="DetailHeaderSeeds.Text" xml:space="preserve"><value>Сіды</value></data>
+  <data name="DetailHeaderPeers.Text" xml:space="preserve"><value>Піры</value></data>
+  <data name="DetailHeaderMessage.Text" xml:space="preserve"><value>Паведамленне</value></data>
+  <data name="DetailHeaderIpPort.Text" xml:space="preserve"><value>IP / порт</value></data>
+  <data name="DetailHeaderCountry.Text" xml:space="preserve"><value>Краіна</value></data>
+  <data name="DetailHeaderClient.Text" xml:space="preserve"><value>Кліент</value></data>
+  <data name="DetailHeaderFlags.Text" xml:space="preserve"><value>Сцягі</value></data>
+  <data name="DetailHeaderName.Text" xml:space="preserve"><value>Імя</value></data>
+  <data name="DetailHeaderSize.Text" xml:space="preserve"><value>Памер</value></data>
+  <data name="DetailHeaderPriority.Text" xml:space="preserve"><value>Прыярытэт</value></data>
+  <data name="FilePrioritySkip.Text" xml:space="preserve"><value>Не загружаць</value></data>
+  <data name="FilePriorityNormal.Text" xml:space="preserve"><value>Звычайны прыярытэт</value></data>
+  <data name="FilePriorityHigh.Text" xml:space="preserve"><value>Высокі прыярытэт</value></data>
+  <data name="FilePriorityMaximum.Text" xml:space="preserve"><value>Максімальны прыярытэт</value></data>
+  <data name="Connection_Starting" xml:space="preserve"><value>Запуск…</value></data>
+  <data name="Connection_StartingBackend" xml:space="preserve"><value>Запуск сервернай часткі…</value></data>
+  <data name="Connection_Connecting" xml:space="preserve"><value>Падключэнне…</value></data>
+  <data name="Connection_Authenticating" xml:space="preserve"><value>Аўтэнтыфікацыя…</value></data>
+  <data name="Connection_Connected" xml:space="preserve"><value>Падключана</value></data>
+  <data name="Connection_Reconnecting" xml:space="preserve"><value>Паўторнае падключэнне…</value></data>
+  <data name="Connection_Failed" xml:space="preserve"><value>Памылка падключэння</value></data>
+  <data name="Connection_Stopping" xml:space="preserve"><value>Спыненне…</value></data>
+  <data name="Connection_Disconnected" xml:space="preserve"><value>Адключана</value></data>
+  <data name="Status_Dht" xml:space="preserve"><value>DHT</value></data>
+  <data name="Search_Ready" xml:space="preserve"><value>Гатова</value></data>
+  <data name="Search_Starting" xml:space="preserve"><value>Запуск пошуку…</value></data>
+  <data name="Search_Running" xml:space="preserve"><value>Выконваецца</value></data>
+  <data name="Search_Stopped" xml:space="preserve"><value>Спынены</value></data>
+  <data name="Search_Results" xml:space="preserve"><value>вынікаў</value></data>
+
+  <data name="AddTorrentWindow.Title" xml:space="preserve"><value>Дадаць торэнт</value></data>
+  <data name="AddTorrentTitle.Text" xml:space="preserve"><value>Дадаць торэнт</value></data>
+  <data name="AddTorrentSources.Header" xml:space="preserve"><value>Торэнт-спасылкі, magnet-спасылкі ці лакальныя .torrent-файлы</value></data>
+  <data name="AddTorrentSources.PlaceholderText" xml:space="preserve"><value>Адна крыніца на радок</value></data>
+  <data name="CommonBrowse.Content" xml:space="preserve"><value>Агляд…</value></data>
+  <data name="AddTorrentPreview.Content" xml:space="preserve"><value>Папярэдні прагляд метаданых</value></data>
+  <data name="AddTorrentSavePath.Header" xml:space="preserve"><value>Шлях захавання</value></data>
+  <data name="AddTorrentCategory.Header" xml:space="preserve"><value>Катэгорыя</value></data>
+  <data name="AddTorrentTags.Header" xml:space="preserve"><value>Меткі</value></data>
+  <data name="AddTorrentTags.PlaceholderText" xml:space="preserve"><value>метка1, метка2</value></data>
+  <data name="AddTorrentStart.Content" xml:space="preserve"><value>Запусціць торэнт</value></data>
+  <data name="AddTorrentAutoTmm.Content" xml:space="preserve"><value>Аўтаматычнае кіраванне торэнтам</value></data>
+  <data name="AddTorrentSequential.Content" xml:space="preserve"><value>Паслядоўная загрузка</value></data>
+  <data name="AddTorrentFirstLast.Content" xml:space="preserve"><value>Спачатку загрузіць першую і апошнюю часткі</value></data>
+  <data name="AddTorrentSkipCheck.Content" xml:space="preserve"><value>Прапусціць праверку хэша</value></data>
+  <data name="AddTorrentDownLimit.Header" xml:space="preserve"><value>Ліміт загрузкі (КіБ/с)</value></data>
+  <data name="AddTorrentUpLimit.Header" xml:space="preserve"><value>Ліміт аддачы (КіБ/с)</value></data>
+  <data name="AddTorrentMetadataHint.Text" xml:space="preserve"><value>Выканайце папярэдні прагляд magnet-спасылкі, URL ці торэнт-файла, каб убачыць яго змесціва.</value></data>
+  <data name="CommonSelectAll.Content" xml:space="preserve"><value>Выбраць усё</value></data>
+  <data name="CommonSelectNone.Content" xml:space="preserve"><value>Зняць выдзяленне</value></data>
+  <data name="AddTorrentRawMetadata.Header" xml:space="preserve"><value>Зыходныя метаданыя</value></data>
+  <data name="AddTorrentManagementMode.Text" xml:space="preserve"><value>Рэжым кіравання торэнтам:</value></data>
+  <data name="AddTorrentManagementManual.Content" xml:space="preserve"><value>Ручны</value></data>
+  <data name="AddTorrentManagementAutomatic.Content" xml:space="preserve"><value>Аўтаматычны</value></data>
+  <data name="AddTorrentSavePathLabel.Text" xml:space="preserve"><value>Шлях захавання</value></data>
+  <data name="AddTorrentUseTempPath.Content" xml:space="preserve"><value>Асобны шлях для няпоўнага торэнта</value></data>
+  <data name="AddTorrentSettingsTitle.Text" xml:space="preserve"><value>Налады торэнта</value></data>
+  <data name="AddTorrentCategoryLabel.Text" xml:space="preserve"><value>Катэгорыя:</value></data>
+  <data name="AddTorrentTagsLabel.Text" xml:space="preserve"><value>Меткі:</value></data>
+  <data name="AddTorrentStopConditionLabel.Text" xml:space="preserve"><value>Умова спынення:</value></data>
+  <data name="AddTorrentStopConditionNone.Content" xml:space="preserve"><value>Няма</value></data>
+  <data name="AddTorrentContentLayoutLabel.Text" xml:space="preserve"><value>Склад змесціва:</value></data>
+  <data name="AddTorrentContentLayoutOriginal.Content" xml:space="preserve"><value>Зыходны</value></data>
+  <data name="AddTorrentInfoTitle.Text" xml:space="preserve"><value>Звесткі аб торэнце</value></data>
+  <data name="AddTorrentInfoName.Text" xml:space="preserve"><value>Імя:</value></data>
+  <data name="AddTorrentInfoSize.Text" xml:space="preserve"><value>Памер:</value></data>
+  <data name="AddTorrentInfoDate.Text" xml:space="preserve"><value>Дата:</value></data>
+  <data name="AddTorrentInfoHashV1.Text" xml:space="preserve"><value>Інфо-хэш v1:</value></data>
+  <data name="AddTorrentInfoHashV2.Text" xml:space="preserve"><value>Інфо-хэш v2:</value></data>
+  <data name="AddTorrentInfoComment.Text" xml:space="preserve"><value>Каментарый:</value></data>
+  <data name="AddTorrentSourcesPanel.Header" xml:space="preserve"><value>Крыніцы торэнта</value></data>
+  <data name="AddTorrentBrowseFile.Content" xml:space="preserve"><value>Дадаць .torrent…</value></data>
+  <data name="AddTorrentFilesFilter.PlaceholderText" xml:space="preserve"><value>Фільтр файлаў…</value></data>
+  <data name="AddTorrentFileNameHeader.Text" xml:space="preserve"><value>Імя</value></data>
+  <data name="AddTorrentFileSizeHeader.Text" xml:space="preserve"><value>Агульны памер</value></data>
+  <data name="AddTorrentFilePriorityHeader.Text" xml:space="preserve"><value>Прыярытэт</value></data>
+  <data name="AddTorrentPriorityDoNotDownload.Content" xml:space="preserve"><value>Не загружаць</value></data>
+  <data name="AddTorrentPriorityNormal.Content" xml:space="preserve"><value>Звычайны</value></data>
+  <data name="AddTorrentPriorityHigh.Content" xml:space="preserve"><value>Высокі</value></data>
+  <data name="AddTorrentPriorityMaximum.Content" xml:space="preserve"><value>Максімальны</value></data>
+  <data name="CommonNotAvailable" xml:space="preserve"><value>Н/Д</value></data>
+  <data name="CommonAdd.Content" xml:space="preserve"><value>Дадаць</value></data>
+
+  <data name="SearchPattern.PlaceholderText" xml:space="preserve"><value>Пошукавы запыт</value></data>
+  <data name="SearchCategoryAll.Content" xml:space="preserve"><value>Усе катэгорыі</value></data>
+  <data name="SearchCategoryMovies.Content" xml:space="preserve"><value>Фільмы</value></data>
+  <data name="SearchCategoryTv.Content" xml:space="preserve"><value>Серыялы</value></data>
+  <data name="SearchCategoryMusic.Content" xml:space="preserve"><value>Музыка</value></data>
+  <data name="SearchCategoryGames.Content" xml:space="preserve"><value>Гульні</value></data>
+  <data name="SearchCategorySoftware.Content" xml:space="preserve"><value>Праграмы</value></data>
+  <data name="SearchAllPlugins.PlaceholderText" xml:space="preserve"><value>Усе плагіны</value></data>
+  <data name="SearchButton.Content" xml:space="preserve"><value>Пошук</value></data>
+  <data name="SearchStop.Content" xml:space="preserve"><value>Спыніць</value></data>
+  <data name="SearchDownload.Content" xml:space="preserve"><value>Загрузіць</value></data>
+  <data name="SearchPlugins.Content" xml:space="preserve"><value>Пошукавыя плагіны…</value></data>
+  <data name="SearchColumnLeechers.Header" xml:space="preserve"><value>Лічы</value></data>
+  <data name="SearchColumnEngine.Header" xml:space="preserve"><value>Сістэма</value></data>
+  <data name="RssNewFeed.Label" xml:space="preserve"><value>Новая стужка</value></data>
+  <data name="RssNewFolder.Label" xml:space="preserve"><value>Новая папка</value></data>
+  <data name="RssRefresh.Label" xml:space="preserve"><value>Абнавіць</value></data>
+  <data name="RssRemove.Label" xml:space="preserve"><value>Выдаліць</value></data>
+  <data name="RssRules.Label" xml:space="preserve"><value>Правілы RSS</value></data>
+  <data name="RssFeeds.Text" xml:space="preserve"><value>Стужкі</value></data>
+  <data name="RssArticles.Text" xml:space="preserve"><value>Артыкулы</value></data>
+  <data name="RssOpenLink.Content" xml:space="preserve"><value>Адкрыць спасылку</value></data>
+  <data name="AddTorrent_LoadingMetadata" xml:space="preserve"><value>Загрузка метаданых торэнта…</value></data>
+  <data name="AddTorrent_MetadataFailed" xml:space="preserve"><value>Не атрымалася загрузіць метаданыя торэнта.</value></data>
+  <data name="AddTorrent_SourceRequired" xml:space="preserve"><value>Дадайце хаця б адзін .torrent-файл, URL ці magnet-спасылку.</value></data>
+  <data name="AddTorrent_ClearUnwantedFiles" xml:space="preserve"><value>Зніміце адзнакі з файлаў, якія не трэба загружаць.</value></data>
+  <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Прыярытэты файлаў з загружанага .torrent можна змяніць на ўкладцы «Файлы» пасля дадання.</value></data>
+  <data name="AddTorrent_File" xml:space="preserve"><value>файл</value></data>
+  <data name="AddTorrent_Files" xml:space="preserve"><value>файлаў</value></data>
+  <data name="Common_Apply" xml:space="preserve"><value>Ужыць</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Адмена</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Выдаліць</value></data>
+  <data name="Common_Confirm" xml:space="preserve"><value>Пацвердзіць</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>ОК</value></data>
+  <data name="Dialog_LocalFilesUnavailableTitle" xml:space="preserve"><value>Лакальныя файлы недаступныя</value></data>
+  <data name="Dialog_LocalFilesUnavailableMessage" xml:space="preserve"><value>Гэты торэнт належыць выдаленаму профілю. WinBitTorrent можа адкрываць папкі толькі для кіраванай лакальнай сервернай часткі.</value></data>
+  <data name="Dialog_DestinationUnavailableTitle" xml:space="preserve"><value>Папка прызначэння недаступная</value></data>
+  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Шлях захавання, атрыманы ад qBittorrent</value></data>
+  <data name="Dialog_DownloadPath" xml:space="preserve"><value>Шлях загрузкі</value></data>
+  <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>Магчыма, шлях яшчэ не існуе ці метаданыя торэнта яшчэ не сінхранізаваныя.</value></data>
+  <data name="Dialog_SetCategory" xml:space="preserve"><value>Прызначыць катэгорыю</value></data>
+  <data name="Dialog_CategoryClearHint" xml:space="preserve"><value>Назва катэгорыі; пакіньце пустым для выдалення</value></data>
+  <data name="Dialog_CategoryName" xml:space="preserve"><value>Назва катэгорыі</value></data>
+  <data name="Dialog_DefaultSavePath" xml:space="preserve"><value>Шлях захавання па змаўчанні</value></data>
+  <data name="Dialog_NewCategory" xml:space="preserve"><value>Новая катэгорыя</value></data>
+  <data name="Dialog_EditCategory" xml:space="preserve"><value>Змяніць катэгорыю</value></data>
+  <data name="Dialog_DeleteCategory" xml:space="preserve"><value>Выдаліць катэгорыю?</value></data>
+  <data name="Dialog_DeleteCategoryMessage" xml:space="preserve"><value>Торэнты з катэгорыі «{0}» застануцца без катэгорыі.</value></data>
+  <data name="Dialog_CreateTags" xml:space="preserve"><value>Стварыць меткі</value></data>
+  <data name="Dialog_CommaSeparatedTags" xml:space="preserve"><value>Назвы метак праз коску</value></data>
+  <data name="Dialog_DeleteTag" xml:space="preserve"><value>Выдаліць метку?</value></data>
+  <data name="Dialog_DeleteTagMessage" xml:space="preserve"><value>Выдаліць метку «{0}» ва ўсіх торэнтаў?</value></data>
+  <data name="Dialog_TorrentTags" xml:space="preserve"><value>Меткі торэнта</value></data>
+  <data name="Dialog_DownloadLimit" xml:space="preserve"><value>Ліміт загрузкі (КіБ/с, 0 — без абмежаванняў)</value></data>
+  <data name="Dialog_UploadLimit" xml:space="preserve"><value>Ліміт аддачы (КіБ/с, 0 — без абмежаванняў)</value></data>
+  <data name="Dialog_TorrentRateLimits" xml:space="preserve"><value>Ліміты хуткасці торэнта</value></data>
+  <data name="Dialog_RatioLimit" xml:space="preserve"><value>Ліміт рэйтынгу (-1 — агульны)</value></data>
+  <data name="Dialog_SeedingTimeLimit" xml:space="preserve"><value>Ліміт часу раздачы ў хвілінах (-1 — агульны)</value></data>
+  <data name="Dialog_InactiveSeedingTime" xml:space="preserve"><value>Неактыўны час раздачы ў хвілінах (-1 — агульны)</value></data>
+  <data name="Dialog_ShareLimits" xml:space="preserve"><value>Абмежаванні раздачы</value></data>
+  <data name="Dialog_RenameTorrent" xml:space="preserve"><value>Перайменаваць торэнт</value></data>
+  <data name="Dialog_NewName" xml:space="preserve"><value>Новае імя</value></data>
+  <data name="Dialog_SetTorrentLocation" xml:space="preserve"><value>Змяніць размяшчэнне торэнта</value></data>
+  <data name="Dialog_ServerPath" xml:space="preserve"><value>Шлях на серверы qBittorrent</value></data>
+  <data name="Dialog_AddTrackers" xml:space="preserve"><value>Дадаць трэкеры</value></data>
+  <data name="Dialog_TrackerPerLine" xml:space="preserve"><value>Адзін URL трэкера на радок</value></data>
+  <data name="Dialog_AddHttpSources" xml:space="preserve"><value>Дадаць HTTP-крыніцы</value></data>
+  <data name="Dialog_UrlPerLine" xml:space="preserve"><value>Адзін URL на радок</value></data>
+  <data name="Dialog_PreviewUnavailable" xml:space="preserve"><value>Папярэдні прагляд недаступны</value></data>
+  <data name="Dialog_SelectDownloadedFile" xml:space="preserve"><value>Спачатку выберыце загружаны файл на ўкладцы «Файлы».</value></data>
+  <data name="Dialog_DownloadedFileNotFound" xml:space="preserve"><value>Загружаны файл не знойдзены на гэтым камп'ютары.</value></data>
+  <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Чаканы шлях</value></data>
+  <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Таксама выдаліць файлы з дыска</value></data>
+  <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Выдаліць выбраныя торэнты?</value></data>
+  <data name="Dialog_ChooseTorrentColumns" xml:space="preserve"><value>Выбар калонак торэнтаў</value></data>
+  <data name="Filter_Uncategorized" xml:space="preserve"><value>Без катэгорыі</value></data>
+  <data name="Log_Blocked" xml:space="preserve"><value>Заблакавана</value></data>
+  <data name="Log_Allowed" xml:space="preserve"><value>Дазволена</value></data>
+  <data name="Log_Normal" xml:space="preserve"><value>Звычайнае</value></data>
+  <data name="Log_Information" xml:space="preserve"><value>Інфармацыя</value></data>
+  <data name="Log_Warning" xml:space="preserve"><value>Папярэджанне</value></data>
+  <data name="Log_Critical" xml:space="preserve"><value>Крытычнае</value></data>
+  <data name="LogNormal.Content" xml:space="preserve"><value>Звычайныя</value></data>
+  <data name="LogInformation.Content" xml:space="preserve"><value>Інфармацыя</value></data>
+  <data name="LogWarning.Content" xml:space="preserve"><value>Папярэджанні</value></data>
+  <data name="LogCritical.Content" xml:space="preserve"><value>Крытычныя</value></data>
+  <data name="CommonRefresh.Content" xml:space="preserve"><value>Абнавіць</value></data>
+  <data name="LogClear.Content" xml:space="preserve"><value>Ачысціць</value></data>
+  <data name="LogGeneralTab.Header" xml:space="preserve"><value>Агульны часопіс</value></data>
+  <data name="LogPeerTab.Header" xml:space="preserve"><value>Часопіс піраў</value></data>
+  <data name="LogHeaderTime.Text" xml:space="preserve"><value>Час</value></data>
+  <data name="LogHeaderLevel.Text" xml:space="preserve"><value>Узровень</value></data>
+  <data name="LogHeaderIp.Text" xml:space="preserve"><value>IP-адрас</value></data>
+  <data name="LogHeaderAction.Text" xml:space="preserve"><value>Дзеянне</value></data>
+  <data name="LogHeaderReason.Text" xml:space="preserve"><value>Прычына</value></data>
+  <data name="ProfilesWindow.Title" xml:space="preserve"><value>Профілі сервераў</value></data>
+  <data name="ProfilesTitle.Text" xml:space="preserve"><value>Профілі</value></data>
+  <data name="CommonNew.Content" xml:space="preserve"><value>Стварыць</value></data>
+  <data name="CommonDelete.Content" xml:space="preserve"><value>Выдаліць</value></data>
+  <data name="CommonClose.Content" xml:space="preserve"><value>Закрыць</value></data>
+  <data name="CommonSave.Content" xml:space="preserve"><value>Захаваць</value></data>
+  <data name="ProfileConnection.Text" xml:space="preserve"><value>Злучэнне</value></data>
+  <data name="ProfileName.Header" xml:space="preserve"><value>Назва профілю</value></data>
+  <data name="ProfileAddress.Header" xml:space="preserve"><value>Адрас сервера</value></data>
+  <data name="ProfileAuthentication.Header" xml:space="preserve"><value>Аўтэнтыфікацыя</value></data>
+  <data name="ProfileUserPassword.Content" xml:space="preserve"><value>Імя карыстальніка і пароль</value></data>
+  <data name="ProfileApiKey.Content" xml:space="preserve"><value>API-ключ Bearer</value></data>
+  <data name="ProfileUsername.Header" xml:space="preserve"><value>Імя карыстальніка</value></data>
+  <data name="ProfileSecret.Header" xml:space="preserve"><value>Пароль ці API-ключ</value></data>
+  <data name="ProfileFingerprint.Header" xml:space="preserve"><value>Замацаваны SHA-256 адбітак TLS-сертыфіката (неабавязкова)</value></data>
+  <data name="ProfileTrustFingerprint.Content" xml:space="preserve"><value>Я праверыў гэты адбітак сертыфіката і яўна давяраю яму</value></data>
+  <data name="ProfileSecretsProtected.Title" xml:space="preserve"><value>Сакрэтныя даныя абаронены</value></data>
+  <data name="ProfileSecretsProtected.Message" xml:space="preserve"><value>Паролі і API-ключы захоўваюцца ў дыспетчары ўліковых даных Windows асобна ад JSON профілю.</value></data>
+  <data name="ProfileSaveConnect.Content" xml:space="preserve"><value>Захаваць і падключыцца</value></data>
+  <data name="CreateTorrentWindow.Title" xml:space="preserve"><value>Стварыць торэнт</value></data>
+  <data name="CreateTorrentTitle.Text" xml:space="preserve"><value>Стварыць новы торэнт</value></data>
+  <data name="CreateTorrentSource.Header" xml:space="preserve"><value>Зыходны файл ці папка</value></data>
+  <data name="CommonFile.Content" xml:space="preserve"><value>Файл…</value></data>
+  <data name="CommonFolder.Content" xml:space="preserve"><value>Папка…</value></data>
+  <data name="CreateTorrentOutput.Header" xml:space="preserve"><value>Выхадны .torrent-файл</value></data>
+  <data name="CreateTorrentTrackers.Header" xml:space="preserve"><value>URL трэкераў (па адным на радок; пусты радок пачынае новы ўзровень)</value></data>
+  <data name="CreateTorrentComment.Header" xml:space="preserve"><value>Каментарый</value></data>
+  <data name="CreateTorrentPieceSize.Header" xml:space="preserve"><value>Памер часткі</value></data>
+  <data name="ChoiceAutomatic.Content" xml:space="preserve"><value>Аўтаматычна</value></data>
+  <data name="CreateTorrentPrivate.Content" xml:space="preserve"><value>Прыватны торэнт</value></data>
+  <data name="CreateTorrentSeed.Content" xml:space="preserve"><value>Пачаць раздачу</value></data>
+  <data name="CreateTorrentReady.Text" xml:space="preserve"><value>Гатова</value></data>
+  <data name="CommonCreate.Content" xml:space="preserve"><value>Стварыць</value></data>
+  <data name="CookiesWindow.Title" xml:space="preserve"><value>Файлы cookie</value></data>
+  <data name="CookiesTitle.Text" xml:space="preserve"><value>Файлы cookie qBittorrent</value></data>
+  <data name="CookiesJson.Header" xml:space="preserve"><value>JSON-масіў файлаў cookie</value></data>
+  <data name="CookiesSave.Content" xml:space="preserve"><value>Захаваць cookie</value></data>
+  <data name="SearchPluginsWindow.Title" xml:space="preserve"><value>Пошукавыя плагіны</value></data>
+  <data name="SearchPluginsTitle.Text" xml:space="preserve"><value>Пошукавыя плагіны</value></data>
+  <data name="PluginsInstall.Content" xml:space="preserve"><value>Усталяваць…</value></data>
+  <data name="PluginsUninstall.Content" xml:space="preserve"><value>Выдаліць</value></data>
+  <data name="PluginsEnable.Content" xml:space="preserve"><value>Уключыць</value></data>
+  <data name="PluginsDisable.Content" xml:space="preserve"><value>Адключыць</value></data>
+  <data name="PluginsUpdate.Content" xml:space="preserve"><value>Праверыць абнаўленні</value></data>
+  <data name="RssRulesWindow.Title" xml:space="preserve"><value>Правілы загрузкі RSS</value></data>
+  <data name="RssRulesListTitle.Text" xml:space="preserve"><value>Правілы</value></data>
+  <data name="RssRuleTitle.Text" xml:space="preserve"><value>Правіла аўтаматычнай загрузкі</value></data>
+  <data name="RssRuleName.Header" xml:space="preserve"><value>Назва правіла</value></data>
+  <data name="RssRuleEnabled.Header" xml:space="preserve"><value>Уключана</value></data>
+  <data name="RssRuleMustContain.Header" xml:space="preserve"><value>Павінна змяшчаць</value></data>
+  <data name="RssRuleMustContain.PlaceholderText" xml:space="preserve"><value>Словы, падзеленыя сімвалам |</value></data>
+  <data name="RssRuleMustNotContain.Header" xml:space="preserve"><value>Не павінна змяшчаць</value></data>
+  <data name="RssRuleEpisode.Header" xml:space="preserve"><value>Фільтр эпізодаў</value></data>
+  <data name="RssRuleCategory.Header" xml:space="preserve"><value>Прызначыць катэгорыю</value></data>
+  <data name="RssRuleFeeds.Header" xml:space="preserve"><value>Ужываць правіла да стужак</value></data>
+  <data name="RssRuleFeeds.PlaceholderText" xml:space="preserve"><value>Адзін шлях стужкі на радок; пакіньце пустым для ўсіх</value></data>
+  <data name="RssRuleSavePath.Header" xml:space="preserve"><value>Захоўваць у іншую папку</value></data>
+  <data name="RssRuleRegex.Content" xml:space="preserve"><value>Выкарыстоўваць рэгулярныя выразы</value></data>
+  <data name="RssRuleSmartFilter.Content" xml:space="preserve"><value>Выкарыстоўваць разумны фільтр эпізодаў</value></data>
+  <data name="RssRulePaused.Content" xml:space="preserve"><value>Дадаваць торэнты спыненымі</value></data>
+  <data name="RssRuleSave.Content" xml:space="preserve"><value>Захаваць правіла</value></data>
+  <data name="WindowTitle_AddTorrent" xml:space="preserve"><value>Дадаць торэнт</value></data>
+  <data name="WindowTitle_Cookies" xml:space="preserve"><value>Файлы cookie</value></data>
+  <data name="WindowTitle_CreateTorrent" xml:space="preserve"><value>Стварыць торэнт</value></data>
+  <data name="WindowTitle_Profiles" xml:space="preserve"><value>Профілі сервераў</value></data>
+  <data name="WindowTitle_RssRules" xml:space="preserve"><value>Правілы загрузкі RSS</value></data>
+  <data name="WindowTitle_SearchPlugins" xml:space="preserve"><value>Пошукавыя плагіны</value></data>
+  <data name="WindowTitle_Settings" xml:space="preserve"><value>Налады</value></data>
+  <data name="Tray_Show" xml:space="preserve"><value>Паказаць WinBitTorrent</value></data>
+  <data name="Tray_Hide" xml:space="preserve"><value>Схаваць WinBitTorrent</value></data>
+  <data name="Tray_AddTorrentFile" xml:space="preserve"><value>Дадаць торэнт-файл...</value></data>
+  <data name="Tray_AddTorrentLink" xml:space="preserve"><value>Дадаць торэнт-спасылку...</value></data>
+  <data name="Tray_AlternativeSpeedLimits" xml:space="preserve"><value>Альтэрнатыўныя абмежаванні хуткасці</value></data>
+  <data name="Tray_GlobalSpeedLimits" xml:space="preserve"><value>Глабальныя абмежаванні хуткасці...</value></data>
+  <data name="Tray_StartAll" xml:space="preserve"><value>Аднавіць усе</value></data>
+  <data name="Tray_StopAll" xml:space="preserve"><value>Прыпыніць усе</value></data>
+  <data name="Tray_Options" xml:space="preserve"><value>Налады...</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Выхад з WinBitTorrent</value></data>
+  <data name="TrackersMenu.Text" xml:space="preserve"><value>Пошук па трэкерах</value></data>
+  <data name="TrackersTab.Header" xml:space="preserve"><value>Трэкеры</value></data>
+  <data name="TrackerPickerTitle.Text" xml:space="preserve"><value>Пошук па трэкерах</value></data>
+  <data name="TrackerPickerSubtitle.Text" xml:space="preserve"><value>Выберыце трэкер. Пазней сюды можна будзе дадаць іншыя крыніцы.</value></data>
+  <data name="TrackerBackText.Text" xml:space="preserve"><value>Усе трэкеры</value></data>
+  <data name="TrackerBackSearchText.Text" xml:space="preserve"><value>Усе трэкеры</value></data>
+  <data name="TrackerLoginTitle.Text" xml:space="preserve"><value>Уваход у RuTracker</value></data>
+  <data name="TrackerLoginSubtitle.Text" xml:space="preserve"><value>Уліковыя даныя бяспечна захоўваюцца ў дыспетчары ўліковых даных Windows.</value></data>
+  <data name="TrackerUserName.Header" xml:space="preserve"><value>Лагін</value></data>
+  <data name="TrackerPassword.Header" xml:space="preserve"><value>Пароль</value></data>
+  <data name="TrackerProxySwitch.Header" xml:space="preserve"><value>Проксі RuTracker</value></data>
+  <data name="TrackerProxySwitch.OnContent" xml:space="preserve"><value>Уключаны</value></data>
+  <data name="TrackerProxySwitch.OffContent" xml:space="preserve"><value>Выключаны</value></data>
+  <data name="TrackerProxyHint.Text" xml:space="preserve"><value>Выкарыстоўваецца проксі з афіцыйнага браўзернага пашырэння RuTracker:</value></data>
+  <data name="TrackerSignIn.Content" xml:space="preserve"><value>Увайсці</value></data>
+  <data name="TrackerBrowserSignIn.Content" xml:space="preserve"><value>Увайсці праз браўзер / прайсці капчу</value></data>
+  <data name="TrackerBrowserBackText.Text" xml:space="preserve"><value>Усе трэкеры</value></data>
+  <data name="TrackerSecureLoginTitle.Text" xml:space="preserve"><value>Бяспечны ўваход у RuTracker</value></data>
+  <data name="TrackerBrowserHint.Text" xml:space="preserve"><value>Увайдзіце ў акаўнт і пройдзіце капчу. WinBitTorrent распазнае сесію аўтаматычна.</value></data>
+  <data name="TrackerBrowserComplete.Content" xml:space="preserve"><value>Праверыць уваход</value></data>
+  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Пошук на RuTracker</value></data>
+  <data name="TrackerSearch.Content" xml:space="preserve"><value>Знайсці</value></data>
+  <data name="TrackerStop.Content" xml:space="preserve"><value>Спыніць</value></data>
+  <data name="TrackerColumnPublished.Header" xml:space="preserve"><value>Дададзена</value></data>
+  <data name="TrackerOpenTopic.Content" xml:space="preserve"><value>Адкрыць тэму</value></data>
+  <data name="TrackerDownload.Content" xml:space="preserve"><value>Спампаваць</value></data>
+  <data name="TrackerSignOut.Content" xml:space="preserve"><value>Выйсці</value></data>
+  <data name="Tracker_EnterCredentials" xml:space="preserve"><value>Увядзіце лагін і пароль.</value></data>
+  <data name="Tracker_SigningIn" xml:space="preserve"><value>Выконваецца ўваход…</value></data>
+  <data name="Tracker_BrowserLoginStatus" xml:space="preserve"><value>Увайдзіце ў акаўнт і пройдзіце капчу ва ўбудаваным браўзеры.</value></data>
+  <data name="Tracker_ImportingBrowserSession" xml:space="preserve"><value>Праверка сесіі RuTracker…</value></data>
+  <data name="Tracker_SessionExpired" xml:space="preserve"><value>Сесія RuTracker скончылася. Увайдзіце ў акаўнт зноў.</value></data>
+  <data name="Tracker_BrowserOpenFailed" xml:space="preserve"><value>Не атрымалася адкрыць старонку ўваходу RuTracker: {0}</value></data>
+  <data name="Tracker_BrowserNotSignedIn" xml:space="preserve"><value>Уваход яшчэ не завершаны. Увядзіце даныя акаўнта і пройдзіце капчу.</value></data>
+  <data name="Tracker_BrowserNavigationBlocked" xml:space="preserve"><value>Тут даступная толькі старонка ўваходу RuTracker.</value></data>
+  <data name="Tracker_BrowserNavigationFailed" xml:space="preserve"><value>Не атрымалася загрузіць старонку ўваходу: {0}</value></data>
+  <data name="Tracker_WaitingForBrowserLogin" xml:space="preserve"><value>Чаканне ўваходу ў RuTracker…</value></data>
+  <data name="Tracker_BrowserSessionReadFailed" xml:space="preserve"><value>Не атрымалася праверыць сесію RuTracker: {0}</value></data>
+  <data name="Tracker_Ready" xml:space="preserve"><value>Гатова</value></data>
+  <data name="Tracker_SearchingNamed" xml:space="preserve"><value>Пошук у {0}…</value></data>
+  <data name="Tracker_SeasonQuerySuffix" xml:space="preserve"><value>сезон {0}</value></data>
+  <data name="Tracker_ResultCount" xml:space="preserve"><value>Вынікаў: {0}</value></data>
+  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Перад спампоўваннем падключыцеся да qBittorrent.</value></data>
+  <data name="Tracker_Downloading" xml:space="preserve"><value>Загрузка torrent-файла…</value></data>
+  <data name="Tracker_Added" xml:space="preserve"><value>Торэнт дададзены ў qBittorrent.</value></data>
+  <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent-файл загружаны. Праверце параметры дадання.</value></data>
+  <data name="Tracker_SignedOut" xml:space="preserve"><value>Вы выйшлі з акаўнта. Увайдзіце пад іншым уліковым запісам.</value></data>
+  <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Пошук па фільмах</value></data>
+  <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Трэкеры</value></data>
+  <data name="CatalogBackToSourcesText.Text" xml:space="preserve"><value>Крыніцы</value></data>
+  <data name="TrackerBackToTitle.Content" xml:space="preserve"><value>Назад да фільма</value></data>
+  <data name="CatalogQuery.PlaceholderText" xml:space="preserve"><value>Пошук фільмаў і серыялаў</value></data>
+  <data name="Catalog_Section_Trending" xml:space="preserve"><value>У трэндзе сёння</value></data>
+  <data name="Catalog_Section_PopularMovies" xml:space="preserve"><value>Папулярныя фільмы</value></data>
+  <data name="Catalog_Section_PopularTv" xml:space="preserve"><value>Папулярныя серыялы</value></data>
+  <data name="Catalog_Section_TopRatedMovies" xml:space="preserve"><value>Лепшыя фільмы</value></data>
+  <data name="Catalog_Section_TopRatedTv" xml:space="preserve"><value>Лепшыя серыялы</value></data>
+  <data name="Catalog_Section_NowPlaying" xml:space="preserve"><value>Цяпер у кіно</value></data>
+  <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Хутка выйдзе</value></data>
+  <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>Серыялы ў эфіры</value></data>
+  <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Падобнае</value></data>
+  <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Рэжысёр</value></data>
+  <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Стваральнікі</value></data>
+  <data name="CatalogSeasonLabel.Text" xml:space="preserve"><value>Сезон</value></data>
+  <data name="Catalog_SeasonLabel" xml:space="preserve"><value>Сезон {0}</value></data>
+  <data name="Catalog_EpisodeCountShort" xml:space="preserve"><value>{0} эп.</value></data>
+  <data name="CatalogBackText.Text" xml:space="preserve"><value>Каталог</value></data>
+  <data name="CatalogCastLabel.Text" xml:space="preserve"><value>У ролях:</value></data>
+  <data name="CatalogDownload.Content" xml:space="preserve"><value>Спампаваць</value></data>
+  <data name="CatalogWatch.Content" xml:space="preserve"><value>Глядзець</value></data>
+  <data name="Catalog_NotConfigured" xml:space="preserve"><value>Пазначце ключ TMDB API ў Наладах > Каталог, каб загрузіць каталог фільмаў і серыялаў.</value></data>
+  <data name="Catalog_WatchUnavailable" xml:space="preserve"><value>Спачатку спампуйце фільм, каб паглядзець яго.</value></data>
+  <data name="Catalog_RuntimeMinutes" xml:space="preserve"><value>{0} хвіл</value></data>
+  <data name="Catalog_SeasonCount" xml:space="preserve"><value>Сезонаў: {0}</value></data>
+  <data name="SettingsCatalog.Content" xml:space="preserve"><value>Каталог</value></data>
+  <data name="SettingsSection_Catalog" xml:space="preserve"><value>Каталог</value></data>
+  <data name="Setting_catalog_tmdb_apiKey" xml:space="preserve"><value>Ключ TMDB API</value></data>
+  <data name="Setting_catalog_tmdb_apiKey_Description" xml:space="preserve"><value>Бясплатны ключ з themoviedb.org, выкарыстоўваецца для загрузкі каталога фільмаў і серыялаў. Зарэгістравацца на themoviedb.org і атрымаць ключ трэба самастойна — WinBitTorrent не можа зрабіць гэта за вас.</value></data>
+  <data name="Settings_GetTmdbKey" xml:space="preserve"><value>Атрымаць ключ…</value></data>
+  <data name="DuplicateTorrent_Title" xml:space="preserve"><value>Торэнт ужо дададзены</value></data>
+  <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Торэнт «{0}» ужо ёсць у спісе перадач. Аб'яднаць трэкеры з новай крыніцы?</value></data>
+  <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Торэнт «{0}» з'яўляецца прыватным. Яго трэкеры нельга аб'яднаць.</value></data>
+  <data name="Connection_NotConnected" xml:space="preserve"><value>Няма падключэння да qBittorrent.</value></data>
+  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>Няма падключэння да qBittorrent</value></data>
+  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Падключыцеся да профілю qBittorrent, каб праглядаць і змяняць гэтыя налады.</value></data>
+  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Налады ўжытыя і правераныя праз qBittorrent.</value></data>
+  <data name="Settings_VerificationFailed" xml:space="preserve"><value>qBittorrent не ўжыў наступныя налады: {0}</value></data>
+  <data name="SettingsConnection_ProtocolTitle" xml:space="preserve"><value>Пратакол і порт праслухоўвання</value></data>
+  <data name="SettingsConnection_ProtocolDescription" xml:space="preserve"><value>Вызначае, як піры падключаюцца да кліента. Значэнне порта 0 дазваляе сістэме выбраць вольны порт.</value></data>
+  <data name="SettingsConnection_LimitsTitle" xml:space="preserve"><value>Абмежаванні злучэнняў</value></data>
+  <data name="SettingsConnection_LimitsDescription" xml:space="preserve"><value>Значэнне -1 адключае абмежаванне. Умераныя ліміты зніжаюць нагрузку на роўтар і памяць.</value></data>
+  <data name="SettingsConnection_ProxyTitle" xml:space="preserve"><value>Проксі-сервер</value></data>
+  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Выберыце, які трафік qBittorrent павінен накіроўваць праз проксі.</value></data>
+  <data name="SettingsConnection_I2pTitle" xml:space="preserve"><value>I2P (эксперыментальна)</value></data>
+  <data name="SettingsConnection_I2pDescription" xml:space="preserve"><value>Патрабуецца запушчаны I2P-роўтар з уключаным SAM-мостам.</value></data>
+  <data name="SettingsConnection_FilterTitle" xml:space="preserve"><value>Фільтрацыя IP</value></data>
+  <data name="SettingsConnection_FilterDescription" xml:space="preserve"><value>Загрузіце сумяшчальны спіс фільтрацыі або заблакуйце асобныя адрасы ўручную.</value></data>
+  <data name="SettingsConnection_RandomPort" xml:space="preserve"><value>Выпадковы порт</value></data>
+  <data name="Setting_bittorrent_protocol" xml:space="preserve"><value>Пратакол падключэння піраў</value></data>
+  <data name="Setting_max_connec" xml:space="preserve"><value>Агульны максімум злучэнняў (-1 — без абмежавання)</value></data>
+  <data name="Setting_max_connec_per_torrent" xml:space="preserve"><value>Максімум злучэнняў на торэнт (-1 — без абмежавання)</value></data>
+  <data name="Setting_max_uploads" xml:space="preserve"><value>Агульны максімум слотаў аддачы (-1 — без абмежавання)</value></data>
+  <data name="Setting_max_uploads_per_torrent" xml:space="preserve"><value>Максімум слотаў аддачы на торэнт (-1 — без абмежавання)</value></data>
+  <data name="Setting_proxy_hostname_lookup" xml:space="preserve"><value>Дазваляць імёны хастоў праз проксі</value></data>
+  <data name="Setting_proxy_auth_enabled" xml:space="preserve"><value>Проксі патрабуе аўтэнтыфікацыю</value></data>
+  <data name="Setting_proxy_username" xml:space="preserve"><value>Імя карыстальніка проксі</value></data>
+  <data name="Setting_proxy_password" xml:space="preserve"><value>Пароль проксі</value></data>
+  <data name="Setting_proxy_bittorrent" xml:space="preserve"><value>Выкарыстоўваць проксі для BitTorrent-трафіку</value></data>
+  <data name="Setting_proxy_peer_connections" xml:space="preserve"><value>Выкарыстоўваць проксі для злучэнняў з пірамі</value></data>
+  <data name="Setting_proxy_rss" xml:space="preserve"><value>Выкарыстоўваць проксі для RSS</value></data>
+  <data name="Setting_proxy_misc" xml:space="preserve"><value>Выкарыстоўваць проксі для агульнага трафіку</value></data>
+  <data name="Setting_i2p_enabled" xml:space="preserve"><value>Уключыць I2P</value></data>
+  <data name="Setting_i2p_address" xml:space="preserve"><value>Хост SAM-моста I2P</value></data>
+  <data name="Setting_i2p_port" xml:space="preserve"><value>Порт SAM-моста I2P</value></data>
+  <data name="Setting_i2p_mixed_mode" xml:space="preserve"><value>Дазваляць звычайных піраў для I2P-торэнтаў (змешаны рэжым)</value></data>
+  <data name="Setting_ip_filter_enabled" xml:space="preserve"><value>Уключыць IP-фільтр</value></data>
+  <data name="Setting_ip_filter_path" xml:space="preserve"><value>Файл IP-фільтра (.dat, .p2p, .p2b)</value></data>
+  <data name="Setting_ip_filter_trackers" xml:space="preserve"><value>Ужываць IP-фільтр да трэкераў</value></data>
+  <data name="Setting_banned_IPs" xml:space="preserve"><value>Заблакаваныя ўручную IP-адрасы (па адным у радку)</value></data>
+  <data name="Setting_random_port_Description" xml:space="preserve"><value>Пры запуску ўбудаванага backend фіксаваны порт замяняецца аўтаматычна выбраным.</value></data>
+  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>qBittorrent захоўвае гэты пароль у незашыфраваным выглядзе.</value></data>
+  <data name="Setting_proxy_peer_connections_Description" xml:space="preserve"><value>Уключыце, каб выключыць прамыя злучэнні з пірамі пры актыўным BitTorrent-проксі.</value></data>
+  <data name="Setting_i2p_mixed_mode_Description" xml:space="preserve"><value>Змешаны рэжым дапускае звычайныя IP-злучэнні і таму не забяспечвае ананімнасць I2P.</value></data>
+  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Пазначце шлях, даступны на выдаленым серверы qBittorrent.</value></data>
+  <data name="Choice_ProtocolBoth" xml:space="preserve"><value>TCP і µTP</value></data>
+  <data name="Choice_ProtocolTcp" xml:space="preserve"><value>Толькі TCP</value></data>
+  <data name="Choice_ProtocolUtp" xml:space="preserve"><value>Толькі µTP</value></data>
+  <data name="AddTorrent_PriorityMixed" xml:space="preserve"><value>Змешаны</value></data>
+  <data name="FilesExpandAll.Content" xml:space="preserve"><value>Разгарнуць усё</value></data>
+  <data name="FilesCollapseAll.Content" xml:space="preserve"><value>Згарнуць усё</value></data>
+  <data name="FilesPriority.Content" xml:space="preserve"><value>Прыярытэт</value></data>
+  <data name="FilesRemaining.Text" xml:space="preserve"><value>Засталося</value></data>
+  <data name="FilesAvailability.Text" xml:space="preserve"><value>Даступнасць</value></data>
+  <data name="FilesOpen.Text" xml:space="preserve"><value>Адкрыць</value></data>
+  <data name="FilesOpenDestination.Text" xml:space="preserve"><value>Адкрыць папку прызначэння</value></data>
+  <data name="Files_PriorityMixed" xml:space="preserve"><value>Змешаны</value></data>
+  <data name="Files_SelectItemsFirst" xml:space="preserve"><value>Спачатку выберыце адзін або некалькі файлаў ці папак.</value></data>
+  <data name="Files_PriorityUpdated" xml:space="preserve"><value>Прыярытэт абноўлены для файлаў: {0}.</value></data>
+  <data name="Files_LocalItemUnavailable" xml:space="preserve"><value>Выбраны файл ці папка пакуль недаступныя лакальна.</value></data>
+  <data name="Files_SelectionUpdated" xml:space="preserve"><value>Выбар загрузкі абноўлены для файлаў: {0}.</value></data>
+  <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>Торэнт дададзены, але спіс яго файлаў пакуль недаступны.</value></data>
+  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торэнт дададзены, але qBittorrent не вярнуў сумяшчальны спіс файлаў для ўжывання прыярытэтаў.</value></data>
+  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торэнт дададзены, але qBittorrent не ўжыў усе выбраныя прыярытэты файлаў.</value></data>
+</root>
