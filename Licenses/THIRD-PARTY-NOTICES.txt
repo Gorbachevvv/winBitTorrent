@@ -15,5 +15,12 @@ CommunityToolkit.Mvvm 8.4.0 — MIT. https://github.com/CommunityToolkit/dotnet
 RuTracker.org logo - public-domain text logo; RuTracker trademark.
 https://commons.wikimedia.org/wiki/File:Rutracker.org_logo.svg
 
+IP geolocation by DB-IP (dbip-country-lite database) — CC BY 4.0.
+https://db-ip.com/ — bundled at Backend\GeoDB\dbip-country-lite.mmdb and used by
+the qBittorrent backend to resolve peer countries.
+
+Country flag images (Assets\Flags) — public domain, from flagcdn.com.
+https://flagcdn.com/
+
 The backend build copies the full license text supplied by every native package
 into Backend\Licenses. NuGet package licenses are retained in their packages.

@@ -55,6 +55,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
             var port = await GetOrCreatePortAsync(cancellationToken).ConfigureAwait(false);
             EnsureSecureConfiguration(port);
             SeedBundledSearchPlugins(backendDirectory);
+            SeedGeoIpDatabase(backendDirectory);
 
             _temporaryPassword = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             _recentOutput.Clear();
@@ -389,6 +390,23 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
         }
     }
 
+    private static void SeedGeoIpDatabase(string backendDirectory)
+    {
+        // qBittorrent resolves peer countries from <data>/GeoDB/dbip-country-lite.mmdb. The log
+        // showed "failed to load IP geolocation database ... the system cannot find the specified
+        // path" because that folder never existed, so every peer's country came back as "N/A".
+        // Create the folder (so qBittorrent can download the database into it) and seed a bundled
+        // copy when one ships with the app, for offline / network-restricted environments.
+        var geoDbDirectory = Path.Combine(AppPaths.BackendData, "GeoDB");
+        Directory.CreateDirectory(geoDbDirectory);
+
+        const string databaseFileName = "dbip-country-lite.mmdb";
+        var bundled = Path.Combine(backendDirectory, "GeoDB", databaseFileName);
+        var target = Path.Combine(geoDbDirectory, databaseFileName);
+        if (File.Exists(bundled) && !File.Exists(target))
+            File.Copy(bundled, target);
+    }
+
     private static async Task<int> GetOrCreatePortAsync(CancellationToken cancellationToken)
     {
         AppPaths.EnsureCreated();
@@ -441,6 +459,9 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
         editor.Set("Preferences", "WebUI\\Port", port.ToString());
         editor.Set("Preferences", "WebUI\\HostHeaderValidation", "true");
         editor.Set("Preferences", "WebUI\\ServerDomains", "localhost;127.0.0.1");
+        // Peer country resolution (Peers tab flags/country column). Default is on, but set it
+        // explicitly so qBittorrent loads/downloads its IP geolocation database.
+        editor.Set("Preferences", "Connection\\ResolvePeerCountries", "true");
         editor.Save(AppPaths.BackendConfig);
     }
 
