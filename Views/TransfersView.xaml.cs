@@ -1073,20 +1073,7 @@ public sealed partial class TransfersView : UserControl
     }
 
     private async void DeleteSelected_Click(object sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrEmpty(ViewModel.SelectedHashes))
-            return;
-        if (!ClientSettings.Get("ui.confirmDelete", true))
-        {
-            await ExecuteMenuActionAsync(() => ViewModel.DeleteSelectedAsync(deleteFiles: false));
-            return;
-        }
-        var files = new CheckBox { Content = Localizer.Get("Dialog_AlsoDeleteFiles", "Also delete files from disk") };
-        var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = Localizer.Get("Dialog_DeleteSelectedTorrents", "Delete selected torrents?"), Content = files, PrimaryButtonText = Localizer.Get("Common_Delete", "Delete"), CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"), DefaultButton = ContentDialogButton.Close };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
-            return;
-        await ExecuteMenuActionAsync(() => ViewModel.DeleteSelectedAsync(files.IsChecked == true));
-    }
+        => await TorrentActions.ConfirmDeleteSelectedAsync(XamlRoot, ViewModel);
 
     private async void ChooseColumns_Click(object sender, RoutedEventArgs e)
     {

@@ -84,9 +84,18 @@
   <data name="SequentialDownload.Text" xml:space="preserve"><value>Паслядоўная загрузка</value></data>
   <data name="FirstLastPriority.Text" xml:space="preserve"><value>Спачатку першая і апошняя часткі</value></data>
   <data name="SuperSeeding.Text" xml:space="preserve"><value>Рэжым суперсіда</value></data>
-  <data name="SetCategory.Text" xml:space="preserve"><value>Прызначыць катэгорыю…</value></data>
   <data name="AddTags.Text" xml:space="preserve"><value>Дадаць меткі…</value></data>
   <data name="RemoveTags.Text" xml:space="preserve"><value>Выдаліць меткі…</value></data>
+  <data name="CategoryMenu.Text" xml:space="preserve"><value>Катэгорыя</value></data>
+  <data name="TagsMenu.Text" xml:space="preserve"><value>Меткі</value></data>
+  <data name="Category_New" xml:space="preserve"><value>Новая катэгорыя…</value></data>
+  <data name="Category_Uncategorized" xml:space="preserve"><value>Без катэгорыі</value></data>
+  <data name="CopyMenu.Text" xml:space="preserve"><value>Капіраваць</value></data>
+  <data name="CopyName.Text" xml:space="preserve"><value>Назва</value></data>
+  <data name="CopyHashV1.Text" xml:space="preserve"><value>Інфа-хэш v1</value></data>
+  <data name="CopyHashV2.Text" xml:space="preserve"><value>Інфа-хэш v2</value></data>
+  <data name="CopyMagnet.Text" xml:space="preserve"><value>Magnet-спасылка</value></data>
+  <data name="Dialog_ActionFailedTitle" xml:space="preserve"><value>Не ўдалося выканаць дзеянне</value></data>
   <data name="LimitRate.Text" xml:space="preserve"><value>Абмежаванне хуткасці</value></data>
   <data name="TransferLimits.Text" xml:space="preserve"><value>Абмежаванні загрузкі і аддачы…</value></data>
   <data name="ShareLimits.Text" xml:space="preserve"><value>Рэйтынг і час раздачы…</value></data>
@@ -193,6 +202,7 @@
   <data name="Choice_System" xml:space="preserve"><value>Сістэмная мова</value></data>
   <data name="Choice_English" xml:space="preserve"><value>English</value></data>
   <data name="Choice_Russian" xml:space="preserve"><value>Руская</value></data>
+  <data name="Choice_Belarusian" xml:space="preserve"><value>Беларуская</value></data>
   <data name="Choice_SystemTheme" xml:space="preserve"><value>Сістэмная тэма</value></data>
   <data name="Choice_Light" xml:space="preserve"><value>Светлая</value></data>
   <data name="Choice_Dark" xml:space="preserve"><value>Цёмная</value></data>
@@ -395,8 +405,6 @@
   <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Шлях захавання, атрыманы ад qBittorrent</value></data>
   <data name="Dialog_DownloadPath" xml:space="preserve"><value>Шлях загрузкі</value></data>
   <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>Магчыма, шлях яшчэ не існуе ці метаданыя торэнта яшчэ не сінхранізаваныя.</value></data>
-  <data name="Dialog_SetCategory" xml:space="preserve"><value>Прызначыць катэгорыю</value></data>
-  <data name="Dialog_CategoryClearHint" xml:space="preserve"><value>Назва катэгорыі; пакіньце пустым для выдалення</value></data>
   <data name="Dialog_CategoryName" xml:space="preserve"><value>Назва катэгорыі</value></data>
   <data name="Dialog_DefaultSavePath" xml:space="preserve"><value>Шлях захавання па змаўчанні</value></data>
   <data name="Dialog_NewCategory" xml:space="preserve"><value>Новая катэгорыя</value></data>

@@ -68,7 +68,7 @@ You get the reliability of the qBittorrent + libtorrent core with a UI that matc
 - **Transfer list** with sortable, reorderable, show/hide columns (queue #, name, size, progress, status, seeds/peers, speeds, ETA, ratio, category, tags, added/completed dates, save path, info hashes, and more).
 - **Add torrents** from `.torrent` files, magnet links or URLs, with a rich pre-add dialog: save path & separate incomplete path, category/tags, start paused, skip-hash-check, sequential download, first-and-last-piece priority, download/upload limits, content layout and stop condition.
 - **Per-file selection & priority** in an interactive file tree (Do not download / Normal / High / Maximum), with tri-state folder checkboxes.
-- **Detail tabs** for the selected torrent: General, Trackers, Peers, HTTP Sources, Files and a live Speed graph.
+- **Detail tabs** for the selected torrent: General, Trackers, Peers (with per-peer country flags), HTTP Sources, Files and a live Speed graph.
 - **Full context-menu actions**: start/stop/force-start, force recheck, reannounce, queue up/down/top/bottom, set category, add/remove tags, rate limits, share-ratio limits, rename, set location, add trackers & web seeds, export `.torrent`, super-seeding, open destination folder (with the file selected in Explorer), preview, and delete (optionally with data).
 
 ### Discovery
@@ -81,7 +81,7 @@ You get the reliability of the qBittorrent + libtorrent core with a UI that matc
 - **Server profiles** — the managed local engine plus any number of remote qBittorrent servers.
 - **Options** across eight categories (Behavior, Downloads, Connection, Speed, BitTorrent, WebUI, RSS, Advanced) that read/write real qBittorrent preferences and verify they were applied.
 - **Windows-native niceties**: Mica backdrop, custom title bar, **light/dark/system theme**, **system tray** icon with quick actions, **drag-and-drop** of `.torrent` files, `.torrent` **file association** and **`magnet:` protocol** handling, single-instance activation, and persistent window/tab/column layout.
-- **Localization**: English (`en-US`) and Russian (`ru-RU`).
+- **Localization**: English (`en-US`), Russian (`ru-RU`) and Belarusian (`be-BY`).
 
 ---
 
@@ -210,7 +210,9 @@ Secrets (the local API key and tracker credentials) are stored in the **Windows 
 
 ## Localization
 
-WinBitTorrent ships with **English** and **Russian** resources (`Strings/en-US`, `Strings/ru-RU`). The language can be changed in **Tools → Options → Behavior** and applies on the next launch. Contributions of additional languages are welcome — add a `Strings/<culture>/Resources.resw` alongside the existing ones.
+WinBitTorrent ships with **English** (`en-US`), **Russian** (`ru-RU`) and **Belarusian** (`be-BY`) resources under `Strings/`. The language can be changed in **Tools → Options → Behavior** and applies on the next launch. Contributions of additional languages are welcome — add a `Strings/<culture>/Resources.resw` alongside the existing ones.
+
+The **Belarusian** translation was kindly contributed by [**@saivan4ick**](https://github.com/saivan4ick).
 
 ---
 
@@ -246,8 +248,12 @@ WinBitTorrent stands on the shoulders of excellent open-source projects. Full no
 | [CPython](https://www.python.org/) | 3.13.14 | PSF License |
 | [WinUI.TableView](https://github.com/w-ahmad/WinUI.TableView) | 1.4.1 | MIT |
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | 8.4.0 | MIT |
+| [DB-IP IP-to-Country Lite](https://db-ip.com/) | 2026-07 | CC BY 4.0 |
+| [flagcdn country flags](https://flagcdn.com/) | — | Public domain |
 
 The bundled `qbittorrent-nox.exe` is built **without source modifications** from the official qBittorrent `release-5.2.3` tag. The build recipe in `build/` serves as the durable written offer for the corresponding source.
+
+Peer-country resolution uses the free **IP-to-Country Lite** database by [**DB-IP**](https://db-ip.com/) (`Backend/GeoDB/dbip-country-lite.mmdb`), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Country flag icons in the Peers tab are public-domain images from [flagcdn](https://flagcdn.com/).
 
 ---
 
@@ -256,6 +262,8 @@ The bundled `qbittorrent-nox.exe` is built **without source modifications** from
 - The [**qBittorrent**](https://www.qbittorrent.org/) team and contributors for the engine that powers this client.
 - [**Arvid Norberg**](https://github.com/arvidn/libtorrent) and the libtorrent project.
 - Microsoft's [**Windows App SDK / WinUI**](https://learn.microsoft.com/windows/apps/windows-app-sdk/) and [**.NET**](https://dotnet.microsoft.com/) teams.
+- [**@saivan4ick**](https://github.com/saivan4ick) for the **Belarusian** translation.
+- [**DB-IP**](https://db-ip.com/) for the free IP-to-Country Lite database, and [**flagcdn**](https://flagcdn.com/) for the public-domain flag icons, used to show peer countries.
 
 <div align="center">
 

@@ -6,7 +6,7 @@
     name the portable folder and the installer.
   -->
   <PropertyGroup>   
-    <Version>1.1.5</Version>
+    <Version>1.1.6</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 

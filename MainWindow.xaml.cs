@@ -243,29 +243,7 @@ public sealed partial class MainWindow : Window
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.SelectedTorrents.Count == 0 && ViewModel.SelectedTorrent is null)
-            return;
-
-        if (!ClientSettings.Get("ui.confirmDelete", true))
-        {
-            await ViewModel.DeleteSelectedAsync(deleteFiles: false);
-            return;
-        }
-
-        var deleteFiles = new CheckBox { Content = "Also delete files from disk" };
-        var dialog = new ContentDialog
-        {
-            XamlRoot = RootGrid.XamlRoot,
-            Title = "Delete selected torrents?",
-            Content = deleteFiles,
-            PrimaryButtonText = "Delete",
-            CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Close
-        };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-            await ViewModel.DeleteSelectedAsync(deleteFiles.IsChecked == true);
-    }
+        => await TorrentActions.ConfirmDeleteSelectedAsync(RootGrid.XamlRoot, ViewModel);
 
     private async void AlternativeSpeed_Click(object sender, RoutedEventArgs e) => await ViewModel.ToggleAlternativeSpeedLimitsAsync();
 

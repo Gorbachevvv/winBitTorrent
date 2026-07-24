@@ -199,6 +199,7 @@
   <data name="Choice_System" xml:space="preserve"><value>Системный язык</value></data>
   <data name="Choice_English" xml:space="preserve"><value>English</value></data>
   <data name="Choice_Russian" xml:space="preserve"><value>Русский</value></data>
+  <data name="Choice_Belarusian" xml:space="preserve"><value>Белорусский</value></data>
   <data name="Choice_SystemTheme" xml:space="preserve"><value>Системная тема</value></data>
   <data name="Choice_Light" xml:space="preserve"><value>Светлая</value></data>
   <data name="Choice_Dark" xml:space="preserve"><value>Тёмная</value></data>

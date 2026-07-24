@@ -316,7 +316,7 @@ public sealed partial class SettingsWindow : Window
             },
             SettingKind.Password => new PasswordBox { Header = label, Password = value?.ToString() ?? string.Empty },
             SettingKind.Multiline => new TextBox { Header = label, Text = value?.ToString() ?? string.Empty, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 110 },
-            SettingKind.Language => ChoiceBox(label, value, [("", "Choice_System", "System default"), ("en-US", "Choice_English", "English"), ("ru-RU", "Choice_Russian", "Русский")]),
+            SettingKind.Language => ChoiceBox(label, value, [("", "Choice_System", "System default"), ("en-US", "Choice_English", "English"), ("ru-RU", "Choice_Russian", "Русский"), ("be-BY", "Choice_Belarusian", "Беларуская")]),
             SettingKind.Theme => ChoiceBox(label, value, [("Default", "Choice_SystemTheme", "Use system setting"), ("Light", "Choice_Light", "Light"), ("Dark", "Choice_Dark", "Dark")]),
             SettingKind.ProxyType => ChoiceBox(label, value, [("None", "Choice_None", "None"), ("HTTP", "Choice_HttpProxy", "HTTP"), ("SOCKS4", "Choice_Socks4", "SOCKS4"), ("SOCKS5", "Choice_Socks5", "SOCKS5")]),
             SettingKind.PeerProtocol => ChoiceBox(label, value, [(0, "Choice_ProtocolBoth", "TCP and µTP"), (1, "Choice_ProtocolTcp", "TCP only"), (2, "Choice_ProtocolUtp", "µTP only")]),
