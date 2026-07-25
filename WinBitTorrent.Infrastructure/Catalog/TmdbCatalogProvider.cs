@@ -32,13 +32,36 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
 
     public string? ApiKey { get; set; }
 
+    public string? Language { get; set; }
+
+    public string? FallbackLanguage { get; set; }
+
+    public string? Region { get; set; }
+
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiKey);
 
-    private static string Language => CultureInfo.CurrentUICulture.Name switch
+    private string RequestLanguage => string.IsNullOrWhiteSpace(Language) ? DefaultLanguage : Language!;
+
+    private static string DefaultLanguage => CultureInfo.CurrentUICulture.Name switch
     {
         "ru-RU" or "ru" => "ru-RU",
         _ => "en-US"
     };
+
+    // Ordered 2-letter language codes to try for a title's text: primary, the configured fallback,
+    // then English as a last resort.
+    private IEnumerable<string> LanguageChain()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var candidate in new[] { RequestLanguage, FallbackLanguage, "en-US" })
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+                continue;
+            var code = candidate.Split('-')[0].ToLowerInvariant();
+            if (seen.Add(code))
+                yield return code;
+        }
+    }
 
     public async Task<IReadOnlyList<CatalogItem>> SearchAsync(string query, CancellationToken cancellationToken = default)
     {
@@ -54,39 +77,104 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
     public async Task<IReadOnlyList<CatalogItem>> GetSectionAsync(CatalogSection section, int page = 1, CancellationToken cancellationToken = default)
     {
         EnsureConfigured();
-        var (path, kind) = section switch
+        var (path, kind, parameters) = ResolveSection(section, page);
+        return await LocalizeListAsync(path, kind, cancellationToken, parameters).ConfigureAwait(false);
+    }
+
+    private (string Path, CatalogKind? Kind, (string, string)[] Parameters) ResolveSection(CatalogSection section, int page)
+    {
+        var pageParam = ("page", page.ToString(CultureInfo.InvariantCulture));
+        // "Popular" from /movie/popular and /tv/popular is global, which floods the TV list with
+        // regionally irrelevant soaps/talk shows. When we know the user's region, switch to
+        // /discover filtered by titles actually available on streaming services in that region.
+        var regional = !string.IsNullOrWhiteSpace(Region);
+        (string, string)[] discover =
+        [
+            pageParam,
+            ("sort_by", "popularity.desc"),
+            ("watch_region", Region ?? string.Empty),
+            ("with_watch_monetization_types", "flatrate|free|ads|rent|buy")
+        ];
+
+        return section switch
         {
-            CatalogSection.TrendingToday => ("trending/all/day", (CatalogKind?)null),
-            CatalogSection.PopularMovies => ("movie/popular", CatalogKind.Movie),
-            CatalogSection.TopRatedMovies => ("movie/top_rated", CatalogKind.Movie),
-            CatalogSection.NowPlayingMovies => ("movie/now_playing", CatalogKind.Movie),
-            CatalogSection.UpcomingMovies => ("movie/upcoming", CatalogKind.Movie),
-            CatalogSection.PopularTvShows => ("tv/popular", CatalogKind.TvShow),
-            CatalogSection.TopRatedTvShows => ("tv/top_rated", CatalogKind.TvShow),
-            CatalogSection.TvShowsOnTheAir => ("tv/on_the_air", CatalogKind.TvShow),
+            CatalogSection.TrendingToday => ("trending/all/day", null, [pageParam]),
+            CatalogSection.PopularMovies => regional
+                ? ("discover/movie", CatalogKind.Movie, discover)
+                : ("movie/popular", CatalogKind.Movie, [pageParam]),
+            CatalogSection.PopularTvShows => regional
+                ? ("discover/tv", CatalogKind.TvShow, discover)
+                : ("tv/popular", CatalogKind.TvShow, [pageParam]),
+            CatalogSection.TopRatedMovies => ("movie/top_rated", CatalogKind.Movie, [pageParam]),
+            CatalogSection.NowPlayingMovies => ("movie/now_playing", CatalogKind.Movie, [pageParam]),
+            CatalogSection.UpcomingMovies => ("movie/upcoming", CatalogKind.Movie, [pageParam]),
+            CatalogSection.TopRatedTvShows => ("tv/top_rated", CatalogKind.TvShow, [pageParam]),
+            CatalogSection.TvShowsOnTheAir => ("tv/on_the_air", CatalogKind.TvShow, [pageParam]),
             _ => throw new ArgumentOutOfRangeException(nameof(section))
         };
-
-        var response = await GetAsync<TmdbListResponse>(path, cancellationToken, ("page", page.ToString(CultureInfo.InvariantCulture))).ConfigureAwait(false);
-        return (response.Results ?? [])
-            .Where(result => kind is not null || !string.Equals(result.MediaType, "person", StringComparison.OrdinalIgnoreCase))
-            .Select(result => ToCatalogItem(result, kind ?? ParseMediaKind(result.MediaType)))
-            .ToArray();
     }
 
     public async Task<IReadOnlyList<CatalogItem>> GetSimilarAsync(string id, CatalogKind kind, int page = 1, CancellationToken cancellationToken = default)
     {
         EnsureConfigured();
         var path = kind == CatalogKind.Movie ? $"movie/{id}/recommendations" : $"tv/{id}/recommendations";
-        var response = await GetAsync<TmdbListResponse>(path, cancellationToken, ("page", page.ToString(CultureInfo.InvariantCulture))).ConfigureAwait(false);
-        return (response.Results ?? []).Select(result => ToCatalogItem(result, kind)).ToArray();
+        return await LocalizeListAsync(path, kind, cancellationToken, ("page", page.ToString(CultureInfo.InvariantCulture))).ConfigureAwait(false);
     }
+
+    // Fetches a TMDB list in the primary language and, when a fallback language is set, in the
+    // fallback too, then fills any untranslated title/poster from the fallback (be -> ru -> en).
+    private async Task<IReadOnlyList<CatalogItem>> LocalizeListAsync(string path, CatalogKind? kind, CancellationToken cancellationToken, params (string Key, string Value)[] parameters)
+    {
+        var primaryTask = FetchListAsync(path, kind, RequestLanguage, cancellationToken, parameters);
+
+        // Only Belarusian needs a second list request: TMDB has almost no Belarusian data, so its
+        // titles come back as the (English) original and we merge Russian in. Languages with good
+        // coverage (ru/en) already fall back sensibly, so a second request would just be wasteful.
+        var mergeLists = !string.IsNullOrWhiteSpace(FallbackLanguage)
+            && !string.Equals(FallbackLanguage, RequestLanguage, StringComparison.OrdinalIgnoreCase)
+            && RequestLanguage.StartsWith("be", StringComparison.OrdinalIgnoreCase);
+        if (!mergeLists)
+            return await primaryTask.ConfigureAwait(false);
+
+        var fallbackTask = FetchListAsync(path, kind, FallbackLanguage!, cancellationToken, parameters);
+        await Task.WhenAll(primaryTask, fallbackTask).ConfigureAwait(false);
+        return MergeLists(primaryTask.Result, fallbackTask.Result);
+    }
+
+    private async Task<IReadOnlyList<CatalogItem>> FetchListAsync(string path, CatalogKind? kind, string language, CancellationToken cancellationToken, (string Key, string Value)[] parameters)
+    {
+        var response = await GetAsync<TmdbListResponse>(path, language, cancellationToken, parameters).ConfigureAwait(false);
+        return (response.Results ?? [])
+            .Where(result => kind is not null || !string.Equals(result.MediaType, "person", StringComparison.OrdinalIgnoreCase))
+            .Select(result => ToCatalogItem(result, kind ?? ParseMediaKind(result.MediaType)))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<CatalogItem> MergeLists(IReadOnlyList<CatalogItem> primary, IReadOnlyList<CatalogItem> fallback)
+    {
+        var byKey = new Dictionary<(string, CatalogKind), CatalogItem>();
+        foreach (var item in fallback)
+            byKey[(item.Id, item.Kind)] = item;
+
+        return primary.Select(item =>
+        {
+            if (!byKey.TryGetValue((item.Id, item.Kind), out var alternate))
+                return item;
+            var title = IsUntranslated(item.Title, item.OriginalTitle) && !string.IsNullOrWhiteSpace(alternate.Title)
+                ? alternate.Title
+                : item.Title;
+            return item with { Title = title, PosterUrl = item.PosterUrl ?? alternate.PosterUrl };
+        }).ToArray();
+    }
+
+    private static bool IsUntranslated(string title, string? original)
+        => string.IsNullOrWhiteSpace(title) || (original is not null && string.Equals(title, original, StringComparison.Ordinal));
 
     public async Task<CatalogItemDetails> GetDetailsAsync(string id, CatalogKind kind, CancellationToken cancellationToken = default)
     {
         EnsureConfigured();
         var path = kind == CatalogKind.Movie ? $"movie/{id}" : $"tv/{id}";
-        var details = await GetAsync<TmdbDetailsResponse>(path, cancellationToken, ("append_to_response", "credits")).ConfigureAwait(false);
+        var details = await GetAsync<TmdbDetailsResponse>(path, RequestLanguage, cancellationToken, ("append_to_response", "credits,translations")).ConfigureAwait(false);
 
         var runtimeMinutes = kind == CatalogKind.Movie
             ? details.Runtime
@@ -101,21 +189,32 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
                 .ToArray() ?? []
             : details.CreatedBy?.Select(static creator => creator.Name ?? string.Empty).Where(static name => name.Length > 0).ToArray() ?? [];
 
+        // Resolve visible text from the /translations block along the language chain (be -> ru -> en)
+        // rather than the primary response, whose fields TMDB already auto-fills with English when the
+        // chosen language is missing - which would otherwise skip the preferred Russian fallback.
+        var originalTitle = details.OriginalTitle ?? details.OriginalName;
+        var title = ResolveTranslated(details, static data => data.Title ?? data.Name)
+            ?? details.Title ?? details.Name ?? originalTitle ?? string.Empty;
+        var overview = ResolveTranslated(details, static data => data.Overview)
+            ?? details.Overview ?? string.Empty;
+        var tagline = ResolveTranslated(details, static data => data.Tagline)
+            ?? (string.IsNullOrWhiteSpace(details.Tagline) ? null : details.Tagline);
+
         return new CatalogItemDetails(
             Id: id,
             Kind: kind,
-            Title: details.Title ?? details.Name ?? string.Empty,
-            OriginalTitle: details.OriginalTitle ?? details.OriginalName,
+            Title: title,
+            OriginalTitle: originalTitle,
             Year: ParseYear(details.ReleaseDate ?? details.FirstAirDate),
             PosterUrl: ToImageUrl(PosterBase, details.PosterPath),
             BackdropUrl: ToImageUrl(BackdropBase, details.BackdropPath),
             Rating: details.VoteAverage,
-            Overview: details.Overview ?? string.Empty,
+            Overview: overview,
             Genres: details.Genres?.Select(static genre => genre.Name ?? string.Empty).Where(static name => name.Length > 0).ToArray() ?? [],
             Runtime: runtimeMinutes is > 0 ? TimeSpan.FromMinutes(runtimeMinutes.Value) : null,
             SeasonCount: kind == CatalogKind.TvShow ? details.NumberOfSeasons : null,
             Cast: details.Credits?.Cast?.Take(8).Select(static member => member.Name ?? string.Empty).Where(static name => name.Length > 0).ToArray() ?? [],
-            Tagline: string.IsNullOrWhiteSpace(details.Tagline) ? null : details.Tagline,
+            Tagline: string.IsNullOrWhiteSpace(tagline) ? null : tagline,
             Directors: directors,
             Countries: details.ProductionCountries?.Select(static country => country.Name ?? string.Empty).Where(static name => name.Length > 0).ToArray() ?? [],
             Seasons: kind == CatalogKind.TvShow
@@ -130,17 +229,40 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
     private static CatalogKind ParseMediaKind(string? mediaType)
         => string.Equals(mediaType, "tv", StringComparison.OrdinalIgnoreCase) ? CatalogKind.TvShow : CatalogKind.Movie;
 
-    private async Task<IReadOnlyList<CatalogItem>> SearchKindAsync(string path, string query, CatalogKind kind, CancellationToken cancellationToken)
+    // Walks the language chain over the appended /translations block, returning the first non-empty
+    // localized value (used to fill a title/overview/tagline the primary language lacks).
+    private string? ResolveTranslated(TmdbDetailsResponse details, Func<TmdbTranslationData, string?> selector)
     {
-        var response = await GetAsync<TmdbListResponse>(path, cancellationToken, ("query", query)).ConfigureAwait(false);
-        return (response.Results ?? []).Select(result => ToCatalogItem(result, kind)).ToArray();
+        var translations = details.Translations?.Translations;
+        if (translations is null)
+            return null;
+
+        foreach (var code in LanguageChain())
+        {
+            var match = translations.FirstOrDefault(translation => string.Equals(translation.Language, code, StringComparison.OrdinalIgnoreCase));
+            if (match?.Data is { } data && selector(data) is { Length: > 0 } value)
+                return value;
+        }
+
+        return null;
     }
 
-    private async Task<T> GetAsync<T>(string path, CancellationToken cancellationToken, params (string Key, string Value)[] parameters)
+    private Task<IReadOnlyList<CatalogItem>> SearchKindAsync(string path, string query, CatalogKind kind, CancellationToken cancellationToken)
+        => LocalizeListAsync(path, kind, cancellationToken, ("query", query));
+
+    private async Task<T> GetAsync<T>(string path, string language, CancellationToken cancellationToken, params (string Key, string Value)[] parameters)
     {
-        (string Key, string Value)[] baseParameters = [("api_key", ApiKey ?? string.Empty), ("language", Language)];
+        var baseParameters = new List<(string Key, string Value)>
+        {
+            ("api_key", ApiKey ?? string.Empty),
+            ("language", language)
+        };
+        if (!string.IsNullOrWhiteSpace(Region))
+            baseParameters.Add(("region", Region!));
+
         var query = string.Join('&', baseParameters
             .Concat(parameters)
+            .Where(pair => !string.IsNullOrEmpty(pair.Value))
             .Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}"));
         try
         {
@@ -275,6 +397,39 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
 
         [JsonPropertyName("seasons")]
         public List<TmdbSeason>? Seasons { get; set; }
+
+        [JsonPropertyName("translations")]
+        public TmdbTranslations? Translations { get; set; }
+    }
+
+    private sealed class TmdbTranslations
+    {
+        [JsonPropertyName("translations")]
+        public List<TmdbTranslation>? Translations { get; set; }
+    }
+
+    private sealed class TmdbTranslation
+    {
+        [JsonPropertyName("iso_639_1")]
+        public string? Language { get; set; }
+
+        [JsonPropertyName("data")]
+        public TmdbTranslationData? Data { get; set; }
+    }
+
+    private sealed class TmdbTranslationData
+    {
+        [JsonPropertyName("title")]
+        public string? Title { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("overview")]
+        public string? Overview { get; set; }
+
+        [JsonPropertyName("tagline")]
+        public string? Tagline { get; set; }
     }
 
     private sealed class TmdbSeason

@@ -16,83 +16,143 @@
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
-                    CornerRadius="8">
-                    <Image Source="{Binding PosterUrl}" Stretch="UniformToFill" />
+                    CornerRadius="10">
+                    <Grid>
+                        <Image Source="{Binding PosterUrl}" Stretch="UniformToFill" />
+                        <Border
+                            Margin="6"
+                            Padding="6,1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Background="#D9000000"
+                            CornerRadius="6"
+                            Visibility="{Binding RatingText, Converter={StaticResource StringToVisibilityConverter}}">
+                            <TextBlock
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="#FFD54A"
+                                Text="{Binding RatingText}" />
+                        </Border>
+                    </Grid>
                 </Border>
-                <StackPanel Grid.Row="1" Margin="2,6,2,0" Spacing="2">
+                <StackPanel Grid.Row="1" Margin="2,6,2,0" Spacing="1">
                     <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Year}" />
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding RatingText}" />
-                    </StackPanel>
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Year}" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
     </UserControl.Resources>
 
     <Grid Loaded="Root_Loaded">
-        <Grid
-            Padding="24,16"
+        <NavigationView
+            x:Name="CatalogNav"
+            IsBackButtonVisible="Collapsed"
+            IsPaneToggleButtonVisible="False"
+            IsSettingsVisible="False"
+            OpenPaneLength="200"
+            PaneDisplayMode="Left"
+            SelectionChanged="CatalogNav_SelectionChanged"
             Visibility="{Binding IsDetailsVisible, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-
-            <Grid ColumnSpacing="10">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <Button Command="{Binding BackToSourcesCommand}">
-                    <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE72B;" /><TextBlock x:Uid="CatalogBackToSourcesText" Text="Sources" /></StackPanel>
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Uid="CatalogNavHome" Content="Home" IsSelected="True" Tag="Home">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE80F;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="CatalogNavMovies" Content="Movies" Tag="Movies">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8B2;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="CatalogNavTv" Content="TV shows" Tag="Tv">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE7F4;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="CatalogNavFavorites" Content="Favorites" Tag="Favorites">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE734;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.PaneFooter>
+                <Button Margin="12,4" HorizontalAlignment="Stretch" Command="{Binding BackToSourcesCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon FontSize="15" Glyph="&#xE72B;" /><TextBlock x:Uid="CatalogBackToSourcesText" Text="Sources" /></StackPanel>
                 </Button>
-                <TextBox x:Uid="CatalogQuery" Grid.Column="1" PlaceholderText="Search movies and TV shows" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" KeyDown="Query_KeyDown" />
-            </Grid>
+            </NavigationView.PaneFooter>
 
-            <Grid Grid.Row="1" Margin="0,10,0,6" ColumnSpacing="10">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <ProgressRing Width="20" Height="20" IsActive="{Binding IsBusy}" />
-                <InfoBar Grid.Column="1" IsOpen="{Binding ErrorMessage, Converter={StaticResource NonEmptyStringConverter}}" IsClosable="False" Severity="Informational" Message="{Binding ErrorMessage}" />
-            </Grid>
+            <Grid Padding="20,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <Grid Grid.Row="2">
-                <ScrollViewer Visibility="{Binding IsSearchActive, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                    <ItemsControl ItemsSource="{Binding Sections}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="0,0,0,22" Spacing="8">
-                                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding Title}" />
-                                    <ListView
-                                        IsItemClickEnabled="True"
-                                        ItemClick="CatalogGrid_ItemClick"
-                                        ItemTemplate="{StaticResource PosterCardTemplate}"
-                                        ItemsSource="{Binding Items}"
-                                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                        ScrollViewer.HorizontalScrollMode="Enabled"
-                                        ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                        ScrollViewer.VerticalScrollMode="Disabled"
-                                        SelectionMode="None">
-                                        <ListView.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Orientation="Horizontal" />
-                                            </ItemsPanelTemplate>
-                                        </ListView.ItemsPanel>
-                                    </ListView>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <TextBox
+                    x:Uid="CatalogQuery"
+                    MaxWidth="520"
+                    HorizontalAlignment="Stretch"
+                    PlaceholderText="Search movies and TV shows"
+                    Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    KeyDown="Query_KeyDown" />
 
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" Visibility="{Binding IsSearchActive, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <GridView
-                        IsItemClickEnabled="True"
-                        ItemClick="CatalogGrid_ItemClick"
-                        ItemTemplate="{StaticResource PosterCardTemplate}"
-                        ItemsSource="{Binding SearchResults}"
-                        SelectionMode="None" />
-                </ScrollViewer>
+                <Grid Grid.Row="1" Margin="0,10,0,6" ColumnSpacing="10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <ProgressRing Width="20" Height="20" IsActive="{Binding IsBusy}" />
+                    <InfoBar Grid.Column="1" IsOpen="{Binding ErrorMessage, Converter={StaticResource NonEmptyStringConverter}}" IsClosable="False" Severity="Informational" Message="{Binding ErrorMessage}" />
+                </Grid>
+
+                <Grid Grid.Row="2">
+                    <ScrollViewer Visibility="{Binding ShowSections, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <ItemsControl ItemsSource="{Binding Sections}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,22" Spacing="8">
+                                        <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding Title}" />
+                                        <ListView
+                                            IsItemClickEnabled="True"
+                                            ItemClick="CatalogGrid_ItemClick"
+                                            ItemTemplate="{StaticResource PosterCardTemplate}"
+                                            ItemsSource="{Binding Items}"
+                                            Loaded="RowList_Loaded"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                            ScrollViewer.HorizontalScrollMode="Enabled"
+                                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                            ScrollViewer.VerticalScrollMode="Disabled"
+                                            SelectionMode="None">
+                                            <ListView.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ListView.ItemsPanel>
+                                        </ListView>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" Visibility="{Binding ShowFavorites, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Grid>
+                            <GridView
+                                IsItemClickEnabled="True"
+                                ItemClick="CatalogGrid_ItemClick"
+                                ItemTemplate="{StaticResource PosterCardTemplate}"
+                                ItemsSource="{Binding Favorites}"
+                                SelectionMode="None" />
+                            <TextBlock
+                                x:Uid="CatalogFavoritesEmpty"
+                                Margin="0,40,0,0"
+                                HorizontalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="No bookmarks yet. Open a title and add it to favorites."
+                                Visibility="{Binding IsFavoritesEmpty, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Grid>
+                    </ScrollViewer>
+
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled" Visibility="{Binding IsSearchActive, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <GridView
+                            IsItemClickEnabled="True"
+                            ItemClick="CatalogGrid_ItemClick"
+                            ItemTemplate="{StaticResource PosterCardTemplate}"
+                            ItemsSource="{Binding SearchResults}"
+                            SelectionMode="None" />
+                    </ScrollViewer>
+                </Grid>
             </Grid>
-        </Grid>
+        </NavigationView>
 
         <Grid Visibility="{Binding IsDetailsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <ScrollViewer>
@@ -153,6 +213,12 @@
                             <StackPanel Margin="0,10,0,0" Orientation="Horizontal" Spacing="10">
                                 <Button x:Uid="CatalogDownload" Command="{Binding DownloadCommand}" Content="Download" Style="{StaticResource AccentButtonStyle}" />
                                 <Button x:Uid="CatalogWatch" Command="{Binding WatchCommand}" Content="Watch" IsEnabled="{Binding CanWatch}" ToolTipService.ToolTip="{Binding WatchUnavailableReason}" />
+                                <Button Command="{Binding ToggleSelectedFavoriteCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon FontSize="16" Foreground="#FFD54A" Glyph="{Binding FavoriteGlyph}" />
+                                        <TextBlock Text="{Binding FavoriteButtonText}" />
+                                    </StackPanel>
+                                </Button>
                                 <ProgressRing Width="20" Height="20" IsActive="{Binding IsBusy}" />
                             </StackPanel>
                             <InfoBar IsOpen="{Binding ErrorMessage, Converter={StaticResource NonEmptyStringConverter}}" IsClosable="False" Severity="Error" Message="{Binding ErrorMessage}" />
@@ -166,6 +232,7 @@
                             ItemClick="CatalogGrid_ItemClick"
                             ItemTemplate="{StaticResource PosterCardTemplate}"
                             ItemsSource="{Binding SimilarItems}"
+                            Loaded="RowList_Loaded"
                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
                             ScrollViewer.HorizontalScrollMode="Enabled"
                             ScrollViewer.VerticalScrollBarVisibility="Disabled"

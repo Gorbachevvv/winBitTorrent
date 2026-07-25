@@ -31,6 +31,12 @@ public sealed partial class TransfersView : UserControl
     private bool _fileTreeRefreshQueued;
     private bool _isRefreshingFiles;
 
+    // Torrent context menu layout: every command keyed by the Tag it carries in XAML, plus a pool
+    // of separator instances, so the flyout can be re-ordered from the saved layout on each open.
+    private Dictionary<string, MenuFlyoutItemBase>? _menuCommands;
+    private readonly List<MenuFlyoutSeparator> _menuSeparators = [];
+    private string _appliedMenuLayout = string.Empty;
+
     // Rubber-band (marquee) selection state.
     private const double RubberBandThreshold = 4;
     private bool _rubberBanding;
@@ -441,8 +447,53 @@ public sealed partial class TransfersView : UserControl
     private async void QueueBottom_Click(object sender, RoutedEventArgs e)
         => await ExecuteMenuActionAsync(ViewModel.MoveBottomSelectedAsync);
 
+    /// <summary>
+    /// Re-arranges the context menu to the layout saved by the editor in Settings -> Behavior.
+    /// The XAML flyout stays the single definition of every command - the items are moved around
+    /// and left out rather than rebuilt, so their click handlers, x:Names, and check glyphs all
+    /// keep working. Rebuilding only happens when the saved order actually changed.
+    /// </summary>
+    private void ApplyMenuLayout(MenuFlyout flyout)
+    {
+        if (_menuCommands is null)
+        {
+            _menuCommands = flyout.Items
+                .Where(static item => item.Tag is string)
+                .ToDictionary(static item => (string)item.Tag!, static item => item);
+            _menuSeparators.AddRange(flyout.Items.OfType<MenuFlyoutSeparator>());
+        }
+
+        var layout = TorrentMenuLayout.LoadVisible();
+        var signature = string.Join(',', layout);
+        if (signature == _appliedMenuLayout)
+            return;
+
+        flyout.Items.Clear();
+        var separators = 0;
+        foreach (var id in layout)
+        {
+            if (id == TorrentMenuLayout.SeparatorId)
+                flyout.Items.Add(MenuSeparator(separators++));
+            else if (_menuCommands.TryGetValue(id, out var item))
+                flyout.Items.Add(item);
+        }
+        _appliedMenuLayout = signature;
+    }
+
+    // Separators are interchangeable, but the same instance cannot sit in the menu twice, so the
+    // pool grows on demand and is reused across rebuilds.
+    private MenuFlyoutSeparator MenuSeparator(int index)
+    {
+        while (_menuSeparators.Count <= index)
+            _menuSeparators.Add(new MenuFlyoutSeparator());
+        return _menuSeparators[index];
+    }
+
     private void TorrentContextMenu_Opening(object sender, object e)
     {
+        if (sender is MenuFlyout flyout)
+            ApplyMenuLayout(flyout);
+
         var selection = ViewModel.SelectedTorrents;
         var model = ViewModel.SelectedTorrent?.Model;
 

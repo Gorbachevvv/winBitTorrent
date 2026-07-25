@@ -607,6 +607,13 @@
   <data name="CatalogDownload.Content" xml:space="preserve"><value>Спампаваць</value></data>
   <data name="CatalogWatch.Content" xml:space="preserve"><value>Глядзець</value></data>
   <data name="Catalog_NotConfigured" xml:space="preserve"><value>Пазначце ключ TMDB API ў Наладах > Каталог, каб загрузіць каталог фільмаў і серыялаў.</value></data>
+  <data name="CatalogNavHome.Content" xml:space="preserve"><value>Галоўная</value></data>
+  <data name="CatalogNavMovies.Content" xml:space="preserve"><value>Фільмы</value></data>
+  <data name="CatalogNavTv.Content" xml:space="preserve"><value>Серыялы</value></data>
+  <data name="CatalogNavFavorites.Content" xml:space="preserve"><value>Абранае</value></data>
+  <data name="CatalogFavoritesEmpty.Text" xml:space="preserve"><value>Пакуль няма закладак. Адкрыйце фільм ці серыял і дадайце ў абранае.</value></data>
+  <data name="Catalog_AddFavorite" xml:space="preserve"><value>У абранае</value></data>
+  <data name="Catalog_RemoveFavorite" xml:space="preserve"><value>У абраным</value></data>
   <data name="Catalog_WatchUnavailable" xml:space="preserve"><value>Спачатку спампуйце фільм, каб паглядзець яго.</value></data>
   <data name="Catalog_RuntimeMinutes" xml:space="preserve"><value>{0} хвіл</value></data>
   <data name="Catalog_SeasonCount" xml:space="preserve"><value>Сезонаў: {0}</value></data>
@@ -679,4 +686,20 @@
   <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>Торэнт дададзены, але спіс яго файлаў пакуль недаступны.</value></data>
   <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торэнт дададзены, але qBittorrent не вярнуў сумяшчальны спіс файлаў для ўжывання прыярытэтаў.</value></data>
   <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торэнт дададзены, але qBittorrent не ўжыў усе выбраныя прыярытэты файлаў.</value></data>
+  <data name="Settings_EditContextMenu" xml:space="preserve"><value>Рэдагаваць кантэкстнае меню…</value></data>
+  <data name="Settings_EditContextMenuDescription" xml:space="preserve"><value>Выберыце, якія каманды паказваць пры націску правай кнопкай на торэнт і ў якім парадку.</value></data>
+  <data name="MenuEditor_Title" xml:space="preserve"><value>Рэдактар кантэкстнага меню</value></data>
+  <data name="MenuEditor_Back" xml:space="preserve"><value>Назад да налад</value></data>
+  <data name="MenuEditor_Reset" xml:space="preserve"><value>Скінуць да прадвызначаных</value></data>
+  <data name="MenuEditor_Hint" xml:space="preserve"><value>Перацягвайце элементы, каб змяніць парадак, або пераносьце іх паміж спісамі. Націсніце каманду справа, каб дадаць яе ў меню.</value></data>
+  <data name="MenuEditor_Preview" xml:space="preserve"><value>Кантэкстнае меню торэнта</value></data>
+  <data name="MenuEditor_Available" xml:space="preserve"><value>Даступныя каманды</value></data>
+  <data name="MenuEditor_AddSeparator" xml:space="preserve"><value>Дадаць падзяляльнік</value></data>
+  <data name="MenuEditor_Separator" xml:space="preserve"><value>Падзяляльнік</value></data>
+  <data name="MenuEditor_DragHint" xml:space="preserve"><value>Перацягніце, каб перамясціць</value></data>
+  <data name="MenuEditor_RemoveHint" xml:space="preserve"><value>Прыбраць з меню</value></data>
+  <data name="MenuEditor_DropAdd" xml:space="preserve"><value>Дадаць у меню</value></data>
+  <data name="MenuEditor_DropRemove" xml:space="preserve"><value>Прыбраць з меню</value></data>
+  <data name="MenuEditor_MenuEmpty" xml:space="preserve"><value>Меню пустое. Дадайце каманды са спіса справа — пустое меню замяняецца стандартным.</value></data>
+  <data name="MenuEditor_AvailableEmpty" xml:space="preserve"><value>Усе каманды ўжо дададзеныя ў меню.</value></data>
 </root>

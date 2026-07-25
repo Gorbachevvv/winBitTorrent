@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WinBitTorrent.Controls.ContextMenuEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:WinBitTorrent.Controls">
+
+    <UserControl.Resources>
+        <Style x:Key="EditorRowStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+
+        <!-- Draws either a command row or a separator rule, so one template can back both. -->
+        <DataTemplate x:Key="MenuRowTemplate" x:DataType="controls:ContextMenuEditorItem">
+            <Grid Padding="4,0" Background="Transparent" ColumnSpacing="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <FontIcon
+                    FontSize="12"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    Glyph="&#xE76F;"
+                    ToolTipService.ToolTip="{x:Bind DragHint}" />
+
+                <Border Grid.Column="1" Height="30" Visibility="{x:Bind CommandVisibility}">
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="15"
+                            Foreground="{x:Bind Accent}"
+                            Glyph="{x:Bind Glyph}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Text="{x:Bind Title}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTipService.ToolTip="{x:Bind Title}" />
+                        <FontIcon
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            FontSize="11"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE76C;"
+                            Visibility="{x:Bind SubmenuVisibility}" />
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1" Height="30" ColumnSpacing="8" Visibility="{x:Bind SeparatorVisibility}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Height="1" VerticalAlignment="Center" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                        Text="{x:Bind Title}" />
+                    <Rectangle Grid.Column="2" Height="1" VerticalAlignment="Center" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                </Grid>
+
+                <Button
+                    Grid.Column="2"
+                    Width="28"
+                    Height="26"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="{x:Bind RemoveHint}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="Remove_Click"
+                    Tag="{x:Bind}"
+                    ToolTipService.ToolTip="{x:Bind RemoveHint}">
+                    <FontIcon
+                        FontSize="11"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Glyph="&#xE711;" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="AvailableRowTemplate" x:DataType="controls:ContextMenuEditorItem">
+            <Grid Height="34" Padding="8,0" Background="Transparent" ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="15"
+                    Foreground="{x:Bind Accent}"
+                    Glyph="{x:Bind Glyph}" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="{x:Bind Title}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTipService.ToolTip="{x:Bind Title}" />
+                <FontIcon
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                    Glyph="&#xE710;" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            x:Name="HintText"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            TextWrapping="Wrap" />
+
+        <Grid Grid.Row="1" ColumnSpacing="14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330" />
+                <ColumnDefinition Width="*" MinWidth="230" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: the menu itself, drawn the way it pops up over a torrent row. -->
+            <Grid RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="PreviewCaption" FontWeight="SemiBold" />
+                <Border
+                    Grid.Row="1"
+                    Padding="4"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <Grid>
+                        <ListView
+                            x:Name="MenuList"
+                            AllowDrop="True"
+                            CanDragItems="True"
+                            CanReorderItems="True"
+                            DragItemsStarting="List_DragItemsStarting"
+                            DragOver="MenuList_DragOver"
+                            Drop="MenuList_Drop"
+                            ItemContainerStyle="{StaticResource EditorRowStyle}"
+                            ItemTemplate="{StaticResource MenuRowTemplate}"
+                            ReorderMode="Enabled"
+                            SelectionMode="Single" />
+                        <TextBlock
+                            x:Name="MenuEmptyText"
+                            Margin="16"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                            IsHitTestVisible="False"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Right: everything that is not in the menu, plus the separator source. -->
+            <Grid Grid.Column="1" RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="AvailableCaption" FontWeight="SemiBold" />
+                <Button
+                    x:Name="AddSeparatorButton"
+                    Grid.Row="1"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Click="AddSeparator_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon
+                            FontSize="14"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE739;" />
+                        <TextBlock x:Name="AddSeparatorText" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Border
+                    Grid.Row="2"
+                    Padding="2"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <Grid>
+                        <ListView
+                            x:Name="AvailableList"
+                            AllowDrop="True"
+                            CanDragItems="True"
+                            DragItemsStarting="List_DragItemsStarting"
+                            DragOver="AvailableList_DragOver"
+                            Drop="AvailableList_Drop"
+                            IsItemClickEnabled="True"
+                            ItemClick="AvailableList_ItemClick"
+                            ItemContainerStyle="{StaticResource EditorRowStyle}"
+                            ItemTemplate="{StaticResource AvailableRowTemplate}"
+                            SelectionMode="None" />
+                        <TextBlock
+                            x:Name="AvailableEmptyText"
+                            Margin="16"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                            IsHitTestVisible="False"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

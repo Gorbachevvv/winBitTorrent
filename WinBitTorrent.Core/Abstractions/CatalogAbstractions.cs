@@ -6,6 +6,19 @@ public interface ICatalogProvider
 {
     string Id { get; }
     string? ApiKey { get; set; }
+
+    /// <summary>TMDB language tag (e.g. "ru-RU", "en-US", "be") applied to titles, posters and overviews.</summary>
+    string? Language { get; set; }
+
+    /// <summary>
+    /// Secondary language used when <see cref="Language"/> has no translation (e.g. Belarusian falls
+    /// back to Russian, Russian falls back to English). English is always tried last.
+    /// </summary>
+    string? FallbackLanguage { get; set; }
+
+    /// <summary>ISO 3166-1 region (e.g. "RU", "US") used to keep regional sections relevant.</summary>
+    string? Region { get; set; }
+
     bool IsConfigured { get; }
 
     Task<IReadOnlyList<CatalogItem>> SearchAsync(string query, CancellationToken cancellationToken = default);

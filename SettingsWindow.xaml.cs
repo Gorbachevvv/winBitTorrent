@@ -20,6 +20,7 @@ public sealed partial class SettingsWindow : Window
     private JsonObject _preferences = [];
     private readonly JsonObject _changedPreferences = [];
     private string _section = "Behavior";
+    private bool _menuEditorUsed;
 
     private static readonly SettingSpec[] Specs =
     [
@@ -95,6 +96,9 @@ public sealed partial class SettingsWindow : Window
     {
         InitializeComponent();
         Title = Localizer.Get("WindowTitle_Settings", "Settings");
+        MenuEditorTitle.Text = Localizer.Get("MenuEditor_Title", "Context menu editor");
+        MenuEditorReset.Content = Localizer.Get("MenuEditor_Reset", "Restore defaults");
+        ToolTipService.SetToolTip(MenuEditorBack, Localizer.Get("MenuEditor_Back", "Back to settings"));
         this.ConfigureOwned(980, 720);
         _main = App.Services.GetRequiredService<MainViewModel>();
         foreach (var spec in Specs.Where(static spec => spec.Local))
@@ -169,6 +173,9 @@ public sealed partial class SettingsWindow : Window
                 AddEditor(SettingsPanel, spec, localManaged, connected);
         }
 
+        if (_section == "Behavior")
+            SettingsPanel.Children.Add(CreateMenuEditorLauncher());
+
         if (localManaged && _section == "WebUI")
             SettingsPanel.Children.Insert(1, new InfoBar
             {
@@ -178,6 +185,46 @@ public sealed partial class SettingsWindow : Window
                 Title = Localizer.Get("Settings_ManagedTitle", "Managed local profile"),
                 Message = Localizer.Get("Settings_ManagedMessage", "Web UI address, port, and authentication are controlled by WinBitTorrent.")
             });
+    }
+
+    /// <summary>
+    /// Entry point for the context menu editor. It is not a <see cref="SettingSpec"/> because it
+    /// edits a list rather than a single value, so it is appended to the Behavior section by hand.
+    /// </summary>
+    private FrameworkElement CreateMenuEditorLauncher()
+    {
+        var label = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+        label.Children.Add(new FontIcon { Glyph = "", FontSize = 15 });
+        label.Children.Add(new TextBlock { Text = Localizer.Get("Settings_EditContextMenu", "Edit the context menu…"), VerticalAlignment = VerticalAlignment.Center });
+        var button = new Button { Content = label, HorizontalAlignment = HorizontalAlignment.Left };
+        button.Click += OpenMenuEditor_Click;
+
+        var stack = new StackPanel { Spacing = 6, Margin = new Thickness(0, 6, 0, 0) };
+        stack.Children.Add(button);
+        stack.Children.Add(new TextBlock
+        {
+            Text = Localizer.Get("Settings_EditContextMenuDescription", "Choose which commands the menu shows when you right-click a torrent, and in what order."),
+            Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            TextWrapping = TextWrapping.Wrap
+        });
+        return stack;
+    }
+
+    private void OpenMenuEditor_Click(object sender, RoutedEventArgs e)
+    {
+        _menuEditorUsed = true;
+        Sections.Visibility = Visibility.Collapsed;
+        MenuEditorHost.Visibility = Visibility.Visible;
+    }
+
+    private void CloseMenuEditor_Click(object sender, RoutedEventArgs e) => CloseMenuEditor();
+
+    private void ResetMenuEditor_Click(object sender, RoutedEventArgs e) => MenuEditor.Reset();
+
+    private void CloseMenuEditor()
+    {
+        MenuEditorHost.Visibility = Visibility.Collapsed;
+        Sections.Visibility = Visibility.Visible;
     }
 
     private void AddEditor(Panel parent, SettingSpec spec, bool localManaged, bool connected)
@@ -518,6 +565,14 @@ public sealed partial class SettingsWindow : Window
                 ClientSettings.SetValue(key, value);
             var language = _localValues.GetValueOrDefault("ui.language") as string;
             App.ApplyLanguageOverride(language ?? string.Empty);
+
+            if (_menuEditorUsed)
+            {
+                TorrentMenuLayout.Save(MenuEditor.VisibleIds, MenuEditor.HiddenIds);
+                // The result message lives in the section panel, so step back out of the editor to
+                // let the user actually see that the layout was applied.
+                CloseMenuEditor();
+            }
 
             if (mismatched.Count > 0)
             {

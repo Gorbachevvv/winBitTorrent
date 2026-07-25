@@ -607,6 +607,13 @@
   <data name="CatalogDownload.Content" xml:space="preserve"><value>Download</value></data>
   <data name="CatalogWatch.Content" xml:space="preserve"><value>Watch</value></data>
   <data name="Catalog_NotConfigured" xml:space="preserve"><value>Set a TMDB API key in Settings &gt; Catalog to load the movie/TV catalog.</value></data>
+  <data name="CatalogNavHome.Content" xml:space="preserve"><value>Home</value></data>
+  <data name="CatalogNavMovies.Content" xml:space="preserve"><value>Movies</value></data>
+  <data name="CatalogNavTv.Content" xml:space="preserve"><value>TV shows</value></data>
+  <data name="CatalogNavFavorites.Content" xml:space="preserve"><value>Favorites</value></data>
+  <data name="CatalogFavoritesEmpty.Text" xml:space="preserve"><value>No bookmarks yet. Open a title and add it to favorites.</value></data>
+  <data name="Catalog_AddFavorite" xml:space="preserve"><value>Add to favorites</value></data>
+  <data name="Catalog_RemoveFavorite" xml:space="preserve"><value>In favorites</value></data>
   <data name="Catalog_WatchUnavailable" xml:space="preserve"><value>Download the title first to watch it.</value></data>
   <data name="Catalog_RuntimeMinutes" xml:space="preserve"><value>{0} min</value></data>
   <data name="Catalog_SeasonCount" xml:space="preserve"><value>{0} seasons</value></data>
@@ -679,4 +686,20 @@
   <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>The torrent was added, but its file list is not available yet.</value></data>
   <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>The torrent was added, but qBittorrent did not return a compatible file list for applying priorities.</value></data>
   <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>The torrent was added, but qBittorrent did not apply all selected file priorities.</value></data>
+  <data name="Settings_EditContextMenu" xml:space="preserve"><value>Edit the context menu…</value></data>
+  <data name="Settings_EditContextMenuDescription" xml:space="preserve"><value>Choose which commands the menu shows when you right-click a torrent, and in what order.</value></data>
+  <data name="MenuEditor_Title" xml:space="preserve"><value>Context menu editor</value></data>
+  <data name="MenuEditor_Back" xml:space="preserve"><value>Back to settings</value></data>
+  <data name="MenuEditor_Reset" xml:space="preserve"><value>Restore defaults</value></data>
+  <data name="MenuEditor_Hint" xml:space="preserve"><value>Drag entries to reorder them, or drag them between the lists. Click an available command to add it to the menu.</value></data>
+  <data name="MenuEditor_Preview" xml:space="preserve"><value>Torrent context menu</value></data>
+  <data name="MenuEditor_Available" xml:space="preserve"><value>Available commands</value></data>
+  <data name="MenuEditor_AddSeparator" xml:space="preserve"><value>Add a separator</value></data>
+  <data name="MenuEditor_Separator" xml:space="preserve"><value>Separator</value></data>
+  <data name="MenuEditor_DragHint" xml:space="preserve"><value>Drag to move</value></data>
+  <data name="MenuEditor_RemoveHint" xml:space="preserve"><value>Remove from the menu</value></data>
+  <data name="MenuEditor_DropAdd" xml:space="preserve"><value>Add to the menu</value></data>
+  <data name="MenuEditor_DropRemove" xml:space="preserve"><value>Remove from the menu</value></data>
+  <data name="MenuEditor_MenuEmpty" xml:space="preserve"><value>The menu is empty. Add commands from the list on the right — an empty menu falls back to the default one.</value></data>
+  <data name="MenuEditor_AvailableEmpty" xml:space="preserve"><value>Every command is already in the menu.</value></data>
 </root>

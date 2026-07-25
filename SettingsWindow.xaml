@@ -3,6 +3,7 @@
     x:Class="WinBitTorrent.SettingsWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:WinBitTorrent.Controls"
     Title="Options">
     <Grid x:Name="Root">
         <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
@@ -21,6 +22,20 @@
             </NavigationView.MenuItems>
             <ScrollViewer Padding="22,18,28,24"><StackPanel x:Name="SettingsPanel" MaxWidth="780" HorizontalAlignment="Stretch" Spacing="14"><TextBlock x:Name="SectionTitle" Style="{StaticResource TitleTextBlockStyle}" /><InfoBar x:Name="MessageBar" IsClosable="True" IsOpen="False" /></StackPanel></ScrollViewer>
         </NavigationView>
+
+        <!-- Full-pane editor for the torrent context menu. It replaces the section list while it is
+             open (the way a sub-page does) and shares the window's Cancel/Apply buttons. -->
+        <Grid x:Name="MenuEditorHost" Padding="22,18,28,10" RowSpacing="14" Visibility="Collapsed">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <Button x:Name="MenuEditorBack" Width="38" Height="38" Padding="0" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Click="CloseMenuEditor_Click"><FontIcon FontSize="15" Glyph="&#xE72B;" /></Button>
+                <TextBlock x:Name="MenuEditorTitle" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource TitleTextBlockStyle}" />
+                <Button x:Name="MenuEditorReset" Grid.Column="2" VerticalAlignment="Center" Click="ResetMenuEditor_Click" />
+            </Grid>
+            <controls:ContextMenuEditor x:Name="MenuEditor" Grid.Row="1" />
+        </Grid>
+
         <StackPanel Grid.Row="1" Padding="12" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8"><Button x:Uid="CommonCancel" Content="Cancel" Click="Cancel_Click" /><Button x:Uid="CommonApply" x:Name="SaveButton" Content="Apply" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" /></StackPanel>
     </Grid>
 </Window>

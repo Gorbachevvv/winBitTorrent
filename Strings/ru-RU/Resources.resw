@@ -607,6 +607,13 @@
   <data name="CatalogDownload.Content" xml:space="preserve"><value>Скачать</value></data>
   <data name="CatalogWatch.Content" xml:space="preserve"><value>Смотреть</value></data>
   <data name="Catalog_NotConfigured" xml:space="preserve"><value>Укажите ключ TMDB API в Настройках &gt; Каталог, чтобы загрузить каталог фильмов и сериалов.</value></data>
+  <data name="CatalogNavHome.Content" xml:space="preserve"><value>Главная</value></data>
+  <data name="CatalogNavMovies.Content" xml:space="preserve"><value>Фильмы</value></data>
+  <data name="CatalogNavTv.Content" xml:space="preserve"><value>Сериалы</value></data>
+  <data name="CatalogNavFavorites.Content" xml:space="preserve"><value>Избранное</value></data>
+  <data name="CatalogFavoritesEmpty.Text" xml:space="preserve"><value>Пока нет закладок. Откройте фильм или сериал и добавьте в избранное.</value></data>
+  <data name="Catalog_AddFavorite" xml:space="preserve"><value>В избранное</value></data>
+  <data name="Catalog_RemoveFavorite" xml:space="preserve"><value>В избранном</value></data>
   <data name="Catalog_WatchUnavailable" xml:space="preserve"><value>Сначала скачайте фильм, чтобы посмотреть его.</value></data>
   <data name="Catalog_RuntimeMinutes" xml:space="preserve"><value>{0} мин</value></data>
   <data name="Catalog_SeasonCount" xml:space="preserve"><value>Сезонов: {0}</value></data>
@@ -679,4 +686,20 @@
   <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>Торрент добавлен, но список его файлов пока недоступен.</value></data>
   <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торрент добавлен, но qBittorrent не вернул совместимый список файлов для применения приоритетов.</value></data>
   <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торрент добавлен, но qBittorrent не применил все выбранные приоритеты файлов.</value></data>
+  <data name="Settings_EditContextMenu" xml:space="preserve"><value>Редактировать контекстное меню…</value></data>
+  <data name="Settings_EditContextMenuDescription" xml:space="preserve"><value>Выберите, какие команды показывать при щелчке правой кнопкой по торренту и в каком порядке.</value></data>
+  <data name="MenuEditor_Title" xml:space="preserve"><value>Редактор контекстного меню</value></data>
+  <data name="MenuEditor_Back" xml:space="preserve"><value>Назад к настройкам</value></data>
+  <data name="MenuEditor_Reset" xml:space="preserve"><value>Сбросить по умолчанию</value></data>
+  <data name="MenuEditor_Hint" xml:space="preserve"><value>Перетаскивайте элементы, чтобы изменить порядок, или переносите их между списками. Щёлкните команду справа, чтобы добавить её в меню.</value></data>
+  <data name="MenuEditor_Preview" xml:space="preserve"><value>Контекстное меню торрента</value></data>
+  <data name="MenuEditor_Available" xml:space="preserve"><value>Доступные команды</value></data>
+  <data name="MenuEditor_AddSeparator" xml:space="preserve"><value>Добавить разделитель</value></data>
+  <data name="MenuEditor_Separator" xml:space="preserve"><value>Разделитель</value></data>
+  <data name="MenuEditor_DragHint" xml:space="preserve"><value>Перетащите, чтобы переместить</value></data>
+  <data name="MenuEditor_RemoveHint" xml:space="preserve"><value>Убрать из меню</value></data>
+  <data name="MenuEditor_DropAdd" xml:space="preserve"><value>Добавить в меню</value></data>
+  <data name="MenuEditor_DropRemove" xml:space="preserve"><value>Убрать из меню</value></data>
+  <data name="MenuEditor_MenuEmpty" xml:space="preserve"><value>Меню пустое. Добавьте команды из списка справа — пустое меню заменяется стандартным.</value></data>
+  <data name="MenuEditor_AvailableEmpty" xml:space="preserve"><value>Все команды уже добавлены в меню.</value></data>
 </root>

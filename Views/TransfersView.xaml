@@ -121,33 +121,35 @@
                 RowContextFlyoutOpening="TorrentTable_RowContextFlyoutOpening"
                 SelectionChanged="TorrentTable_SelectionChanged">
                 <tv:TableView.RowContextFlyout>
+                    <!-- Tags on the top-level entries are the ids the context menu editor
+                         (Settings -> Behavior) stores, so a saved layout can reorder or drop them. -->
                     <MenuFlyout Opening="TorrentContextMenu_Opening">
-                        <MenuFlyoutItem x:Name="StartMenuItem" x:Uid="Start" Text="Start" Click="Start_Click">
+                        <MenuFlyoutItem x:Name="StartMenuItem" x:Uid="Start" Tag="start" Text="Start" Click="Start_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" Foreground="#16A34A" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Name="StopMenuItem" x:Uid="Stop" Text="Stop" Click="Stop_Click">
+                        <MenuFlyoutItem x:Name="StopMenuItem" x:Uid="Stop" Tag="stop" Text="Stop" Click="Stop_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71A;" Foreground="#DC2626" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="ForceStart" Text="Force start" Click="ForceStart_Click">
+                        <MenuFlyoutItem x:Uid="ForceStart" Tag="forceStart" Text="Force start" Click="ForceStart_Click">
                             <MenuFlyoutItem.Icon><FontIcon x:Name="ForceStartCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="SetLocation" Text="Set location…" Click="SetLocation_Click">
+                        <MenuFlyoutItem x:Uid="SetLocation" Tag="setLocation" Text="Set location…" Click="SetLocation_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DE;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="RenameTorrent" Text="Rename…" Click="Rename_Click">
+                        <MenuFlyoutItem x:Uid="RenameTorrent" Tag="rename" Text="Rename…" Click="Rename_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE70F;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutSubItem x:Name="CategorySubmenu" x:Uid="CategoryMenu" Text="Category">
+                        <MenuFlyoutSubItem x:Name="CategorySubmenu" x:Uid="CategoryMenu" Tag="category" Text="Category">
                             <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8EC;" Foreground="#D97706" /></MenuFlyoutSubItem.Icon>
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutSubItem x:Uid="TagsMenu" Text="Tags">
+                        <MenuFlyoutSubItem x:Uid="TagsMenu" Tag="tags" Text="Tags">
                             <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8EC;" Foreground="#9333EA" /></MenuFlyoutSubItem.Icon>
                             <MenuFlyoutItem x:Uid="AddTags" Text="Add tags…" Tag="add" Click="Tags_Click" />
                             <MenuFlyoutItem x:Uid="RemoveTags" Text="Remove tags…" Tag="remove" Click="Tags_Click" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutSubItem x:Uid="QueueMenu" Text="Queue">
+                        <MenuFlyoutSubItem x:Uid="QueueMenu" Tag="queue" Text="Queue">
                             <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xEA37;" Foreground="#64748B" /></MenuFlyoutSubItem.Icon>
                             <MenuFlyoutItem x:Uid="MoveTop" Text="Move to top" Click="QueueTop_Click">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
@@ -162,16 +164,16 @@
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutItem x:Uid="SequentialDownload" Text="Download in sequential order" Click="Sequential_Click">
+                        <MenuFlyoutItem x:Uid="SequentialDownload" Tag="sequential" Text="Download in sequential order" Click="Sequential_Click">
                             <MenuFlyoutItem.Icon><FontIcon x:Name="SequentialCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="FirstLastPriority" Text="Download first and last pieces first" Click="FirstLast_Click">
+                        <MenuFlyoutItem x:Uid="FirstLastPriority" Tag="firstLast" Text="Download first and last pieces first" Click="FirstLast_Click">
                             <MenuFlyoutItem.Icon><FontIcon x:Name="FirstLastCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="SuperSeeding" Text="Super seeding mode" Click="SuperSeeding_Click">
+                        <MenuFlyoutItem x:Uid="SuperSeeding" Tag="superSeeding" Text="Super seeding mode" Click="SuperSeeding_Click">
                             <MenuFlyoutItem.Icon><FontIcon x:Name="SuperSeedingCheckIcon" Glyph="&#xE739;" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutSubItem x:Uid="LimitRate" Text="Limit rate">
+                        <MenuFlyoutSubItem x:Uid="LimitRate" Tag="limitRate" Text="Limit rate">
                             <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE9E9;" Foreground="#0D9488" /></MenuFlyoutSubItem.Icon>
                             <MenuFlyoutItem x:Uid="TransferLimits" Text="Download and upload limits…" Click="Limits_Click">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9E9;" Foreground="#0D9488" /></MenuFlyoutItem.Icon>
@@ -180,7 +182,7 @@
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9E9;" Foreground="#0D9488" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutSubItem x:Uid="TrackersWebSeeds" Text="Trackers and web seeds">
+                        <MenuFlyoutSubItem x:Uid="TrackersWebSeeds" Tag="trackers" Text="Trackers and web seeds">
                             <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE774;" Foreground="#2563EB" /></MenuFlyoutSubItem.Icon>
                             <MenuFlyoutItem x:Uid="AddTrackers" Text="Add trackers…" Click="AddTrackers_Click">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE774;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
@@ -190,34 +192,34 @@
                             </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="ForceRecheck" Text="Force recheck" Click="ForceRecheck_Click">
+                        <MenuFlyoutItem x:Uid="ForceRecheck" Tag="forceRecheck" Text="Force recheck" Click="ForceRecheck_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE72C;" Foreground="#2563EB" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="Reannounce" Text="Reannounce" Click="Reannounce_Click">
+                        <MenuFlyoutItem x:Uid="Reannounce" Tag="reannounce" Text="Reannounce" Click="Reannounce_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE789;" Foreground="#D97706" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Name="PreviewMenuItem" x:Uid="PreviewAvailableFile" Text="Preview first available file" Click="PreviewFile_Click">
+                        <MenuFlyoutItem x:Name="PreviewMenuItem" x:Uid="PreviewAvailableFile" Tag="preview" Text="Preview first available file" Click="PreviewFile_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7B3;" Foreground="#0D9488" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Name="OpenDestinationMenuItem" x:Uid="OpenDestination" Text="Open destination folder" Click="OpenDestination_Click">
+                        <MenuFlyoutItem x:Name="OpenDestinationMenuItem" x:Uid="OpenDestination" Tag="openDestination" Text="Open destination folder" Click="OpenDestination_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE838;" Foreground="#D97706" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutSubItem x:Uid="CopyMenu" Text="Copy">
+                        <MenuFlyoutSubItem x:Uid="CopyMenu" Tag="copy" Text="Copy">
                             <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8C8;" Foreground="#64748B" /></MenuFlyoutSubItem.Icon>
                             <MenuFlyoutItem x:Uid="CopyName" Text="Name" Tag="name" Click="CopyInfo_Click" />
                             <MenuFlyoutItem x:Uid="CopyHashV1" Text="Info hash v1" Tag="hashv1" Click="CopyInfo_Click" />
                             <MenuFlyoutItem x:Uid="CopyHashV2" Text="Info hash v2" Tag="hashv2" Click="CopyInfo_Click" />
                             <MenuFlyoutItem x:Uid="CopyMagnet" Text="Magnet link" Tag="magnet" Click="CopyInfo_Click" />
                         </MenuFlyoutSubItem>
-                        <MenuFlyoutItem x:Uid="ExportTorrent" Text="Export .torrent…" Click="Export_Click">
+                        <MenuFlyoutItem x:Uid="ExportTorrent" Tag="export" Text="Export .torrent…" Click="Export_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74E;" Foreground="#64748B" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="ChooseColumns" Text="Choose columns…" Click="ChooseColumns_Click">
+                        <MenuFlyoutItem x:Uid="ChooseColumns" Tag="chooseColumns" Text="Choose columns…" Click="ChooseColumns_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" Foreground="#64748B" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Uid="Delete" Text="Delete…" Click="DeleteSelected_Click">
+                        <MenuFlyoutItem x:Uid="Delete" Tag="delete" Text="Delete…" Click="DeleteSelected_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" Foreground="#DC2626" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                     </MenuFlyout>
@@ -531,8 +533,8 @@
                                                 Margin="0,4"
                                                 Background="{ThemeResource ControlFillColorDefaultBrush}">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="{x:Bind ProgressValue, Converter={StaticResource ProgressGridLengthConverter}}" />
-                                                    <ColumnDefinition Width="{x:Bind ProgressValue, Converter={StaticResource ProgressGridLengthConverter}, ConverterParameter=remaining}" />
+                                                    <ColumnDefinition Width="{x:Bind ProgressValue, Converter={StaticResource ProgressGridLengthConverter}, Mode=OneWay}" />
+                                                    <ColumnDefinition Width="{x:Bind ProgressValue, Converter={StaticResource ProgressGridLengthConverter}, ConverterParameter=remaining, Mode=OneWay}" />
                                                 </Grid.ColumnDefinitions>
                                                 <Border Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="3" Opacity="0.82" />
                                                 <Border Grid.ColumnSpan="2" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="3" />
@@ -541,20 +543,20 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     FontSize="11"
-                                                    Text="{x:Bind ProgressText}" />
+                                                    Text="{x:Bind ProgressText, Mode=OneWay}" />
                                             </Grid>
                                             <TextBlock
                                                 Grid.Column="4"
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Center"
                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                Text="{x:Bind RemainingText}" />
+                                                Text="{x:Bind RemainingText, Mode=OneWay}" />
                                             <TextBlock
                                                 Grid.Column="5"
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Center"
                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                Text="{x:Bind AvailabilityText}" />
+                                                Text="{x:Bind AvailabilityText, Mode=OneWay}" />
                                             <ComboBox
                                                 Grid.Column="6"
                                                 MinWidth="132"

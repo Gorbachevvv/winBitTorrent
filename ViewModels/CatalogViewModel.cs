@@ -13,21 +13,22 @@ public sealed partial class CatalogViewModel : ObservableObject
 {
     private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".m4v", ".ts"];
 
-    private static readonly (CatalogSection Section, string Key, string Fallback)[] HomeSections =
+    private static readonly (CatalogSection Section, string Key, string Fallback, CatalogNav Nav)[] HomeSections =
     [
-        (CatalogSection.TrendingToday, "Catalog_Section_Trending", "Trending today"),
-        (CatalogSection.PopularMovies, "Catalog_Section_PopularMovies", "Popular movies"),
-        (CatalogSection.PopularTvShows, "Catalog_Section_PopularTv", "Popular TV shows"),
-        (CatalogSection.TopRatedMovies, "Catalog_Section_TopRatedMovies", "Top rated movies"),
-        (CatalogSection.TopRatedTvShows, "Catalog_Section_TopRatedTv", "Top rated TV shows"),
-        (CatalogSection.NowPlayingMovies, "Catalog_Section_NowPlaying", "Now in theaters"),
-        (CatalogSection.UpcomingMovies, "Catalog_Section_Upcoming", "Coming soon"),
-        (CatalogSection.TvShowsOnTheAir, "Catalog_Section_OnTheAir", "TV shows on the air")
+        (CatalogSection.TrendingToday, "Catalog_Section_Trending", "Trending today", CatalogNav.Home),
+        (CatalogSection.PopularMovies, "Catalog_Section_PopularMovies", "Popular movies", CatalogNav.Movies),
+        (CatalogSection.NowPlayingMovies, "Catalog_Section_NowPlaying", "Now in theaters", CatalogNav.Movies),
+        (CatalogSection.UpcomingMovies, "Catalog_Section_Upcoming", "Coming soon", CatalogNav.Movies),
+        (CatalogSection.TopRatedMovies, "Catalog_Section_TopRatedMovies", "Top rated movies", CatalogNav.Movies),
+        (CatalogSection.PopularTvShows, "Catalog_Section_PopularTv", "Popular TV shows", CatalogNav.Tv),
+        (CatalogSection.TvShowsOnTheAir, "Catalog_Section_OnTheAir", "TV shows on the air", CatalogNav.Tv),
+        (CatalogSection.TopRatedTvShows, "Catalog_Section_TopRatedTv", "Top rated TV shows", CatalogNav.Tv)
     ];
 
     private readonly MainViewModel _main;
     private readonly ICatalogProvider _catalog;
     private readonly TrackerSearchViewModel _trackerSearch;
+    private readonly List<(CatalogNav Nav, CatalogSectionViewModel Section)> _allSections = [];
     private CancellationTokenSource? _loadLifetime;
     private bool _initialLoadStarted;
 
@@ -42,7 +43,31 @@ public sealed partial class CatalogViewModel : ObservableObject
     public ObservableCollection<CatalogSectionViewModel> Sections { get; } = [];
     public ObservableCollection<CatalogCardViewModel> SearchResults { get; } = [];
     public ObservableCollection<CatalogCardViewModel> SimilarItems { get; } = [];
+    public ObservableCollection<CatalogCardViewModel> Favorites { get; } = [];
     public ObservableCollection<CatalogSeasonOption> Seasons { get; } = [];
+
+    // Left-rail navigation (Lampa-style): Home shows every row, Movies/TV filter to their sections,
+    // Favorites shows the local bookmarks grid. Search overlays all of them while a query is active.
+    public bool ShowSections => !IsSearchActive && !IsFavoritesActive;
+    public bool ShowFavorites => IsFavoritesActive && !IsSearchActive;
+
+    [ObservableProperty]
+    private CatalogNav _selectedNav = CatalogNav.Home;
+
+    [ObservableProperty]
+    private bool _isFavoritesActive;
+
+    [ObservableProperty]
+    private bool _isFavoritesEmpty;
+
+    [ObservableProperty]
+    private bool _isSelectedFavorite;
+
+    public string FavoriteButtonText => IsSelectedFavorite
+        ? Localizer.Get("Catalog_RemoveFavorite", "In favorites")
+        : Localizer.Get("Catalog_AddFavorite", "Add to favorites");
+
+    public string FavoriteGlyph => IsSelectedFavorite ? "" : "";
 
     [ObservableProperty]
     private bool _isSearchActive;
@@ -95,6 +120,72 @@ public sealed partial class CatalogViewModel : ObservableObject
     [RelayCommand]
     public void BackToSources() => _trackerSearch.BackToTrackers();
 
+    partial void OnIsSearchActiveChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowSections));
+        OnPropertyChanged(nameof(ShowFavorites));
+    }
+
+    partial void OnIsFavoritesActiveChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowSections));
+        OnPropertyChanged(nameof(ShowFavorites));
+    }
+
+    partial void OnIsSelectedFavoriteChanged(bool value)
+    {
+        OnPropertyChanged(nameof(FavoriteButtonText));
+        OnPropertyChanged(nameof(FavoriteGlyph));
+    }
+
+    partial void OnSelectedNavChanged(CatalogNav value)
+    {
+        IsSearchActive = false;
+        ApplyNav();
+    }
+
+    private void ApplyNav()
+    {
+        IsFavoritesActive = SelectedNav == CatalogNav.Favorites;
+        if (IsFavoritesActive)
+        {
+            RefreshFavorites();
+            Sections.Clear();
+            return;
+        }
+
+        Sections.Clear();
+        foreach (var (nav, section) in _allSections)
+            if (SelectedNav == CatalogNav.Home || nav == SelectedNav)
+                Sections.Add(section);
+    }
+
+    private void RefreshFavorites()
+    {
+        Favorites.Clear();
+        foreach (var favorite in CatalogFavoritesStore.Load())
+            Favorites.Add(new CatalogCardViewModel(favorite.Id, favorite.Kind, favorite.Title, favorite.Year, favorite.PosterUrl, favorite.RatingText));
+        IsFavoritesEmpty = IsFavoritesActive && Favorites.Count == 0;
+    }
+
+    [RelayCommand]
+    public void ToggleSelectedFavorite()
+    {
+        if (SelectedDetails is null)
+            return;
+
+        var favorite = new CatalogFavorite(
+            SelectedDetails.Id,
+            SelectedDetails.Kind,
+            SelectedDetails.Title,
+            SelectedDetails.Year?.ToString(),
+            SelectedDetails.PosterUrl,
+            SelectedDetails.Rating is > 0 ? SelectedDetails.Rating.Value.ToString("0.0") : string.Empty);
+
+        IsSelectedFavorite = CatalogFavoritesStore.Toggle(favorite);
+        RefreshFavorites();
+    }
+
     public async Task EnsureLoadedAsync()
     {
         if (_initialLoadStarted)
@@ -107,8 +198,13 @@ public sealed partial class CatalogViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadHomeAsync()
     {
-        if (!SyncApiKey())
+        if (!SyncProviderConfig())
+        {
+            // Bookmarks are local, so they stay usable even without a TMDB key.
+            if (SelectedNav == CatalogNav.Favorites)
+                ApplyNav();
             return;
+        }
 
         _loadLifetime?.Cancel();
         _loadLifetime?.Dispose();
@@ -122,15 +218,17 @@ public sealed partial class CatalogViewModel : ObservableObject
             var tasks = HomeSections.Select(entry => _catalog.GetSectionAsync(entry.Section, 1, token)).ToArray();
             var results = await Task.WhenAll(tasks).ConfigureAwait(true);
 
-            Sections.Clear();
+            _allSections.Clear();
             for (var i = 0; i < HomeSections.Length; i++)
             {
                 var section = new CatalogSectionViewModel(Localizer.Get(HomeSections[i].Key, HomeSections[i].Fallback));
                 foreach (var item in results[i])
                     section.Items.Add(new CatalogCardViewModel(item));
                 if (section.Items.Count > 0)
-                    Sections.Add(section);
+                    _allSections.Add((HomeSections[i].Nav, section));
             }
+
+            ApplyNav();
         }
         catch (OperationCanceledException)
         {
@@ -148,7 +246,7 @@ public sealed partial class CatalogViewModel : ObservableObject
     [RelayCommand]
     public async Task SearchAsync()
     {
-        if (!SyncApiKey())
+        if (!SyncProviderConfig())
             return;
 
         if (string.IsNullOrWhiteSpace(Query))
@@ -196,6 +294,7 @@ public sealed partial class CatalogViewModel : ObservableObject
         {
             var details = await _catalog.GetDetailsAsync(card.Id, card.Kind);
             SelectedDetails = details;
+            IsSelectedFavorite = CatalogFavoritesStore.Contains(details.Id, details.Kind);
             SelectedMetaText = BuildMetaText(details);
             SelectedGenresText = string.Join(" · ", details.Genres);
             SelectedCastText = string.Join(", ", details.Cast);
@@ -379,14 +478,62 @@ public sealed partial class CatalogViewModel : ObservableObject
     private static string Normalize(string value)
         => new(value.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
 
-    private bool SyncApiKey()
+    private bool SyncProviderConfig()
     {
         _catalog.ApiKey = ClientSettings.Get<string>("catalog.tmdb.apiKey");
+        _catalog.Language = ResolveTmdbLanguage();
+        _catalog.FallbackLanguage = ResolveTmdbFallback();
+        _catalog.Region = ResolveTmdbRegion();
         IsConfigured = _catalog.IsConfigured;
         if (!IsConfigured)
             ErrorMessage = Localizer.Get("Catalog_NotConfigured", "Set a TMDB API key in Settings > Catalog to load the movie/TV catalog.");
         return IsConfigured;
     }
+
+    // Titles/posters/overviews follow the app's chosen language; the section relevance follows the
+    // system region (so "popular TV shows" isn't full of unrelated foreign shows).
+    private static string ResolveTmdbLanguage()
+    {
+        var setting = ClientSettings.Get<string>("ui.language");
+        var culture = string.IsNullOrWhiteSpace(setting)
+            ? System.Globalization.CultureInfo.CurrentUICulture.Name
+            : setting;
+        return culture switch
+        {
+            "be-BY" or "be" => "be",
+            _ => culture
+        };
+    }
+
+    // Belarusian has little TMDB coverage, so it falls back to Russian; Russian (and anything else)
+    // falls back to English. English needs no fallback.
+    private static string? ResolveTmdbFallback()
+        => ResolveTmdbLanguage() switch
+        {
+            "be" => "ru-RU",
+            "en-US" or "en" => null,
+            _ => "en-US"
+        };
+
+    private static string? ResolveTmdbRegion()
+    {
+        try
+        {
+            return System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+}
+
+public enum CatalogNav
+{
+    Home,
+    Movies,
+    Tv,
+    Favorites
 }
 
 public sealed record CatalogSeasonOption(int SeasonNumber, string DisplayName);
