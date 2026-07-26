@@ -117,7 +117,7 @@
                 SelectionMode="Extended"
                 SelectionUnit="Row"
                 ItemsSource="{Binding Torrents}"
-                ColumnReordered="TorrentTable_ColumnReordered"
+                ColumnReordering="TorrentTable_ColumnReordering"
                 RightTapped="TorrentTable_RightTapped"
                 RowContextFlyoutOpening="TorrentTable_RowContextFlyoutOpening"
                 SelectionChanged="TorrentTable_SelectionChanged">
@@ -223,20 +223,36 @@
                     </MenuFlyout>
                 </tv:TableView.RowContextFlyout>
                 <tv:TableView.Columns>
-                    <tv:TableViewTemplateColumn Header="" Width="40" MinWidth="34" CanResize="False">
+                    <!-- The status icon lives inline with the name, like qBittorrent's own Name
+                         column, rather than as its own separate leading column. SortMemberPath
+                         stands in for Binding here, since a template column has no Binding of its
+                         own to sort by. -->
+                    <tv:TableViewTemplateColumn x:Uid="ColumnName" Header="Name" Width="2*" MinWidth="204" SortMemberPath="Name">
                         <tv:TableViewTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <FontIcon
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontSize="15"
-                                    Glyph="{Binding StatusGlyph}"
-                                    Foreground="{Binding StatusBrush}"
-                                    ToolTipService.ToolTip="{Binding Status}" />
+                                <Grid Margin="8,0,0,0" ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon
+                                        Width="18"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        Glyph="{Binding StatusGlyph}"
+                                        Foreground="{Binding StatusBrush}"
+                                        ToolTipService.ToolTip="{Binding Status}" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding Name}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                </Grid>
                             </DataTemplate>
                         </tv:TableViewTemplateColumn.CellTemplate>
                     </tv:TableViewTemplateColumn>
-                    <tv:TableViewTextColumn x:Uid="ColumnName" Header="Name" Width="2*" MinWidth="180" Binding="{Binding Name}" />
                     <tv:TableViewTextColumn x:Uid="ColumnSize" Header="Size" Width="90" Binding="{Binding Size}" />
                     <tv:TableViewTextColumn x:Uid="ColumnTotalSize" Header="Total size" Width="95" Visibility="Collapsed" Binding="{Binding TotalSize}" />
                     <tv:TableViewTemplateColumn x:Uid="ColumnProgress" Header="Progress" Width="130">

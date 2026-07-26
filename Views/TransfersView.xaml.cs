@@ -16,6 +16,7 @@ using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
 using WinBitTorrent.Core.Models;
+using WinBitTorrent.Core.Services;
 using WinBitTorrent.Services;
 using WinBitTorrent.ViewModels;
 using WinUI.TableView;
@@ -334,28 +335,47 @@ public sealed partial class TransfersView : UserControl
         if (ClientSettings.GetValue("layout.detailsHeight") is double detailsHeight)
             ContentGrid.RowDefinitions[2].Height = new GridLength(Math.Max(ContentGrid.RowDefinitions[2].MinHeight, detailsHeight));
 
+        // Column order is never tracked through TableViewColumn.Order (see the comment on
+        // TorrentTable_ColumnReordering for why); it is instead the physical sequence of columns
+        // in the underlying collection, which the saved array reproduces entry by entry.
         if (ClientSettings.GetValue("layout.torrentColumns") is string json)
         {
             try
             {
                 var states = JsonSerializer.Deserialize<List<ColumnState>>(json) ?? [];
-                for (var stateIndex = 0; stateIndex < states.Count; stateIndex++)
+                var matched = new List<TableViewColumn>();
+                foreach (var state in states)
                 {
-                    var state = states[stateIndex];
-                    TableViewColumn? column = null;
-                    if (int.TryParse(state.Id, out var columnIndex) && columnIndex >= 0 && columnIndex < TorrentTable.Columns.Count)
-                        column = TorrentTable.Columns[columnIndex];
-                    column ??= TorrentTable.Columns.FirstOrDefault(candidate => string.Equals(candidate.Header?.ToString(), state.Header, StringComparison.Ordinal));
-                    // Older versions persisted localized header text only. The serialized list
-                    // follows the declaration order, so its position is a safe migration key.
-                    if (column is null && stateIndex < TorrentTable.Columns.Count)
-                        column = TorrentTable.Columns[stateIndex];
+                    // Matched by header text - stable across reorders and across a changed column
+                    // count between app versions, unlike a saved positional index. The one column
+                    // with no header (the leading status icon) always keeps its declared position,
+                    // so it never needs a saved entry to begin with.
+                    var column = TorrentTable.Columns.FirstOrDefault(candidate =>
+                        !matched.Contains(candidate) &&
+                        candidate.Header?.ToString() is { Length: > 0 } header &&
+                        string.Equals(header, state.Header, StringComparison.Ordinal));
                     if (column is null)
                         continue;
+
+                    matched.Add(column);
                     if (double.IsFinite(state.Width) && state.Width > 0)
                         column.Width = new GridLength(Math.Max(column.MinWidth ?? 0d, state.Width));
                     column.Visibility = state.Visible ? Visibility.Visible : Visibility.Collapsed;
-                    column.Order = state.Order;
+                }
+
+                // Move every matched column to the front, in saved order, one at a time - and
+                // unconditionally, even when a column's position does not actually change. The
+                // remove+insert is also what makes WinUI.TableView recompute which columns are
+                // "frozen" (see RefreshColumnPlacement), which a column that starts hidden in XAML
+                // otherwise never gets right. Columns absent from the file (added by a newer build
+                // than the one that saved it) are left untouched, keeping their declared position
+                // around the ones that were restored.
+                for (var target = 0; target < matched.Count; target++)
+                {
+                    var column = matched[target];
+                    var current = TorrentTable.Columns.IndexOf(column);
+                    TorrentTable.Columns.RemoveAt(current);
+                    TorrentTable.Columns.Insert(target, column);
                 }
             }
             catch (JsonException)
@@ -370,16 +390,40 @@ public sealed partial class TransfersView : UserControl
             return;
         ClientSettings.SetValue("layout.sidebarWidth", ((Grid)Content).ColumnDefinitions[0].ActualWidth);
         ClientSettings.SetValue("layout.detailsHeight", ContentGrid.RowDefinitions[2].ActualHeight);
-        var columns = TorrentTable.Columns.Select((column, index) => new ColumnState(
-            index.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        // The array's own sequence *is* the saved column order - see RestoreLayout.
+        var columns = TorrentTable.Columns.Select(column => new ColumnState(
             column.Header?.ToString() ?? string.Empty,
             double.IsFinite(column.ActualWidth) && column.ActualWidth > 0 ? column.ActualWidth : column.Width.Value,
-            column.Visibility == Visibility.Visible,
-            column.Order ?? TorrentTable.Columns.IndexOf(column))).ToList();
+            column.Visibility == Visibility.Visible)).ToList();
         ClientSettings.SetValue("layout.torrentColumns", JsonSerializer.Serialize(columns));
     }
 
-    private void TorrentTable_ColumnReordered(object sender, TableViewColumnReorderedEventArgs e) => SaveLayout();
+    // WinUI.TableView's own header drag-and-drop measures the drop position among *visible*
+    // columns but then moves that index inside the *raw* (all-columns, hidden included) collection -
+    // two different index spaces that only agree when nothing is hidden. This table hides about
+    // thirty of its ~38 columns by default, so the built-in move reliably repositions (and
+    // corrupts the saved position of) some unrelated column instead of the one that was dragged.
+    // The drag gesture and drop indicator are unaffected by this, so only the resulting move is
+    // replaced: it is cancelled here and redone from the column/target index the event still
+    // reports correctly.
+    private void TorrentTable_ColumnReordering(object sender, TableViewColumnReorderingEventArgs e)
+    {
+        e.Cancel = true;
+        MoveVisibleColumn(e.Column, e.DropIndex);
+        SaveLayout();
+    }
+
+    // Repositions a column among the currently visible ones, leaving every hidden column exactly
+    // where it physically sits (their relative order among themselves is never touched, so a later
+    // "show" places them predictably). The actual index arithmetic is in ColumnReorderPlanner
+    // (WinBitTorrent.Core), unit-tested there independently of any live TableView.
+    private void MoveVisibleColumn(TableViewColumn column, int visibleDropIndex)
+    {
+        var others = TorrentTable.Columns.VisibleColumns.Where(candidate => candidate != column).ToList();
+        TorrentTable.Columns.Remove(column);
+        var insertAt = ColumnReorderPlanner.ComputeInsertIndex(TorrentTable.Columns.ToList(), others, visibleDropIndex);
+        TorrentTable.Columns.Insert(insertAt, column);
+    }
 
     private async void ForceStart_Click(object sender, RoutedEventArgs e)
     {
@@ -1162,7 +1206,25 @@ public sealed partial class TransfersView : UserControl
         }
 
         column.Visibility = item.IsChecked ? Visibility.Visible : Visibility.Collapsed;
+        RefreshColumnPlacement(column);
         SaveLayout();
+    }
+
+    // WinUI.TableView only recomputes which columns are "frozen" (pinned to the left, outside the
+    // normal header flow) when the Columns collection itself changes - never when a column's
+    // Visibility flips. A column that starts Collapsed in XAML is, at that point, absent from
+    // VisibleColumns, and the library's frozen-column check (index-in-VisibleColumns < frozen
+    // count) treats "absent" the same as "before the first column" - so it is marked frozen and
+    // stays that way even once shown, rendering in the pinned area instead of its real slot. A
+    // harmless remove-then-reinsert at the same spot is enough to make the library redo that
+    // check (and rebuild the header) now that the column's real position is known.
+    private void RefreshColumnPlacement(TableViewColumn column)
+    {
+        var index = TorrentTable.Columns.IndexOf(column);
+        if (index < 0)
+            return;
+        TorrentTable.Columns.RemoveAt(index);
+        TorrentTable.Columns.Insert(index, column);
     }
 
     private static bool IsColumnHeader(DependencyObject? source)
@@ -1243,5 +1305,5 @@ public sealed partial class TransfersView : UserControl
         WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(window));
     }
 
-    private sealed record ColumnState(string? Id, string Header, double Width, bool Visible, int Order);
+    private sealed record ColumnState(string Header, double Width, bool Visible);
 }
