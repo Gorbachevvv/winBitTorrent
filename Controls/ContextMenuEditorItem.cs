@@ -47,6 +47,10 @@ public sealed class ContextMenuEditorItem
     public string DragHint => Localizer.Get("MenuEditor_DragHint", "Drag to move");
     public string RemoveHint => Localizer.Get("MenuEditor_RemoveHint", "Remove from the menu");
 
+    // The editor rows are icon-and-text templates, so the list item falls back to ToString() for the
+    // automation name - without this a screen reader would read the type name.
+    public override string ToString() => Title;
+
     // The menu uses fixed accent colours per command (the same ones the real flyout draws), so the
     // brushes are cached by hex value instead of being rebuilt for every row.
     private static SolidColorBrush AccentBrush(string color)

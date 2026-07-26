@@ -21,10 +21,22 @@ public interface ITrackerSearchProvider
     Task<byte[]> DownloadTorrentAsync(string resultId, CancellationToken cancellationToken = default);
 }
 
+// Trackers that answer searches without an account (public JSON APIs). The search UI skips the
+// sign-in step for these providers and never offers a "sign out" action.
+public interface ITrackerAnonymousAccess
+{
+}
+
 public interface ITrackerProxyOptions
 {
     bool UseBuiltInProxy { get; set; }
     string BuiltInProxyDescription { get; }
+
+    /// <summary>
+    /// Address of the built-in proxy, so the embedded sign-in browser can be routed through the same
+    /// hop the provider's own requests use when the tracker is blocked by the ISP.
+    /// </summary>
+    Uri BuiltInProxyAddress { get; }
 }
 
 public interface ITrackerInteractiveAuthentication

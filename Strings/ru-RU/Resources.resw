@@ -96,7 +96,6 @@
   <data name="AddTrackers.Text" xml:space="preserve"><value>Добавить трекеры…</value></data>
   <data name="AddWebSeeds.Text" xml:space="preserve"><value>Добавить веб-сиды…</value></data>
   <data name="ExportTorrent.Text" xml:space="preserve"><value>Экспортировать .torrent…</value></data>
-  <data name="ChooseColumns.Text" xml:space="preserve"><value>Выбрать столбцы…</value></data>
   <data name="OpenDestination.Text" xml:space="preserve"><value>Открыть папку назначения</value></data>
   <data name="PreviewAvailableFile.Text" xml:space="preserve"><value>Открыть первый доступный файл</value></data>
   <data name="TagsMenu.Text" xml:space="preserve"><value>Метки</value></data>
@@ -386,6 +385,8 @@
   <data name="RssOpenLink.Content" xml:space="preserve"><value>Открыть ссылку</value></data>
   <data name="AddTorrent_LoadingMetadata" xml:space="preserve"><value>Загрузка метаданных торрента…</value></data>
   <data name="AddTorrent_MetadataFailed" xml:space="preserve"><value>Не удалось загрузить метаданные торрента.</value></data>
+  <data name="AddTorrent_MetadataCancelled" xml:space="preserve"><value>Загрузка метаданных остановлена.</value></data>
+  <data name="AddTorrentStopPreview.Content" xml:space="preserve"><value>Остановить</value></data>
   <data name="AddTorrent_SourceRequired" xml:space="preserve"><value>Добавьте хотя бы один .torrent-файл, URL или magnet-ссылку.</value></data>
   <data name="AddTorrent_ClearUnwantedFiles" xml:space="preserve"><value>Снимите отметки с файлов, которые не нужно загружать.</value></data>
   <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Приоритеты файлов из загруженного .torrent можно изменить на вкладке «Файлы» после добавления.</value></data>
@@ -437,7 +438,6 @@
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Ожидаемый путь</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Также удалить файлы с диска</value></data>
   <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Удалить выбранные торренты?</value></data>
-  <data name="Dialog_ChooseTorrentColumns" xml:space="preserve"><value>Выбор колонок торрентов</value></data>
   <data name="Filter_Uncategorized" xml:space="preserve"><value>Без категории</value></data>
   <data name="Log_Blocked" xml:space="preserve"><value>Заблокировано</value></data>
   <data name="Log_Allowed" xml:space="preserve"><value>Разрешено</value></data>
@@ -556,7 +556,15 @@
   <data name="TrackerSecureLoginTitle.Text" xml:space="preserve"><value>Безопасный вход в RuTracker</value></data>
   <data name="TrackerBrowserHint.Text" xml:space="preserve"><value>Войдите в аккаунт и пройдите капчу. WinBitTorrent распознает сессию автоматически.</value></data>
   <data name="TrackerBrowserComplete.Content" xml:space="preserve"><value>Проверить вход</value></data>
-  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Поиск на RuTracker</value></data>
+  <data name="TrackerBrowserBlockedTitle.Text" xml:space="preserve"><value>Страница входа не загрузилась</value></data>
+  <data name="TrackerBrowserBlockedHint.Text" xml:space="preserve"><value>Обычно трекер заблокирован интернет-провайдером. Включите прокси трекера ниже и повторите попытку.</value></data>
+  <data name="TrackerBrowserRetry.Content" xml:space="preserve"><value>Обновить страницу</value></data>
+  <data name="TrackerBrowserResetSession.Content" xml:space="preserve"><value>Войти заново</value></data>
+  <data name="Tracker_BrowserSessionRejected" xml:space="preserve"><value>Трекер не принял сохранённую сессию. Нажмите «Войти заново», чтобы очистить её.</value></data>
+  <data name="TrackerBrowserLoadingText.Text" xml:space="preserve"><value>Открывается страница входа…</value></data>
+  <data name="Tracker_BrowserLoadTimedOut" xml:space="preserve"><value>Трекер не ответил за 25 секунд.</value></data>
+  <data name="Tracker_BrowserProxyUnavailable" xml:space="preserve"><value>Не удалось применить прокси к браузеру входа, подключение идёт напрямую: {0}</value></data>
+  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Поиск по трекеру</value></data>
   <data name="TrackerSearch.Content" xml:space="preserve"><value>Найти</value></data>
   <data name="TrackerStop.Content" xml:space="preserve"><value>Остановить</value></data>
   <data name="TrackerColumnPublished.Header" xml:space="preserve"><value>Добавлено</value></data>
@@ -582,6 +590,7 @@
   <data name="Tracker_Downloading" xml:space="preserve"><value>Загрузка torrent-файла…</value></data>
   <data name="Tracker_Added" xml:space="preserve"><value>Торрент добавлен в qBittorrent.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent-файл загружен. Проверьте параметры добавления.</value></data>
+  <data name="Tracker_MagnetReady" xml:space="preserve"><value>Magnet-ссылка готова. Проверьте параметры добавления.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Вы вышли из аккаунта. Войдите под другой учётной записью.</value></data>
   <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Поиск по фильмам</value></data>
   <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Трекеры</value></data>
@@ -597,6 +606,7 @@
   <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Скоро выйдет</value></data>
   <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>Сериалы в эфире</value></data>
   <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Похожее</value></data>
+  <data name="CatalogTrackerPickerTitle.Text" xml:space="preserve"><value>Выберите трекер</value></data>
   <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Режиссёр</value></data>
   <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Создатели</value></data>
   <data name="CatalogSeasonLabel.Text" xml:space="preserve"><value>Сезон</value></data>

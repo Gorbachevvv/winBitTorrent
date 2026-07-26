@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddSingleton<ICredentialStore, PasswordVaultCredentialStore>();
         services.AddSingleton<ITrackerCredentialStore, PasswordVaultTrackerCredentialStore>();
         services.AddSingleton<ITrackerSearchProvider, RuTrackerProvider>();
+        services.AddSingleton<ITrackerSearchProvider, PirateBayProvider>();
         services.AddSingleton<ICatalogProvider, TmdbCatalogProvider>();
         services.AddSingleton<IServerProfileStore, JsonServerProfileStore>();
         services.AddSingleton<IManagedBackendHost, ManagedBackendHost>();

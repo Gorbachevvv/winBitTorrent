@@ -50,26 +50,27 @@ public sealed class ContextMenuEditorTests
             // labels come from the same resources the real menu uses.
             AssertAnyName(editorNames, "Separator", "Разделитель", "Падзяляльнік");
             AssertAnyName(editorNames, "Force recheck", "Перепроверить принудительно", "Пераправерыць прымусова");
-            // Nothing has been removed yet, so the right-hand list is empty.
-            AssertAnyName(editorNames, "Every command is already in the menu", "Все команды уже добавлены в меню", "Усе каманды ўжо дададзеныя ў меню");
+            // List rows fall back to ToString() for their automation name, so a row view model that
+            // does not override it makes a screen reader read the bare type name (or, for records, a
+            // dump of every property).
+            AssertNoTypeDumpNames(editorNames);
 
-            // Removing the first command moves it out of the menu and onto the shelf...
+            // Every row in the menu carries one remove button, so counting them measures the menu
+            // without depending on the layout this machine happens to have saved.
+            var rowsBefore = MenuRowCount(settingsWindow!);
+            Assert.True(rowsBefore > 0, "The menu preview rendered no rows.");
+
+            // Removing a command takes its row out...
             var remove = FindByAnyName(settingsWindow!, "Remove from the menu", "Убрать из меню", "Прыбраць з меню");
             Assert.NotNull(remove);
             remove!.Click();
-            var afterRemoval = Retry.While(
-                () => VisibleNames(settingsWindow!),
-                found => found.Any(name => name.Contains("Every command is already in the menu", StringComparison.OrdinalIgnoreCase)
-                    || name.Contains("Все команды уже добавлены в меню", StringComparison.OrdinalIgnoreCase)
-                    || name.Contains("Усе каманды ўжо дададзеныя ў меню", StringComparison.OrdinalIgnoreCase)),
-                TimeSpan.FromSeconds(5)).Result ?? [];
-            AssertAnyName(afterRemoval, "Start", "Запустить", "Запусціць");
+            Assert.Equal(rowsBefore - 1, WaitForMenuRowCount(settingsWindow!, rowsBefore - 1));
 
-            // ...and clicking it there puts it back, emptying the shelf again.
-            var available = FindByAnyName(settingsWindow!, "Start", "Запустить", "Запусціць");
-            Assert.NotNull(available);
-            available!.Click();
-            WaitForNames(settingsWindow!, "Every command is already in the menu", "Все команды уже добавлены в меню", "Усе каманды ўжо дададзеныя ў меню");
+            // ...and adding a separator puts a row back.
+            var addSeparator = FindByAnyName(settingsWindow!, "Add a separator", "Добавить разделитель", "Дадаць падзяляльнік");
+            Assert.NotNull(addSeparator);
+            addSeparator!.Click();
+            Assert.Equal(rowsBefore, WaitForMenuRowCount(settingsWindow!, rowsBefore));
         }
         finally
         {
@@ -88,6 +89,24 @@ public sealed class ContextMenuEditorTests
             TimeSpan.FromSeconds(10)).Result ?? VisibleNames(root);
         AssertAnyName(names, expected);
         return names;
+    }
+
+    private static int MenuRowCount(AutomationElement root)
+        => VisibleNames(root).Count(static name =>
+            name.Equals("Remove from the menu", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("Убрать из меню", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("Прыбраць з меню", StringComparison.OrdinalIgnoreCase));
+
+    private static int WaitForMenuRowCount(AutomationElement root, int expected)
+        => Retry.While(() => MenuRowCount(root), count => count != expected, TimeSpan.FromSeconds(5)).Result;
+
+    private static void AssertNoTypeDumpNames(string[] names)
+    {
+        var offenders = names
+            .Where(static name => name.StartsWith("WinBitTorrent.", StringComparison.Ordinal)
+                || name.Contains("ViewModel {", StringComparison.Ordinal))
+            .ToArray();
+        Assert.True(offenders.Length == 0, $"Automation names leak their type: {string.Join(" | ", offenders)}");
     }
 
     private static void AssertAnyName(string[] names, params string[] expected)

@@ -71,6 +71,12 @@ public sealed record PeerLogEntryViewModel(long Id, DateTimeOffset Timestamp, st
     public string Time => Timestamp.LocalDateTime.ToString("G");
     public string Action => Blocked ? Localizer.Get("Log_Blocked", "Blocked") : Localizer.Get("Log_Allowed", "Allowed");
 
+    // The list item falls back to ToString() for the automation name, and the record default dumps
+    // every property at a screen reader.
+    public override string ToString() => string.IsNullOrWhiteSpace(Reason)
+        ? $"{Time} {Address} {Action}"
+        : $"{Time} {Address} {Action} {Reason}";
+
     public static PeerLogEntryViewModel FromJson(JsonObject value)
     {
         var timestamp = value["timestamp"]?.GetValue<long>() ?? 0;
@@ -94,6 +100,10 @@ public sealed record LogEntryViewModel(long Id, DateTimeOffset Timestamp, int Ty
         8 => Localizer.Get("Log_Critical", "Critical"),
         _ => Type.ToString()
     };
+
+    // The list item falls back to ToString() for the automation name, and the record default dumps
+    // every property at a screen reader.
+    public override string ToString() => $"{Time} {Level} {Message}";
 
     public static LogEntryViewModel FromJson(JsonObject value)
     {

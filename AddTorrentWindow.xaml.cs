@@ -24,6 +24,7 @@ public sealed partial class AddTorrentWindow : Window
     private string? _metadataName;
     private JsonObject? _metadata;
     private bool _initialized;
+    private CancellationTokenSource? _previewLifetime;
 
     public AddTorrentWindow(IReadOnlyList<string> torrentFiles, IReadOnlyList<string> urls)
     {
@@ -37,7 +38,13 @@ public sealed partial class AddTorrentWindow : Window
         SourcesBox.Text = string.Join(Environment.NewLine, torrentFiles.Concat(urls));
         Activated += AddTorrentWindow_Activated;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
-        Closed += (_, _) => _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        Closed += (_, _) =>
+        {
+            _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            // A magnet preview polls qBittorrent for up to two minutes; closing the window has to
+            // end that instead of leaving it running against a dead UI.
+            _previewLifetime?.Cancel();
+        };
     }
 
     private async void AddTorrentWindow_Activated(object sender, WindowActivatedEventArgs args)
@@ -114,16 +121,28 @@ public sealed partial class AddTorrentWindow : Window
         if (_viewModel.Api is null || !PreviewButton.IsEnabled)
             return;
 
+        _previewLifetime?.Cancel();
+        _previewLifetime?.Dispose();
+        _previewLifetime = new CancellationTokenSource();
+        var cancellationToken = _previewLifetime.Token;
+
         PreviewButton.IsEnabled = false;
+        SetPreviewBusy(true);
         MetadataSummary.Text = Localizer.Get("AddTorrent_LoadingMetadata", "Loading torrent metadata…");
         ErrorBar.IsOpen = false;
         try
         {
             var metadata = IsRemoteSource(source)
-                ? await _viewModel.Api.Torrents.FetchMetadataAsync(source)
-                : await _viewModel.Api.Torrents.ParseMetadataAsync(source);
+                ? await _viewModel.Api.Torrents.FetchMetadataAsync(source, cancellationToken)
+                : await _viewModel.Api.Torrents.ParseMetadataAsync(source, cancellationToken);
             PopulateMetadata(source, metadata);
             MetadataText.Text = metadata.ToJsonString(new() { WriteIndented = true });
+        }
+        catch (OperationCanceledException)
+        {
+            // Either the user pressed Stop or the window is closing; a newer preview owns the UI now.
+            if (cancellationToken == _previewLifetime?.Token)
+                MetadataSummary.Text = Localizer.Get("AddTorrent_MetadataCancelled", "Metadata loading stopped.");
         }
         catch (Exception exception)
         {
@@ -139,8 +158,18 @@ public sealed partial class AddTorrentWindow : Window
         finally
         {
             PreviewButton.IsEnabled = true;
+            SetPreviewBusy(false);
         }
     }
+
+    private void SetPreviewBusy(bool busy)
+    {
+        MetadataProgress.IsActive = busy;
+        MetadataProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        StopPreviewButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void StopPreview_Click(object sender, RoutedEventArgs e) => _previewLifetime?.Cancel();
 
     private async void Add_Click(object sender, RoutedEventArgs e)
     {

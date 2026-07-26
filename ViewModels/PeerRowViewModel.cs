@@ -22,6 +22,10 @@ public sealed partial class PeerRowViewModel : ObservableObject
     [ObservableProperty] private string _downloaded = string.Empty;
     [ObservableProperty] private string _uploaded = string.Empty;
 
+    // List rows fall back to ToString() for their automation name, so without this a screen reader
+    // announces the bare type name instead of the peer.
+    public override string ToString() => Address;
+
     public static PeerRowViewModel FromJson(string id, JsonObject value)
     {
         var peer = new PeerRowViewModel(id);

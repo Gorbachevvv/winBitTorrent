@@ -131,7 +131,10 @@ public sealed partial class SearchViewModel : ObservableObject
     }
 }
 
-public sealed record SearchPluginViewModel(string Name, string FullName, bool Enabled, string Version, string Url);
+public sealed record SearchPluginViewModel(string Name, string FullName, bool Enabled, string Version, string Url)
+{
+    public override string ToString() => FullName;
+}
 
 public sealed record SearchResultViewModel(
     string Name,
@@ -145,6 +148,10 @@ public sealed record SearchResultViewModel(
     string Category)
 {
     public string Size => ValueFormatter.Size(SizeValue);
+
+    // The results grid falls back to ToString() for the row's automation name, and the record
+    // default dumps every property at a screen reader.
+    public override string ToString() => Name;
 
     public static SearchResultViewModel FromJson(JsonObject value) => new(
         value["fileName"]?.GetValue<string>() ?? string.Empty,

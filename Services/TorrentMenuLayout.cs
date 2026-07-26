@@ -53,7 +53,6 @@ public static class TorrentMenuLayout
         new("openDestination", "OpenDestination", "Open destination folder", "", "#D97706"),
         new("copy", "CopyMenu", "Copy", "", "#64748B", true),
         new("export", "ExportTorrent", "Export .torrent…", "", "#64748B"),
-        new("chooseColumns", "ChooseColumns", "Choose columns…", "", "#64748B"),
         new("delete", "Delete", "Delete…", "", "#DC2626")
     ];
 
@@ -68,7 +67,7 @@ public static class TorrentMenuLayout
         SeparatorId,
         "forceRecheck", "reannounce",
         SeparatorId,
-        "preview", "openDestination", "copy", "export", "chooseColumns",
+        "preview", "openDestination", "copy", "export",
         SeparatorId,
         "delete"
     ];

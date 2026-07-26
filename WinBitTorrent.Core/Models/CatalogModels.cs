@@ -27,11 +27,14 @@ public sealed record CatalogItem(
     string? PosterUrl,
     double? Rating);
 
+// EnglishTitle is the title as released in English, independent of the UI language. Tracker release
+// names are overwhelmingly English, so searches are built from it rather than from Title.
 public sealed record CatalogItemDetails(
     string Id,
     CatalogKind Kind,
     string Title,
     string? OriginalTitle,
+    string? EnglishTitle,
     int? Year,
     string? PosterUrl,
     string? BackdropUrl,

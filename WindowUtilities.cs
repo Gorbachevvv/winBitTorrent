@@ -39,14 +39,12 @@ internal static class WindowUtilities
         window.SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
         appWindow.SetIcon(AppIconPath());
 
-        var titleBar = appWindow.TitleBar;
-        titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
-        titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        var theme = CurrentTheme();
+        ApplyTitleBarTheme(appWindow, theme);
 
         if (window.Content is not FrameworkElement originalContent)
             return;
 
-        var theme = CurrentTheme();
         originalContent.HorizontalAlignment = HorizontalAlignment.Stretch;
         originalContent.VerticalAlignment = VerticalAlignment.Stretch;
         originalContent.RequestedTheme = theme;
@@ -104,7 +102,25 @@ internal static class WindowUtilities
         return titleBar;
     }
 
-    private static ElementTheme CurrentTheme()
+    /// <summary>
+    /// Colours the system-drawn caption buttons (minimise, maximise, close). Those are painted by
+    /// the shell, not by XAML, so the app theme picked in the settings never reaches them on its
+    /// own - with a light theme over a dark app mode their glyphs stayed white and invisible.
+    /// </summary>
+    internal static void ApplyTitleBarTheme(AppWindow appWindow, ElementTheme theme)
+    {
+        var titleBar = appWindow.TitleBar;
+        titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        titleBar.PreferredTheme = theme switch
+        {
+            ElementTheme.Light => TitleBarTheme.Light,
+            ElementTheme.Dark => TitleBarTheme.Dark,
+            _ => TitleBarTheme.UseDefaultAppMode
+        };
+    }
+
+    internal static ElementTheme CurrentTheme()
         => (ClientSettings.GetValue("ui.theme") as string) switch
         {
             "Light" => ElementTheme.Light,

@@ -33,6 +33,7 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
     public Uri LoginPage => new(Mirrors[0], "/forum/login.php");
     public bool UseBuiltInProxy { get; set; }
     public string BuiltInProxyDescription => "ps1.blockme.site:443";
+    public Uri BuiltInProxyAddress => OfficialAddonProxy;
 
     public async Task SignInAsync(TrackerCredentials credentials, CancellationToken cancellationToken = default)
     {

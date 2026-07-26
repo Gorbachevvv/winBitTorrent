@@ -46,6 +46,9 @@ public sealed partial class CatalogViewModel : ObservableObject
     public ObservableCollection<CatalogCardViewModel> Favorites { get; } = [];
     public ObservableCollection<CatalogSeasonOption> Seasons { get; } = [];
 
+    // Every tracker registered in the app, so the download flyout stays in sync automatically.
+    public ObservableCollection<TrackerCardViewModel> Trackers => _trackerSearch.Trackers;
+
     // Left-rail navigation (Lampa-style): Home shows every row, Movies/TV filter to their sections,
     // Favorites shows the local bookmarks grid. Search overlays all of them while a query is active.
     public bool ShowSections => !IsSearchActive && !IsFavoritesActive;
@@ -74,6 +77,9 @@ public sealed partial class CatalogViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isDetailsVisible;
+
+    [ObservableProperty]
+    private bool _isTrackerPickerOpen;
 
     [ObservableProperty]
     private bool _isBusy;
@@ -335,6 +341,7 @@ public sealed partial class CatalogViewModel : ObservableObject
     [RelayCommand]
     public void BackToBrowse()
     {
+        IsTrackerPickerOpen = false;
         IsDetailsVisible = false;
         SelectedDetails = null;
         Seasons.Clear();
@@ -342,13 +349,41 @@ public sealed partial class CatalogViewModel : ObservableObject
         SelectedSeason = null;
     }
 
+    // "Download" no longer jumps straight to one tracker: it opens the side panel so the user picks
+    // which of the registered trackers should run the search.
     [RelayCommand]
-    public async Task DownloadAsync()
+    public void Download()
     {
         if (SelectedDetails is null)
             return;
 
-        await _trackerSearch.SearchForCatalogTitleAsync(SelectedDetails.Title, SelectedDetails.Year, SelectedSeason?.SeasonNumber);
+        IsTrackerPickerOpen = true;
+    }
+
+    [RelayCommand]
+    public void CloseTrackerPicker() => IsTrackerPickerOpen = false;
+
+    [RelayCommand]
+    public async Task PickTrackerAsync(TrackerCardViewModel? tracker)
+    {
+        if (tracker is null || SelectedDetails is null)
+            return;
+
+        IsTrackerPickerOpen = false;
+        await _trackerSearch.SearchForCatalogTitleAsync(BuildTrackerQuery(), tracker.Id);
+    }
+
+    // Trackers name their releases in English, so the search uses the English title even when the
+    // catalog is displayed in another language - "Блич" finds nothing on an English-indexed tracker.
+    private CatalogTrackerQuery BuildTrackerQuery()
+    {
+        var english = SelectedDetails!.EnglishTitle;
+        var useEnglish = !string.IsNullOrWhiteSpace(english);
+        return new CatalogTrackerQuery(
+            useEnglish ? english!.Trim() : SelectedDetails.Title,
+            SelectedDetails.Year,
+            SelectedSeason?.SeasonNumber,
+            useEnglish);
     }
 
     [RelayCommand]
@@ -367,6 +402,7 @@ public sealed partial class CatalogViewModel : ObservableObject
 
     private async void OnBackToCatalogRequested()
     {
+        IsTrackerPickerOpen = false;
         IsDetailsVisible = SelectedDetails is not null;
         if (SelectedDetails is not null)
             await RefreshWatchAvailabilityAsync();
@@ -555,4 +591,10 @@ public sealed record CatalogCardViewModel(string Id, CatalogKind Kind, string Ti
         item.Rating is > 0 ? item.Rating.Value.ToString("0.0") : string.Empty)
     {
     }
+
+    // The poster is an image with no text of its own, so the list/grid container falls back to
+    // ToString() for the automation name a screen reader announces.
+    public string AutomationName => string.IsNullOrWhiteSpace(Year) ? Title : $"{Title} ({Year})";
+
+    public override string ToString() => AutomationName;
 }

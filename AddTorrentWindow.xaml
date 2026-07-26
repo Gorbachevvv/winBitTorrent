@@ -339,15 +339,32 @@
             </Border>
         </Grid>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" ColumnSpacing="10">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <!-- Magnet metadata arrives over DHT and can take minutes, so the wait is shown and can
+                 be abandoned instead of looking like a frozen window. -->
+            <ProgressRing
+                x:Name="MetadataProgress"
+                Width="18"
+                Height="18"
+                VerticalAlignment="Center"
+                IsActive="False"
+                Visibility="Collapsed" />
             <TextBlock
                 x:Uid="AddTorrentMetadataHint"
                 x:Name="MetadataSummary"
+                Grid.Column="1"
                 VerticalAlignment="Center"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 Text="Preview a magnet, URL, or torrent file to inspect its contents."
                 TextWrapping="Wrap" />
-            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+            <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                <Button
+                    x:Uid="AddTorrentStopPreview"
+                    x:Name="StopPreviewButton"
+                    Content="Stop"
+                    Click="StopPreview_Click"
+                    Visibility="Collapsed" />
                 <Button x:Uid="CommonCancel" Content="Cancel" Click="Cancel_Click" />
                 <Button x:Uid="CommonAdd" x:Name="AddButton" Content="Add" Style="{StaticResource AccentButtonStyle}" Click="Add_Click" />
             </StackPanel>

@@ -105,7 +105,6 @@
   <data name="AddTrackers.Text" xml:space="preserve"><value>Дадаць трэкеры…</value></data>
   <data name="AddWebSeeds.Text" xml:space="preserve"><value>Дадаць вэб-сіды…</value></data>
   <data name="ExportTorrent.Text" xml:space="preserve"><value>Экспартаваць .torrent…</value></data>
-  <data name="ChooseColumns.Text" xml:space="preserve"><value>Выбраць слупкі…</value></data>
   <data name="OpenDestination.Text" xml:space="preserve"><value>Адкрыць папку прызначэння</value></data>
   <data name="PreviewAvailableFile.Text" xml:space="preserve"><value>Адкрыць першы даступны файл</value></data>
 
@@ -389,6 +388,8 @@
   <data name="RssOpenLink.Content" xml:space="preserve"><value>Адкрыць спасылку</value></data>
   <data name="AddTorrent_LoadingMetadata" xml:space="preserve"><value>Загрузка метаданых торэнта…</value></data>
   <data name="AddTorrent_MetadataFailed" xml:space="preserve"><value>Не атрымалася загрузіць метаданыя торэнта.</value></data>
+  <data name="AddTorrent_MetadataCancelled" xml:space="preserve"><value>Загрузка метаданых спынена.</value></data>
+  <data name="AddTorrentStopPreview.Content" xml:space="preserve"><value>Спыніць</value></data>
   <data name="AddTorrent_SourceRequired" xml:space="preserve"><value>Дадайце хаця б адзін .torrent-файл, URL ці magnet-спасылку.</value></data>
   <data name="AddTorrent_ClearUnwantedFiles" xml:space="preserve"><value>Зніміце адзнакі з файлаў, якія не трэба загружаць.</value></data>
   <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Прыярытэты файлаў з загружанага .torrent можна змяніць на ўкладцы «Файлы» пасля дадання.</value></data>
@@ -437,7 +438,6 @@
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Чаканы шлях</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Таксама выдаліць файлы з дыска</value></data>
   <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Выдаліць выбраныя торэнты?</value></data>
-  <data name="Dialog_ChooseTorrentColumns" xml:space="preserve"><value>Выбар калонак торэнтаў</value></data>
   <data name="Filter_Uncategorized" xml:space="preserve"><value>Без катэгорыі</value></data>
   <data name="Log_Blocked" xml:space="preserve"><value>Заблакавана</value></data>
   <data name="Log_Allowed" xml:space="preserve"><value>Дазволена</value></data>
@@ -556,7 +556,15 @@
   <data name="TrackerSecureLoginTitle.Text" xml:space="preserve"><value>Бяспечны ўваход у RuTracker</value></data>
   <data name="TrackerBrowserHint.Text" xml:space="preserve"><value>Увайдзіце ў акаўнт і пройдзіце капчу. WinBitTorrent распазнае сесію аўтаматычна.</value></data>
   <data name="TrackerBrowserComplete.Content" xml:space="preserve"><value>Праверыць уваход</value></data>
-  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Пошук на RuTracker</value></data>
+  <data name="TrackerBrowserBlockedTitle.Text" xml:space="preserve"><value>Старонка ўваходу не загрузілася</value></data>
+  <data name="TrackerBrowserBlockedHint.Text" xml:space="preserve"><value>Звычайна трэкер заблакаваны інтэрнэт-правайдарам. Уключыце проксі трэкера ніжэй і паўтарыце спробу.</value></data>
+  <data name="TrackerBrowserRetry.Content" xml:space="preserve"><value>Абнавіць старонку</value></data>
+  <data name="TrackerBrowserResetSession.Content" xml:space="preserve"><value>Увайсці нанова</value></data>
+  <data name="Tracker_BrowserSessionRejected" xml:space="preserve"><value>Трэкер не прыняў захаваную сесію. Націсніце «Увайсці нанова», каб ачысціць яе.</value></data>
+  <data name="TrackerBrowserLoadingText.Text" xml:space="preserve"><value>Адкрываецца старонка ўваходу…</value></data>
+  <data name="Tracker_BrowserLoadTimedOut" xml:space="preserve"><value>Трэкер не адказаў за 25 секунд.</value></data>
+  <data name="Tracker_BrowserProxyUnavailable" xml:space="preserve"><value>Не ўдалося ўжыць проксі да браўзера ўваходу, злучэнне ідзе напрамую: {0}</value></data>
+  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Пошук па трэкеры</value></data>
   <data name="TrackerSearch.Content" xml:space="preserve"><value>Знайсці</value></data>
   <data name="TrackerStop.Content" xml:space="preserve"><value>Спыніць</value></data>
   <data name="TrackerColumnPublished.Header" xml:space="preserve"><value>Дададзена</value></data>
@@ -582,6 +590,7 @@
   <data name="Tracker_Downloading" xml:space="preserve"><value>Загрузка torrent-файла…</value></data>
   <data name="Tracker_Added" xml:space="preserve"><value>Торэнт дададзены ў qBittorrent.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent-файл загружаны. Праверце параметры дадання.</value></data>
+  <data name="Tracker_MagnetReady" xml:space="preserve"><value>Magnet-спасылка гатовая. Праверце параметры дадання.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Вы выйшлі з акаўнта. Увайдзіце пад іншым уліковым запісам.</value></data>
   <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Пошук па фільмах</value></data>
   <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Трэкеры</value></data>
@@ -597,6 +606,7 @@
   <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Хутка выйдзе</value></data>
   <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>Серыялы ў эфіры</value></data>
   <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Падобнае</value></data>
+  <data name="CatalogTrackerPickerTitle.Text" xml:space="preserve"><value>Выберыце трэкер</value></data>
   <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Рэжысёр</value></data>
   <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Стваральнікі</value></data>
   <data name="CatalogSeasonLabel.Text" xml:space="preserve"><value>Сезон</value></data>

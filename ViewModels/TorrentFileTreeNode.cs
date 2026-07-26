@@ -162,6 +162,10 @@ public sealed class TorrentFileTreeNode : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    // Tree rows fall back to ToString() for their automation name, so without this a screen reader
+    // announces the bare type name instead of the file.
+    public override string ToString() => Name;
+
     private void OnPropertyChanged(string propertyName)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

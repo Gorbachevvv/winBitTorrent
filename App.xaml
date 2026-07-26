@@ -49,6 +49,15 @@
                 </Setter>
             </Style>
 
+            <!-- Secondary body text for panels that are built in code-behind. A ThemeResource in a
+                 Setter is resolved against the target element's theme, whereas reading the brush
+                 from Application.Current.Resources in code always returns the app-theme brush -
+                 which showed up white on the light theme. -->
+            <Style x:Key="SecondaryBodyTextBlockStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
             <Style x:Key="PollingListViewStyle" TargetType="ListView">
                 <Setter Property="ItemContainerTransitions">
                     <Setter.Value>

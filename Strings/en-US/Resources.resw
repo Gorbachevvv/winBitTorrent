@@ -96,7 +96,6 @@
   <data name="AddTrackers.Text" xml:space="preserve"><value>Add trackers…</value></data>
   <data name="AddWebSeeds.Text" xml:space="preserve"><value>Add web seeds…</value></data>
   <data name="ExportTorrent.Text" xml:space="preserve"><value>Export .torrent…</value></data>
-  <data name="ChooseColumns.Text" xml:space="preserve"><value>Choose columns…</value></data>
   <data name="OpenDestination.Text" xml:space="preserve"><value>Open destination folder</value></data>
   <data name="PreviewAvailableFile.Text" xml:space="preserve"><value>Preview first available file</value></data>
   <data name="TagsMenu.Text" xml:space="preserve"><value>Tags</value></data>
@@ -386,6 +385,8 @@
   <data name="RssOpenLink.Content" xml:space="preserve"><value>Open link</value></data>
   <data name="AddTorrent_LoadingMetadata" xml:space="preserve"><value>Loading torrent metadata…</value></data>
   <data name="AddTorrent_MetadataFailed" xml:space="preserve"><value>Torrent metadata could not be loaded.</value></data>
+  <data name="AddTorrent_MetadataCancelled" xml:space="preserve"><value>Metadata loading stopped.</value></data>
+  <data name="AddTorrentStopPreview.Content" xml:space="preserve"><value>Stop</value></data>
   <data name="AddTorrent_SourceRequired" xml:space="preserve"><value>Add at least one .torrent file, URL, or magnet link.</value></data>
   <data name="AddTorrent_ClearUnwantedFiles" xml:space="preserve"><value>Clear files you do not want to download.</value></data>
   <data name="AddTorrent_LocalPrioritiesHint" xml:space="preserve"><value>Uploaded .torrent file priorities can be changed from the Files tab after adding.</value></data>
@@ -437,7 +438,6 @@
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Expected path</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Also delete files from disk</value></data>
   <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Delete selected torrents?</value></data>
-  <data name="Dialog_ChooseTorrentColumns" xml:space="preserve"><value>Choose torrent columns</value></data>
   <data name="Filter_Uncategorized" xml:space="preserve"><value>Uncategorized</value></data>
   <data name="Log_Blocked" xml:space="preserve"><value>Blocked</value></data>
   <data name="Log_Allowed" xml:space="preserve"><value>Allowed</value></data>
@@ -556,7 +556,15 @@
   <data name="TrackerSecureLoginTitle.Text" xml:space="preserve"><value>Secure RuTracker sign-in</value></data>
   <data name="TrackerBrowserHint.Text" xml:space="preserve"><value>Sign in and complete the captcha. WinBitTorrent will recognize the session automatically.</value></data>
   <data name="TrackerBrowserComplete.Content" xml:space="preserve"><value>Check sign-in</value></data>
-  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Search RuTracker</value></data>
+  <data name="TrackerBrowserBlockedTitle.Text" xml:space="preserve"><value>The sign-in page did not load</value></data>
+  <data name="TrackerBrowserBlockedHint.Text" xml:space="preserve"><value>The tracker is usually blocked by the internet provider. Switch the tracker proxy below on and try again.</value></data>
+  <data name="TrackerBrowserRetry.Content" xml:space="preserve"><value>Reload the page</value></data>
+  <data name="TrackerBrowserResetSession.Content" xml:space="preserve"><value>Sign in again</value></data>
+  <data name="Tracker_BrowserSessionRejected" xml:space="preserve"><value>The tracker did not accept the saved session. Use "Sign in again" to clear it.</value></data>
+  <data name="TrackerBrowserLoadingText.Text" xml:space="preserve"><value>Opening the sign-in page…</value></data>
+  <data name="Tracker_BrowserLoadTimedOut" xml:space="preserve"><value>The tracker did not respond within 25 seconds.</value></data>
+  <data name="Tracker_BrowserProxyUnavailable" xml:space="preserve"><value>The proxy could not be applied to the sign-in browser, so it is connecting directly: {0}</value></data>
+  <data name="TrackerQuery.PlaceholderText" xml:space="preserve"><value>Search the tracker</value></data>
   <data name="TrackerSearch.Content" xml:space="preserve"><value>Search</value></data>
   <data name="TrackerStop.Content" xml:space="preserve"><value>Stop</value></data>
   <data name="TrackerColumnPublished.Header" xml:space="preserve"><value>Added</value></data>
@@ -582,6 +590,7 @@
   <data name="Tracker_Downloading" xml:space="preserve"><value>Downloading torrent file…</value></data>
   <data name="Tracker_Added" xml:space="preserve"><value>Torrent added to qBittorrent.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent file downloaded. Review add options.</value></data>
+  <data name="Tracker_MagnetReady" xml:space="preserve"><value>Magnet link ready. Review add options.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Signed out. Sign in with another account.</value></data>
   <data name="CatalogFeaturedTitle.Text" xml:space="preserve"><value>Search by movies</value></data>
   <data name="TrackersSectionTitle.Text" xml:space="preserve"><value>Trackers</value></data>
@@ -597,6 +606,7 @@
   <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Coming soon</value></data>
   <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>TV shows on the air</value></data>
   <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Similar titles</value></data>
+  <data name="CatalogTrackerPickerTitle.Text" xml:space="preserve"><value>Choose a tracker</value></data>
   <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Director</value></data>
   <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Creators</value></data>
   <data name="CatalogSeasonLabel.Text" xml:space="preserve"><value>Season</value></data>

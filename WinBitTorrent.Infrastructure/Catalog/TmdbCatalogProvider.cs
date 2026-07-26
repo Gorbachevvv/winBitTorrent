@@ -200,11 +200,17 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
         var tagline = ResolveTranslated(details, static data => data.Tagline)
             ?? (string.IsNullOrWhiteSpace(details.Tagline) ? null : details.Tagline);
 
+        // Trackers index releases under their English name, so it is resolved regardless of the UI
+        // language. Titles that were never translated fall back to the original-language name.
+        var englishTitle = ResolveTranslation(details, "en", static data => data.Title ?? data.Name)
+            ?? originalTitle;
+
         return new CatalogItemDetails(
             Id: id,
             Kind: kind,
             Title: title,
             OriginalTitle: originalTitle,
+            EnglishTitle: englishTitle,
             Year: ParseYear(details.ReleaseDate ?? details.FirstAirDate),
             PosterUrl: ToImageUrl(PosterBase, details.PosterPath),
             BackdropUrl: ToImageUrl(BackdropBase, details.BackdropPath),
@@ -233,18 +239,20 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
     // localized value (used to fill a title/overview/tagline the primary language lacks).
     private string? ResolveTranslated(TmdbDetailsResponse details, Func<TmdbTranslationData, string?> selector)
     {
-        var translations = details.Translations?.Translations;
-        if (translations is null)
-            return null;
-
         foreach (var code in LanguageChain())
         {
-            var match = translations.FirstOrDefault(translation => string.Equals(translation.Language, code, StringComparison.OrdinalIgnoreCase));
-            if (match?.Data is { } data && selector(data) is { Length: > 0 } value)
+            if (ResolveTranslation(details, code, selector) is { } value)
                 return value;
         }
 
         return null;
+    }
+
+    private static string? ResolveTranslation(TmdbDetailsResponse details, string languageCode, Func<TmdbTranslationData, string?> selector)
+    {
+        var match = details.Translations?.Translations?
+            .FirstOrDefault(translation => string.Equals(translation.Language, languageCode, StringComparison.OrdinalIgnoreCase));
+        return match?.Data is { } data && selector(data) is { Length: > 0 } value ? value : null;
     }
 
     private Task<IReadOnlyList<CatalogItem>> SearchKindAsync(string path, string query, CatalogKind kind, CancellationToken cancellationToken)

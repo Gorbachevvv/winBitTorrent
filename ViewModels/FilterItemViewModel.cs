@@ -28,4 +28,8 @@ public sealed partial class FilterItemViewModel : ObservableObject
 
     [ObservableProperty]
     private int _count;
+
+    // List rows fall back to ToString() for their automation name, so without this a screen reader
+    // announces the bare type name instead of the filter.
+    public override string ToString() => Title;
 }

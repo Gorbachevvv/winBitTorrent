@@ -13,6 +13,10 @@ public sealed class TorrentRowViewModel : ObservableObject
 
     public TorrentRowViewModel(TorrentInfo model) => _model = model;
 
+    // Table rows fall back to ToString() for their automation name, so without this a screen reader
+    // announces the bare type name instead of the torrent.
+    public override string ToString() => Name;
+
     public TorrentInfo Model => _model;
     public string Hash => _model.Hash;
     public int QueuePosition => _model.QueuePosition;

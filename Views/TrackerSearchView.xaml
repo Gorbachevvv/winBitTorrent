@@ -81,6 +81,7 @@
                                     Margin="0,0,16,16"
                                     Padding="20"
                                     HorizontalContentAlignment="Stretch"
+                                    AutomationProperties.Name="{Binding Name}"
                                     Tag="{Binding Id}"
                                     Click="TrackerButton_Click">
                                     <Grid ColumnSpacing="18">
@@ -116,7 +117,10 @@
                 <Button x:Uid="TrackerBackSearch" Command="{Binding BackToTrackersCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE72B;" /><TextBlock x:Uid="TrackerBackSearchText" Text="All trackers" /></StackPanel>
                 </Button>
-                <Image Grid.Column="1" Width="88" Height="30" Source="{Binding ActiveLogoUri}" Stretch="Uniform" />
+                <!-- Logos are dark-ink artwork, so they keep the same white plate the tracker cards use. -->
+                <Border Grid.Column="1" Width="88" Height="34" Background="White" CornerRadius="8">
+                    <Image Margin="6,4" Source="{Binding ActiveLogoUri}" Stretch="Uniform" />
+                </Border>
                 <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="{Binding ActiveTrackerName}" />
                 <TextBlock Grid.Column="3" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding SignedInUser}" />
                 <Button
@@ -124,7 +128,7 @@
                     Grid.Column="4"
                     Content="Sign out"
                     Click="SignOut_Click"
-                    Visibility="{Binding IsSignedIn, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    Visibility="{Binding CanSignOut, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </Grid>
             <Grid Grid.Row="1" ColumnSpacing="8">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
@@ -185,7 +189,9 @@
                     <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE72B;" /><TextBlock x:Uid="TrackerBrowserBackText" Text="All trackers" /></StackPanel>
                 </Button>
                 <StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Spacing="10">
-                    <Image Width="104" Height="32" Source="{Binding ActiveLogoUri}" Stretch="Uniform" />
+                    <Border Width="104" Height="38" Background="White" CornerRadius="8">
+                        <Image Margin="6,4" Source="{Binding ActiveLogoUri}" Stretch="Uniform" />
+                    </Border>
                     <TextBlock x:Uid="TrackerSecureLoginTitle" VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="Secure sign-in" />
                 </StackPanel>
                 <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
@@ -204,10 +210,11 @@
                     BorderThickness="1"
                     CornerRadius="12">
                     <Grid>
-                        <WebView2
-                            x:Name="TrackerLoginWebView"
-                            NavigationCompleted="TrackerLoginWebView_NavigationCompleted"
-                            NavigationStarting="TrackerLoginWebView_NavigationStarting" />
+                        <!-- The WebView2 is created in code-behind: routing it through the tracker's
+                             built-in proxy needs browser arguments that can only be supplied when its
+                             environment is built, so the control is rebuilt whenever the proxy is
+                             toggled. -->
+                        <Border x:Name="TrackerLoginWebViewHost" />
                         <StackPanel
                             Padding="20"
                             HorizontalAlignment="Center"
@@ -218,6 +225,82 @@
                             <ProgressRing Width="32" Height="32" IsActive="{Binding IsBusy}" />
                             <TextBlock Foreground="DimGray" Text="{Binding Status}" TextAlignment="Center" TextWrapping="Wrap" />
                         </StackPanel>
+                        <!-- A blocked tracker often keeps the request hanging rather than failing, so
+                             the wait is shown instead of an unexplained empty rectangle. -->
+                        <Border
+                            Background="White"
+                            RequestedTheme="Light"
+                            Visibility="{Binding IsBrowserPageLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel
+                                Padding="32"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="14">
+                                <ProgressRing Width="34" Height="34" IsActive="{Binding IsBrowserPageLoading}" />
+                                <TextBlock
+                                    x:Uid="TrackerBrowserLoadingText"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Opening the sign-in page…"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                        <!-- A blocked tracker leaves the browser blank, which looks like a hung app.
+                             This takes its place and offers the two things that can actually help. -->
+                        <!-- RequestedTheme pins the subtree to light: the panel sits on the browser's
+                             white page, and dark-theme control brushes would render a white button
+                             with white text on it. -->
+                        <Border
+                            Background="White"
+                            RequestedTheme="Light"
+                            Visibility="{Binding IsBrowserPageFailed, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel
+                                Padding="32"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                MaxWidth="420"
+                                Spacing="12">
+                                <FontIcon
+                                    FontSize="34"
+                                    Foreground="#C24A38"
+                                    Glyph="&#xEB5E;" />
+                                <TextBlock
+                                    x:Uid="TrackerBrowserBlockedTitle"
+                                    FontSize="18"
+                                    FontWeight="SemiBold"
+                                    Text="The sign-in page did not load"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Uid="TrackerBrowserBlockedHint"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="The tracker is usually blocked by the provider. Turn on the tracker proxy below and try again."
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    Text="{Binding BrowserFailureDetail}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap"
+                                    Visibility="{Binding BrowserFailureDetail, Converter={StaticResource StringToVisibilityConverter}}" />
+                                <StackPanel
+                                    Margin="0,6,0,0"
+                                    HorizontalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <Button
+                                        x:Uid="TrackerBrowserRetry"
+                                        Click="TrackerBrowserRetry_Click"
+                                        Content="Retry"
+                                        Style="{StaticResource AccentButtonStyle}" />
+                                    <Button
+                                        x:Uid="TrackerBrowserResetSession"
+                                        Click="TrackerBrowserResetSession_Click"
+                                        Content="Sign in again" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </Border>
             </Grid>
@@ -243,7 +326,8 @@
                     Grid.Column="2"
                     VerticalAlignment="Bottom"
                     Content="Check sign-in"
-                    Click="TrackerBrowserComplete_Click" />
+                    Click="TrackerBrowserComplete_Click"
+                    Visibility="{Binding CanCheckBrowserSignIn, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </Grid>
         </Grid>
     </Grid>

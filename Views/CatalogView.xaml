@@ -43,7 +43,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Loaded="Root_Loaded">
+    <Grid Loaded="Root_Loaded" Unloaded="Root_Unloaded">
         <NavigationView
             x:Name="CatalogNav"
             IsBackButtonVisible="Collapsed"
@@ -247,6 +247,101 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
+        </Grid>
+
+        <!-- Tracker chooser: slides in from the right edge when "Download" is pressed. Visibility is
+             driven from code-behind so the closing slide-out is visible before it is collapsed. -->
+        <Grid
+            x:Name="TrackerPickerOverlay"
+            Visibility="{Binding IsTrackerPickerOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Rectangle
+                x:Name="TrackerPickerScrim"
+                Fill="{ThemeResource SmokeFillColorDefaultBrush}"
+                Tapped="TrackerPickerScrim_Tapped" />
+            <Border
+                x:Name="TrackerPickerPanel"
+                Width="380"
+                HorizontalAlignment="Right"
+                Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1,0,0,0">
+                <!-- Rests at its final position: the slide-in is decoration applied by code-behind,
+                     so the panel is still usable if the animation never runs. -->
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="TrackerPickerTransform" X="0" />
+                </Border.RenderTransform>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Padding="20,18,16,12" Spacing="4">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Uid="CatalogTrackerPickerTitle"
+                                VerticalAlignment="Center"
+                                FontSize="20"
+                                FontWeight="SemiBold"
+                                Text="Choose a tracker"
+                                TextWrapping="Wrap" />
+                            <Button
+                                Grid.Column="1"
+                                Width="34"
+                                Height="34"
+                                Padding="0"
+                                VerticalAlignment="Top"
+                                Command="{Binding CloseTrackerPickerCommand}"
+                                CornerRadius="17">
+                                <FontIcon FontSize="13" Glyph="&#xE711;" />
+                            </Button>
+                        </Grid>
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="{Binding SelectedDetails.Title}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" Padding="16,4,16,16" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Trackers}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button
+                                        Margin="0,0,0,8"
+                                        Padding="12"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        AutomationProperties.Name="{Binding Name}"
+                                        Command="{Binding DataContext.PickTrackerCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"
+                                        CornerRadius="10">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="72" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <Border Width="72" Height="46" Background="White" CornerRadius="8">
+                                                <Image Margin="6" Source="{Binding LogoUri}" Stretch="Uniform" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                                <TextBlock
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Text="{Binding HomePage}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    TextWrapping="NoWrap" />
+                                            </StackPanel>
+                                            <FontIcon
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                FontSize="14"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Glyph="&#xE76C;" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

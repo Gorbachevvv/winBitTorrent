@@ -22,6 +22,11 @@ public sealed partial class SettingsWindow : Window
     private string _section = "Behavior";
     private bool _menuEditorUsed;
 
+    // Explanatory text under an editor. The style carries the secondary foreground as a
+    // ThemeResource so it follows the window's theme; a brush read out of Application.Current
+    // .Resources here would be the app-theme one and stayed white on the light theme.
+    private static Style SecondaryTextStyle => (Style)Application.Current.Resources["SecondaryBodyTextBlockStyle"];
+
     private static readonly SettingSpec[] Specs =
     [
         new("Behavior", "ui.language", "Language", SettingKind.Language, true, ""),
@@ -204,8 +209,7 @@ public sealed partial class SettingsWindow : Window
         stack.Children.Add(new TextBlock
         {
             Text = Localizer.Get("Settings_EditContextMenuDescription", "Choose which commands the menu shows when you right-click a torrent, and in what order."),
-            Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-            TextWrapping = TextWrapping.Wrap
+            Style = SecondaryTextStyle
         });
         return stack;
     }
@@ -275,8 +279,7 @@ public sealed partial class SettingsWindow : Window
             header.Children.Add(new TextBlock
             {
                 Text = description,
-                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-                TextWrapping = TextWrapping.Wrap
+                Style = SecondaryTextStyle
             });
 
         content.Margin = new Thickness(0, 8, 0, 4);
@@ -320,8 +323,7 @@ public sealed partial class SettingsWindow : Window
         stack.Children.Add(new TextBlock
         {
             Text = description,
-            Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-            TextWrapping = TextWrapping.Wrap
+            Style = SecondaryTextStyle
         });
         return stack;
     }

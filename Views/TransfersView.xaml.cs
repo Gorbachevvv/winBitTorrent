@@ -1126,21 +1126,55 @@ public sealed partial class TransfersView : UserControl
     private async void DeleteSelected_Click(object sender, RoutedEventArgs e)
         => await TorrentActions.ConfirmDeleteSelectedAsync(XamlRoot, ViewModel);
 
-    private async void ChooseColumns_Click(object sender, RoutedEventArgs e)
+    // Column visibility is edited by right-clicking the header row, the way qBittorrent does it,
+    // instead of from the row context menu. TableView has no header context flyout of its own, so
+    // the right-tap is caught as it bubbles up and answered only when it started on a header.
+    private void TorrentTable_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        var list = new StackPanel { Spacing = 4 };
-        var choices = new List<(TableViewColumn Column, CheckBox CheckBox)>();
+        if (!IsColumnHeader(e.OriginalSource as DependencyObject))
+            return;
+
+        var flyout = new MenuFlyout();
         foreach (var column in TorrentTable.Columns.OrderBy(static column => column.Order))
         {
-            var checkBox = new CheckBox { Content = column.Header?.ToString(), IsChecked = column.Visibility == Visibility.Visible };
-            choices.Add((column, checkBox)); list.Children.Add(checkBox);
+            // The leading status-icon column has no header text and no business being hidden.
+            if (column.Header?.ToString() is not { Length: > 0 } header)
+                continue;
+
+            var item = new ToggleMenuFlyoutItem { Text = header, IsChecked = column.Visibility == Visibility.Visible };
+            item.Click += (_, _) => ToggleColumn(column, item);
+            flyout.Items.Add(item);
         }
-        var scroll = new ScrollViewer { Content = list, MaxHeight = 430 };
-        if (await ShowFormAsync(Localizer.Get("Dialog_ChooseTorrentColumns", "Choose torrent columns"), scroll) != ContentDialogResult.Primary)
+
+        flyout.ShowAt(TorrentTable, new FlyoutShowOptions { Position = e.GetPosition(TorrentTable) });
+        e.Handled = true;
+    }
+
+    private void ToggleColumn(TableViewColumn column, ToggleMenuFlyoutItem item)
+    {
+        // Hiding the last visible column would leave a table nothing could be done with.
+        if (!item.IsChecked && TorrentTable.Columns.Count(static candidate =>
+                candidate.Visibility == Visibility.Visible &&
+                candidate.Header?.ToString() is { Length: > 0 }) <= 1)
+        {
+            item.IsChecked = true;
             return;
-        foreach (var (column, checkBox) in choices)
-            column.Visibility = checkBox.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        column.Visibility = item.IsChecked ? Visibility.Visible : Visibility.Collapsed;
         SaveLayout();
+    }
+
+    private static bool IsColumnHeader(DependencyObject? source)
+    {
+        for (var node = source; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is TableViewColumnHeader)
+                return true;
+            if (node is TableView)
+                return false;
+        }
+        return false;
     }
 
     private async Task<string?> PromptAsync(string title, string placeholder, string? value = null, bool multiline = false)

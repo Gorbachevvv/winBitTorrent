@@ -34,12 +34,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         RootGrid.DataContext = viewModel;
         RestoreWorkspaceTabs();
-        RootGrid.RequestedTheme = (ClientSettings.GetValue("ui.theme") as string) switch
-        {
-            "Light" => ElementTheme.Light,
-            "Dark" => ElementTheme.Dark,
-            _ => ElementTheme.Default
-        };
+        RootGrid.RequestedTheme = WindowUtilities.CurrentTheme();
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBarDragRegion);
@@ -48,6 +43,9 @@ public sealed partial class MainWindow : Window
         var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(_windowHandle);
         _appWindow = AppWindow.GetFromWindowId(windowId);
         _appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "WinBitTorrent.ico"));
+        // The main window builds its own title bar in XAML instead of going through ConfigureOwned,
+        // so it has to theme the caption buttons itself.
+        WindowUtilities.ApplyTitleBarTheme(_appWindow, RootGrid.RequestedTheme);
         _appWindow.Resize(new Windows.Graphics.SizeInt32(1240, 800));
         _appWindow.Closing += AppWindow_Closing;
         Closed += MainWindow_Closed;

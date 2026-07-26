@@ -129,11 +129,18 @@ public sealed partial class RssViewModel : ObservableObject
     }
 }
 
-public sealed record RssFeedViewModel(string Path, string Title, string Url, IReadOnlyList<RssArticleViewModel> Articles);
+public sealed record RssFeedViewModel(string Path, string Title, string Url, IReadOnlyList<RssArticleViewModel> Articles)
+{
+    // The list item falls back to ToString() for the automation name, and the record default dumps
+    // every property (including the whole article list) at a screen reader.
+    public override string ToString() => Title;
+}
 
 public sealed record RssArticleViewModel(string Id, string Title, string Link, string Description, DateTimeOffset? Published)
 {
     public string PublishedText => Published?.LocalDateTime.ToString("g") ?? string.Empty;
+
+    public override string ToString() => PublishedText.Length == 0 ? Title : $"{Title} {PublishedText}";
 
     public static RssArticleViewModel FromJson(JsonObject value)
     {

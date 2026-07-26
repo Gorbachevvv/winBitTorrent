@@ -118,6 +118,7 @@
                 SelectionUnit="Row"
                 ItemsSource="{Binding Torrents}"
                 ColumnReordered="TorrentTable_ColumnReordered"
+                RightTapped="TorrentTable_RightTapped"
                 RowContextFlyoutOpening="TorrentTable_RowContextFlyoutOpening"
                 SelectionChanged="TorrentTable_SelectionChanged">
                 <tv:TableView.RowContextFlyout>
@@ -214,9 +215,6 @@
                         </MenuFlyoutSubItem>
                         <MenuFlyoutItem x:Uid="ExportTorrent" Tag="export" Text="Export .torrent…" Click="Export_Click">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74E;" Foreground="#64748B" /></MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Uid="ChooseColumns" Tag="chooseColumns" Text="Choose columns…" Click="ChooseColumns_Click">
-                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" Foreground="#64748B" /></MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
                         <MenuFlyoutItem x:Uid="Delete" Tag="delete" Text="Delete…" Click="DeleteSelected_Click">
