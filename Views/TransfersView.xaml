@@ -364,7 +364,7 @@
                             </Grid>
                             <Grid ColumnSpacing="24" RowSpacing="6">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                 <TextBlock x:Uid="DetailsTimeActive" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Time active" /><TextBlock Grid.Column="1" Text="{Binding SelectedTorrent.TimeActive}" />
                                 <TextBlock x:Uid="DetailsEta" Grid.Column="2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="ETA" /><TextBlock Grid.Column="3" Text="{Binding SelectedTorrent.Eta}" />
                                 <TextBlock x:Uid="DetailsDownloaded" Grid.Row="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Downloaded" /><TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedTorrent.Downloaded}" />
@@ -374,6 +374,30 @@
                                 <TextBlock x:Uid="DetailsRatio" Grid.Row="3" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Ratio" /><TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedTorrent.Ratio}" />
                                 <TextBlock x:Uid="DetailsSavePath" Grid.Row="3" Grid.Column="2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Save path" /><TextBlock Grid.Row="3" Grid.Column="3" TextTrimming="CharacterEllipsis" Text="{Binding SelectedTorrent.SavePath}" />
                                 <TextBlock x:Uid="DetailsInfoHash" Grid.Row="4" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Info hash v1" /><TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" FontFamily="Consolas" Text="{Binding SelectedTorrent.InfoHashV1}" />
+                                <!-- Almost always carries a link back to the original release. When the
+                                     whole comment is one, it opens in the browser on click; otherwise
+                                     it falls back to selectable plain text (arbitrary free-form
+                                     comments are not scanned for an embedded URL). -->
+                                <TextBlock x:Uid="DetailsComment" Grid.Row="5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Comment" />
+                                <HyperlinkButton
+                                    Grid.Row="5"
+                                    Grid.Column="1"
+                                    Grid.ColumnSpan="3"
+                                    Padding="0"
+                                    HorizontalAlignment="Left"
+                                    HorizontalContentAlignment="Left"
+                                    NavigateUri="{Binding SelectedProperties.Comment, Converter={StaticResource CommentLinkUriConverter}}"
+                                    Visibility="{Binding SelectedProperties.Comment, Converter={StaticResource CommentLinkVisibilityConverter}}">
+                                    <TextBlock Text="{Binding SelectedProperties.Comment}" TextWrapping="Wrap" />
+                                </HyperlinkButton>
+                                <TextBlock
+                                    Grid.Row="5"
+                                    Grid.Column="1"
+                                    Grid.ColumnSpan="3"
+                                    IsTextSelectionEnabled="True"
+                                    Text="{Binding SelectedProperties.Comment}"
+                                    TextWrapping="Wrap"
+                                    Visibility="{Binding SelectedProperties.Comment, Converter={StaticResource CommentPlainTextVisibilityConverter}}" />
                             </Grid>
                         </StackPanel>
                     </ScrollViewer>

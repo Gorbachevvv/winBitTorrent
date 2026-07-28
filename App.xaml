@@ -17,6 +17,9 @@
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
+            <converters:CommentLinkUriConverter x:Key="CommentLinkUriConverter" />
+            <converters:CommentLinkVisibilityConverter x:Key="CommentLinkVisibilityConverter" />
+            <converters:CommentPlainTextVisibilityConverter x:Key="CommentPlainTextVisibilityConverter" />
             <converters:ProgressGridLengthConverter x:Key="ProgressGridLengthConverter" />
 
             <FontIconSource x:Key="TransfersIcon" Glyph="&#xE896;" />

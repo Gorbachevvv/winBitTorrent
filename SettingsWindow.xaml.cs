@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,14 @@ public sealed partial class SettingsWindow : Window
     private readonly Dictionary<string, Control> _editors = [];
     private readonly Dictionary<string, object?> _localValues = [];
     private JsonObject _preferences = [];
+    // Snapshot of what qBittorrent last reported, so CaptureSection can tell a genuinely edited
+    // field from one that was merely displayed while a section was open.
+    private JsonObject _originalPreferences = [];
     private readonly JsonObject _changedPreferences = [];
+    // Set by CaptureSection when a visited section had remote fields but no snapshot was ever
+    // loaded to safely diff them against; Save_Click turns this into an explicit message instead
+    // of silently reporting success while those edits went nowhere.
+    private bool _preferencesUnavailable;
     private string _section = "Behavior";
     private bool _menuEditorUsed;
 
@@ -109,6 +117,16 @@ public sealed partial class SettingsWindow : Window
         foreach (var spec in Specs.Where(static spec => spec.Local))
             _localValues[spec.Key] = ClientSettings.GetValue(spec.Key) ?? spec.DefaultValue;
         Activated += SettingsWindow_Activated;
+        // The window can become Activated before MainViewModel finishes connecting - e.g. the
+        // user opens Settings right after launch, before the qBittorrent handshake completes.
+        // When that happens the block below skips loading preferences, _preferences/
+        // _originalPreferences stay empty, and every remote field the user later merely looks at
+        // (without changing) reads back as "changed" relative to that empty baseline - reported
+        // as qBittorrent having rejected settings the user never touched. This subscription is
+        // the fallback: it loads preferences (and refreshes whatever section is on screen) the
+        // moment a connection actually comes up, however late that is.
+        _main.PropertyChanged += Main_PropertyChanged;
+        Closed += (_, _) => _main.PropertyChanged -= Main_PropertyChanged;
     }
 
     private async void SettingsWindow_Activated(object sender, WindowActivatedEventArgs args)
@@ -117,7 +135,7 @@ public sealed partial class SettingsWindow : Window
         try
         {
             if (_main.Api is not null)
-                _preferences = await _main.Api.Application.GetPreferencesAsync();
+                await LoadPreferencesAsync();
             Sections.SelectedItem = Sections.MenuItems[0];
             RenderSection();
         }
@@ -125,6 +143,32 @@ public sealed partial class SettingsWindow : Window
         {
             ShowMessage(exception.Message, InfoBarSeverity.Error);
         }
+    }
+
+    private async void Main_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // _preferences.Count > 0 means a previous pass (either this handler or Activated) already
+        // loaded successfully; nothing left to catch up on.
+        if (e.PropertyName != nameof(MainViewModel.IsConnected) || !_main.IsConnected || _main.Api is null || _preferences.Count > 0)
+            return;
+
+        try
+        {
+            await LoadPreferencesAsync();
+            // Re-render the section that is currently on screen so its fields swap from the
+            // pre-connection defaults to the values qBittorrent actually reported.
+            RenderSection();
+        }
+        catch (Exception exception)
+        {
+            ShowMessage(exception.Message, InfoBarSeverity.Error);
+        }
+    }
+
+    private async Task LoadPreferencesAsync()
+    {
+        _preferences = await _main.Api!.Application.GetPreferencesAsync();
+        _originalPreferences = (JsonObject)_preferences.DeepClone();
     }
 
     private void Sections_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -510,6 +554,7 @@ public sealed partial class SettingsWindow : Window
 
     private void CaptureSection()
     {
+        var captured = new Dictionary<string, object>();
         foreach (var spec in Specs.Where(spec => spec.Section == _section))
         {
             if (!_editors.TryGetValue(spec.Key, out var editor))
@@ -532,19 +577,59 @@ public sealed partial class SettingsWindow : Window
             if (spec.Local)
                 _localValues[spec.Key] = value;
             else
-            {
-                _preferences[spec.Key] = JsonValue.Create(value);
-                _changedPreferences[spec.Key] = JsonValue.Create(value);
-            }
+                captured[spec.Key] = value;
+        }
+
+        if (captured.Count == 0)
+            return;
+
+        // Without a real snapshot from qBittorrent there is nothing trustworthy to diff these
+        // editors against - every field would look "changed" purely because the baseline is
+        // empty (every editor defaults to 0/off/"None" until real values are loaded), and saving
+        // would overwrite the user's actual settings with those defaults instead of merely
+        // failing loudly. Remote fields are left un-queued until a snapshot has actually loaded
+        // (see SettingsWindow_Activated / Main_PropertyChanged); Save_Click surfaces this rather
+        // than silently reporting success once nothing remote ends up in _changedPreferences.
+        if (_originalPreferences.Count == 0)
+        {
+            _preferencesUnavailable = true;
+            return;
+        }
+
+        // Only fields that actually differ from what qBittorrent last reported are queued for
+        // saving and verification. Without this, merely opening a tab - without changing
+        // anything in it - would resend and re-verify every setting shown there, and any field
+        // qBittorrent happens to echo back in a differently-shaped but equivalent form (e.g. a
+        // banned-IP list with normalized line endings) would get wrongly reported as "did not
+        // apply" for a setting the user never touched.
+        var candidate = new JsonObject();
+        foreach (var (key, value) in captured)
+            candidate[key] = JsonValue.Create(value);
+        var changedKeys = PreferenceVerifier.FindMismatchedKeys(candidate, _originalPreferences).ToHashSet(StringComparer.Ordinal);
+
+        foreach (var (key, value) in captured)
+        {
+            _preferences[key] = JsonValue.Create(value);
+            if (changedKeys.Contains(key))
+                _changedPreferences[key] = JsonValue.Create(value);
+            else
+                _changedPreferences.Remove(key);
         }
     }
 
     private async void Save_Click(object sender, RoutedEventArgs e)
     {
+        _preferencesUnavailable = false;
         CaptureSection();
         SaveButton.IsEnabled = false;
         try
         {
+            if (_preferencesUnavailable)
+            {
+                ShowMessage(Localizer.Get("Settings_NotConnectedMessage", "Connect to a qBittorrent profile to view and change these settings."), InfoBarSeverity.Error);
+                return;
+            }
+
             IReadOnlyList<string> mismatched = [];
             var hadRemoteChanges = _changedPreferences.Count > 0;
             if (hadRemoteChanges)
@@ -558,6 +643,7 @@ public sealed partial class SettingsWindow : Window
                 var requested = (JsonObject)_changedPreferences.DeepClone();
                 await _main.Api.Application.SetPreferencesAsync(requested);
                 _preferences = await _main.Api.Application.GetPreferencesAsync();
+                _originalPreferences = (JsonObject)_preferences.DeepClone();
                 mismatched = PreferenceVerifier.FindMismatchedKeys(requested, _preferences);
                 if (mismatched.Count == 0)
                     _changedPreferences.Clear();

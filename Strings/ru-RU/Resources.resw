@@ -41,7 +41,7 @@
   <data name="Dialog_AboutDescription" xml:space="preserve"><value>Нативный клиент WinUI 3 для qBittorrent 5.2.3 / Web API 2.15.1</value></data>
   <data name="Dialog_AboutConnectedBackend" xml:space="preserve"><value>Подключённый бэкенд: {0}</value></data>
   <data name="Dialog_AboutRepository" xml:space="preserve"><value>Репозиторий на GitHub</value></data>
-  <data name="Dialog_AboutReportIssue" xml:space="preserve"><value>Сообщить о проблеме</value></data>
+  <data name="Dialog_AboutHomepage" xml:space="preserve"><value>Домашняя страница</value></data>
   <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent распространяется по лицензии GPL-2.0-or-later. Уведомления о стороннем ПО и предложение о предоставлении исходного кода включены в приложение.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Закрыть</value></data>
   <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Проверить обновления…</value></data>
@@ -273,6 +273,7 @@
   <data name="DetailsRatio.Text" xml:space="preserve"><value>Рейтинг</value></data>
   <data name="DetailsSavePath.Text" xml:space="preserve"><value>Путь сохранения</value></data>
   <data name="DetailsInfoHash.Text" xml:space="preserve"><value>Инфо-хеш v1</value></data>
+  <data name="DetailsComment.Text" xml:space="preserve"><value>Комментарий</value></data>
   <data name="RemoveSelectedTrackers.Text" xml:space="preserve"><value>Удалить выбранные трекеры</value></data>
   <data name="BanSelectedPeers.Text" xml:space="preserve"><value>Заблокировать выбранных пиров</value></data>
   <data name="RemoveSelectedWebSeeds.Text" xml:space="preserve"><value>Удалить выбранные веб-сиды</value></data>
@@ -437,6 +438,7 @@
   <data name="Dialog_DownloadedFileNotFound" xml:space="preserve"><value>Загруженный файл не найден на этом компьютере.</value></data>
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Ожидаемый путь</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Также удалить файлы с диска</value></data>
+  <data name="Dialog_AlsoDeleteSourceFile" xml:space="preserve"><value>Также удалить .torrent-файл, из которого добавлен</value></data>
   <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Удалить выбранные торренты?</value></data>
   <data name="Filter_Uncategorized" xml:space="preserve"><value>Без категории</value></data>
   <data name="Log_Blocked" xml:space="preserve"><value>Заблокировано</value></data>

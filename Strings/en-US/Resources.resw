@@ -41,7 +41,7 @@
   <data name="Dialog_AboutDescription" xml:space="preserve"><value>Native WinUI 3 client for qBittorrent 5.2.3 / Web API 2.15.1</value></data>
   <data name="Dialog_AboutConnectedBackend" xml:space="preserve"><value>Connected backend: {0}</value></data>
   <data name="Dialog_AboutRepository" xml:space="preserve"><value>GitHub repository</value></data>
-  <data name="Dialog_AboutReportIssue" xml:space="preserve"><value>Report an issue</value></data>
+  <data name="Dialog_AboutHomepage" xml:space="preserve"><value>Homepage</value></data>
   <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
   <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Check for updates…</value></data>
@@ -273,6 +273,7 @@
   <data name="DetailsRatio.Text" xml:space="preserve"><value>Ratio</value></data>
   <data name="DetailsSavePath.Text" xml:space="preserve"><value>Save path</value></data>
   <data name="DetailsInfoHash.Text" xml:space="preserve"><value>Info hash v1</value></data>
+  <data name="DetailsComment.Text" xml:space="preserve"><value>Comment</value></data>
   <data name="RemoveSelectedTrackers.Text" xml:space="preserve"><value>Remove selected trackers</value></data>
   <data name="BanSelectedPeers.Text" xml:space="preserve"><value>Ban selected peers</value></data>
   <data name="RemoveSelectedWebSeeds.Text" xml:space="preserve"><value>Remove selected web seeds</value></data>
@@ -437,6 +438,7 @@
   <data name="Dialog_DownloadedFileNotFound" xml:space="preserve"><value>The downloaded file was not found locally.</value></data>
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Expected path</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Also delete files from disk</value></data>
+  <data name="Dialog_AlsoDeleteSourceFile" xml:space="preserve"><value>Also delete the .torrent file it was added from</value></data>
   <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Delete selected torrents?</value></data>
   <data name="Filter_Uncategorized" xml:space="preserve"><value>Uncategorized</value></data>
   <data name="Log_Blocked" xml:space="preserve"><value>Blocked</value></data>

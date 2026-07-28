@@ -19,7 +19,7 @@ namespace WinBitTorrent;
 public sealed partial class MainWindow : Window
 {
     private static readonly Uri RepositoryUri = new("https://github.com/Gorbachevvv/winBitTorrent");
-    private static readonly Uri RepositoryIssuesUri = new("https://github.com/Gorbachevvv/winBitTorrent/issues");
+    private static readonly Uri HomepageUri = new("https://winbittorrent.github.io/");
 
     private readonly AppWindow _appWindow;
     private readonly IntPtr _windowHandle;
@@ -355,14 +355,14 @@ public sealed partial class MainWindow : Window
         var links = new StackPanel { Spacing = 2 };
         links.Children.Add(new HyperlinkButton
         {
-            NavigateUri = RepositoryUri,
-            Content = Localizer.Get("Dialog_AboutRepository", "GitHub repository"),
+            NavigateUri = HomepageUri,
+            Content = Localizer.Get("Dialog_AboutHomepage", "Homepage"),
             Padding = new Thickness(0)
         });
         links.Children.Add(new HyperlinkButton
         {
-            NavigateUri = RepositoryIssuesUri,
-            Content = Localizer.Get("Dialog_AboutReportIssue", "Report an issue"),
+            NavigateUri = RepositoryUri,
+            Content = Localizer.Get("Dialog_AboutRepository", "GitHub repository"),
             Padding = new Thickness(0)
         });
 

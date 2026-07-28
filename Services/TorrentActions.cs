@@ -14,7 +14,10 @@ public static class TorrentActions
 {
     public static async Task ConfirmDeleteSelectedAsync(XamlRoot xamlRoot, MainViewModel viewModel)
     {
-        if (viewModel.SelectedTorrents.Count == 0 && viewModel.SelectedTorrent is null)
+        var selected = viewModel.SelectedTorrents.Count > 0
+            ? viewModel.SelectedTorrents
+            : viewModel.SelectedTorrent is null ? [] : [viewModel.SelectedTorrent];
+        if (selected.Count == 0)
             return;
 
         try
@@ -25,18 +28,51 @@ public static class TorrentActions
                 return;
             }
 
+            var hashes = selected.SelectMany(TorrentHashes).ToArray();
+            // Only offered when a tracked source file is still actually on disk - a torrent added
+            // before this feature existed, or whose .torrent file was since moved or deleted, has
+            // nothing to remove here.
+            var sourceFiles = selected
+                .Select(torrent => TorrentSourceFileStore.Find(TorrentHashes(torrent)))
+                .OfType<string>()
+                .Where(File.Exists)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            var content = new StackPanel { Spacing = 8 };
             var deleteFiles = new CheckBox { Content = Localizer.Get("Dialog_AlsoDeleteFiles", "Also delete files from disk") };
+            content.Children.Add(deleteFiles);
+            CheckBox? deleteSourceFiles = null;
+            if (sourceFiles.Length > 0)
+            {
+                deleteSourceFiles = new CheckBox { Content = Localizer.Get("Dialog_AlsoDeleteSourceFile", "Also delete the .torrent file it was added from") };
+                content.Children.Add(deleteSourceFiles);
+            }
+
             var dialog = new ContentDialog
             {
                 XamlRoot = xamlRoot,
                 Title = Localizer.Get("Dialog_DeleteSelectedTorrents", "Delete selected torrents?"),
-                Content = deleteFiles,
+                Content = content,
                 PrimaryButtonText = Localizer.Get("Common_Delete", "Delete"),
                 CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"),
                 DefaultButton = ContentDialogButton.Close
             };
-            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-                await viewModel.DeleteSelectedAsync(deleteFiles.IsChecked == true);
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+                return;
+
+            await viewModel.DeleteSelectedAsync(deleteFiles.IsChecked == true);
+            if (deleteSourceFiles?.IsChecked == true)
+            {
+                foreach (var path in sourceFiles)
+                {
+                    try { File.Delete(path); }
+                    catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
+                }
+            }
+            // The torrent no longer exists in qBittorrent either way, so the mapping can never be
+            // looked up again - drop it regardless of whether the file itself was also deleted.
+            TorrentSourceFileStore.Forget(hashes);
         }
         catch (Exception exception)
         {
@@ -48,5 +84,12 @@ public static class TorrentActions
                 CloseButtonText = Localizer.Get("Common_OK", "OK")
             }.ShowAsync();
         }
+    }
+
+    private static IEnumerable<string> TorrentHashes(TorrentRowViewModel torrent)
+    {
+        if (!string.IsNullOrWhiteSpace(torrent.Hash)) yield return torrent.Hash;
+        if (!string.IsNullOrWhiteSpace(torrent.InfoHashV1)) yield return torrent.InfoHashV1;
+        if (!string.IsNullOrWhiteSpace(torrent.InfoHashV2)) yield return torrent.InfoHashV2;
     }
 }

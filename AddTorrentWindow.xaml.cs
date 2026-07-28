@@ -225,6 +225,7 @@ public sealed partial class AddTorrentWindow : Window
                 await _viewModel.AddAsync(pendingFiles, pendingUrls, pendingRequest);
                 if (pendingPriorities is not null)
                     await ApplyAddedFilePrioritiesAsync(pendingFiles, pendingUrls, pendingPriorities, startAfterPriorities);
+                RememberSourceFiles(pendingFiles);
             }
             Close();
         }
@@ -240,6 +241,27 @@ public sealed partial class AddTorrentWindow : Window
 
     private IEnumerable<string> ParseSources()
         => SourcesBox.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    // Lets the delete dialog later offer to remove the same .torrent file this torrent was added
+    // from - qBittorrent itself never records that path once the torrent exists. The hash is
+    // computed locally from the file's own bytes rather than trusted from qBittorrent's response,
+    // so this works the same way for every file regardless of how the add itself was reported.
+    private static void RememberSourceFiles(IReadOnlyList<string> files)
+    {
+        foreach (var file in files)
+        {
+            try
+            {
+                var hashes = TorrentIdentity.FromTorrentFile(file);
+                TorrentSourceFileStore.Record(hashes, file);
+            }
+            catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException)
+            {
+                // A file that cannot be re-read or parsed just does not get tracked; the add
+                // itself already succeeded and must not be rolled back over this.
+            }
+        }
+    }
 
     private TorrentAddRequest CreateAddRequest(
         IReadOnlyList<string> files,

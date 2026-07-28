@@ -62,6 +62,51 @@ public sealed class CountToVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
+// Torrent comments almost always carry a link back to the original release; when the whole
+// comment IS one, it is shown as a clickable link instead of plain text. A converter (rather than
+// code-behind) is used because HyperlinkButton.NavigateUri needs a real Uri, which XAML bindings
+// cannot coerce a string into on their own.
+public static class CommentLink
+{
+    public static bool TryGetHttpUri(string? text, out Uri uri)
+    {
+        uri = null!;
+        if (string.IsNullOrWhiteSpace(text) || !Uri.TryCreate(text.Trim(), UriKind.Absolute, out var candidate))
+            return false;
+        if (candidate.Scheme != Uri.UriSchemeHttp && candidate.Scheme != Uri.UriSchemeHttps)
+            return false;
+        uri = candidate;
+        return true;
+    }
+}
+
+public sealed class CommentLinkUriConverter : IValueConverter
+{
+    public object? Convert(object value, Type targetType, object parameter, string language)
+        => value is string text && CommentLink.TryGetHttpUri(text, out var uri) ? uri : null;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
+public sealed class CommentLinkVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+        => value is string text && CommentLink.TryGetHttpUri(text, out _) ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
+public sealed class CommentPlainTextVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+        => value is string text && CommentLink.TryGetHttpUri(text, out _) ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
 public sealed class ProgressGridLengthConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
