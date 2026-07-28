@@ -1,0 +1,33 @@
+<Project>
+  <!--
+    Microsoft.WindowsAppSDK.SelfContained.targets copies a .mui satellite resource file for
+    every culture it ships (~75 folders like de-DE, ja-JP, zh-CN...) regardless of
+    SatelliteResourceLanguages, since it adds them as plain <None CopyToOutputDirectory> items
+    rather than through the normal satellite-assembly mechanism. This app only ships
+    en-US/ru-RU/be-BY, so drop every other culture's .mui right after the SDK's own target adds
+    them, before they get copied to the output/publish directory.
+  -->
+  <Target Name="RemoveUnusedWindowsAppSDKCultureResources"
+          AfterTargets="AddMicrosoftWindowsAppSDKPayloadFilesFromComponents">
+    <ItemGroup>
+      <None Remove="@(None)"
+            Condition="'%(None.Extension)' == '.mui' and '%(None.RecursiveDir)' != '' and !$([System.String]::new('%(None.RecursiveDir)').TrimEnd('\').ToLowerInvariant().Equals('en-us')) and !$([System.String]::new('%(None.RecursiveDir)').TrimEnd('\').ToLowerInvariant().Equals('ru-ru')) and !$([System.String]::new('%(None.RecursiveDir)').TrimEnd('\').ToLowerInvariant().Equals('be-by'))" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Microsoft.WinUI.AppX.targets separately relocates the same per-culture .mui files into
+    RuntimeTargetsCopyLocalItems (its own comment explains this is a workaround so deps.json
+    stays valid) - this item group feeds `dotnet publish`'s self-contained deployment directly,
+    bypassing both SatelliteResourceLanguages and the <None> filtering above. That's why a plain
+    build only ever showed 2 culture folders but a publish brought back all ~75: this second
+    target is what publish actually reads from.
+  -->
+  <Target Name="RemoveUnusedWindowsAppSDKCultureRuntimeTargets"
+          AfterTargets="_UpdateMuiFilesAfterNugetRestore">
+    <ItemGroup>
+      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)"
+            Condition="'%(RuntimeTargetsCopyLocalItems.Extension)' == '.mui' and '%(RuntimeTargetsCopyLocalItems.DestinationSubDirectory)' != '' and !$([System.String]::new('%(RuntimeTargetsCopyLocalItems.DestinationSubDirectory)').TrimEnd('\').ToLowerInvariant().Equals('en-us')) and !$([System.String]::new('%(RuntimeTargetsCopyLocalItems.DestinationSubDirectory)').TrimEnd('\').ToLowerInvariant().Equals('ru-ru')) and !$([System.String]::new('%(RuntimeTargetsCopyLocalItems.DestinationSubDirectory)').TrimEnd('\').ToLowerInvariant().Equals('be-by'))" />
+    </ItemGroup>
+  </Target>
+</Project>

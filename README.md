@@ -2,7 +2,7 @@
 
 <img src="winBitTorrent_logo%201.png" alt="WinBitTorrent logo" width="140" />
 
-# WinBitTorrent
+# [WinBitTorrent](https://winbittorrent.github.io/)
 
 **A native WinUI 3 desktop client for qBittorrent on Windows.**
 
@@ -91,17 +91,17 @@ WinBitTorrent does **not** re-implement the BitTorrent protocol. Instead it driv
 
 ```
 ┌──────────────────────────────────────────────┐
-│  WinBitTorrent (WinUI 3 desktop app, .NET 8)  │
-│  Views / ViewModels (MVVM)                     │
-│            │  HTTP + API key (localhost)        │
-│            ▼                                    │
-│  QbittorrentApi client  ── Web API 2.15.1 ──┐  │
+│  WinBitTorrent (WinUI 3 desktop app, .NET 8) │
+│  Views / ViewModels (MVVM)                   │
+│            │  HTTP + API key (localhost)     │
+│            ▼                                 │
+│  QbittorrentApi client  ── Web API 2.15.1 ──┐│
 └──────────────────────────────────────────────┘
              │                                 │
              ▼ (managed local profile)         ▼ (remote profile)
    ┌───────────────────────────┐     ┌───────────────────────────┐
-   │  Bundled qbittorrent-nox  │     │  Any remote qBittorrent    │
-   │  5.2.3 + libtorrent 2.0.x │     │  server (NAS / seedbox)    │
+   │  Bundled qbittorrent-nox  │     │  Any remote qBittorrent   │
+   │  5.2.3 + libtorrent 2.0.x │     │  server (NAS / seedbox)   │
    │  child process, 127.0.0.1 │     └───────────────────────────┘
    └───────────────────────────┘
 ```

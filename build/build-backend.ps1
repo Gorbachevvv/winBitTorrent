@@ -192,18 +192,42 @@ $backendExecutable = Get-ChildItem -LiteralPath $qbitStage -Filter 'qbittorrent-
 if (-not $backendExecutable) { throw 'The qBittorrent build completed without qbittorrent-nox.exe.' }
 Copy-Item -LiteralPath $backendExecutable.FullName -Destination (Join-Path $OutputRoot 'qbittorrent-nox.exe')
 
+# qbittorrent-nox.exe is built with -DGUI=OFF, so it never links the GUI half of Qt
+# (Widgets/Gui/Designer/PrintSupport/OpenGL/UiTools/Test/DBus/Concurrent) or the font/image
+# codecs those pull in (freetype, harfbuzz, jpeg, png). libtorrent statically links the boost
+# pieces it needs, so none of vcpkg's boost_*.dll are ever dynamically imported either. The
+# vcpkg triplet bin folder contains all of that plus every other package's runtime regardless -
+# copying it wholesale silently balloons the backend package by tens of MB of dead weight.
+# This allowlist was derived by walking the actual PE import table of qbittorrent-nox.exe (and
+# the sqlite Qt plugin it loads at runtime) transitively; re-derive it with
+# build/verify-backend-deps.ps1 after upgrading Qt/libtorrent/boost in case the real dependency
+# set changes.
+$requiredRuntimeDlls = @(
+    'brotlicommon.dll', 'brotlidec.dll', 'double-conversion.dll',
+    'icudt78.dll', 'icuin78.dll', 'icuuc78.dll',
+    'libcrypto-3-x64.dll', 'libssl-3-x64.dll', 'pcre2-16.dll',
+    'Qt6Core.dll', 'Qt6Network.dll', 'Qt6Sql.dll', 'Qt6Xml.dll',
+    'z.dll', 'zstd.dll'
+)
 foreach ($runtimeRoot in @((Join-Path $tripletRoot 'bin'), (Join-Path $libtorrentStage 'bin'))) {
     if (Test-Path -LiteralPath $runtimeRoot) {
         Get-ChildItem -LiteralPath $runtimeRoot -Filter '*.dll' |
-            Where-Object { $_.Name -notmatch '^(python\d*|boost_python).*\.dll$' } |
+            Where-Object { $_.Name -eq 'torrent-rasterbar.dll' -or $_.Name -in $requiredRuntimeDlls } |
             Copy-Item -Destination $OutputRoot -Force
     }
 }
+foreach ($required in $requiredRuntimeDlls) {
+    if (-not (Test-Path -LiteralPath (Join-Path $OutputRoot $required))) {
+        throw "Expected runtime dependency '$required' was not found in the vcpkg triplet output. The allowlist in build-backend.ps1 may be stale."
+    }
+}
+# Only the sqlite driver is ever loaded (qBittorrent has no Postgres/MySQL support); the psql
+# plugin drags in libpq/libecpg/libpgtypes for nothing.
 $pluginSource = Join-Path $tripletRoot 'Qt6\plugins\sqldrivers'
 if (Test-Path -LiteralPath $pluginSource) {
     $pluginOutput = Join-Path $OutputRoot 'sqldrivers'
     New-Item -ItemType Directory -Path $pluginOutput -Force | Out-Null
-    Copy-Item -Path (Join-Path $pluginSource '*.dll') -Destination $pluginOutput -Force
+    Copy-Item -Path (Join-Path $pluginSource 'qsqlite.dll') -Destination $pluginOutput -Force
 }
 
 $pythonOutput = Join-Path $OutputRoot 'Python'
