@@ -102,9 +102,9 @@ public interface ISearchApi
 public interface ITorrentCreatorApi
 {
     Task<JsonObject> AddTaskAsync(JsonObject request, CancellationToken cancellationToken = default);
-    Task<JsonObject> GetStatusAsync(int taskId, CancellationToken cancellationToken = default);
-    Task<byte[]> GetTorrentFileAsync(int taskId, CancellationToken cancellationToken = default);
-    Task DeleteTaskAsync(int taskId, CancellationToken cancellationToken = default);
+    Task<JsonObject> GetStatusAsync(string taskId, CancellationToken cancellationToken = default);
+    Task<byte[]> GetTorrentFileAsync(string taskId, CancellationToken cancellationToken = default);
+    Task DeleteTaskAsync(string taskId, CancellationToken cancellationToken = default);
 }
 
 public interface IClientDataApi

@@ -66,7 +66,7 @@ public sealed partial class CreateTorrentWindow : Window
                 ["trackers"] = TrackersBox.Text
             };
             var created = await _main.Api.TorrentCreator.AddTaskAsync(request, _lifetime.Token);
-            var taskId = created["taskID"]?.GetValue<int>() ?? created["taskId"]?.GetValue<int>() ?? created["id"]?.GetValue<int>() ?? throw new InvalidOperationException("The backend did not return a torrent creator task id.");
+            var taskId = created["taskID"]?.GetValue<string>() ?? created["taskId"]?.GetValue<string>() ?? created["id"]?.GetValue<string>() ?? throw new InvalidOperationException("The backend did not return a torrent creator task id.");
             while (!_lifetime.IsCancellationRequested)
             {
                 var status = await _main.Api.TorrentCreator.GetStatusAsync(taskId, _lifetime.Token);
@@ -74,10 +74,14 @@ public sealed partial class CreateTorrentWindow : Window
                 Progress.Value = progress <= 1 ? progress * 100 : progress;
                 var state = status["status"]?.GetValue<string>() ?? status["state"]?.GetValue<string>() ?? "Running";
                 StatusText.Text = $"{state} — {Progress.Value:0}%";
-                if (state.Contains("complete", StringComparison.OrdinalIgnoreCase) || state.Contains("success", StringComparison.OrdinalIgnoreCase))
+                // qBittorrent's actual TaskState values are Queued/Running/Finished/Failed - the
+                // "complete"/"success" checks this used to have would never match "Finished",
+                // so the loop never broke out and the app spun on this poll forever even when
+                // qBittorrent had already succeeded.
+                if (state.Contains("finish", StringComparison.OrdinalIgnoreCase) || state.Contains("complete", StringComparison.OrdinalIgnoreCase) || state.Contains("success", StringComparison.OrdinalIgnoreCase))
                     break;
                 if (state.Contains("fail", StringComparison.OrdinalIgnoreCase) || state.Contains("error", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException(status["error"]?.ToString() ?? "Torrent creation failed.");
+                    throw new InvalidOperationException(status["error"]?.GetValue<string>() ?? "Torrent creation failed.");
                 await Task.Delay(300, _lifetime.Token);
             }
             var bytes = await _main.Api.TorrentCreator.GetTorrentFileAsync(taskId, _lifetime.Token);

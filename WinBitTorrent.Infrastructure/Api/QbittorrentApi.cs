@@ -491,18 +491,39 @@ public sealed class QbittorrentApi : IQBittorrentApi
     {
         public async Task<JsonObject> AddTaskAsync(JsonObject request, CancellationToken cancellationToken = default)
         {
-            var parameters = request.ToDictionary(static item => item.Key, static item => item.Value?.ToJsonString().Trim('"'));
+            // Value?.ToJsonString().Trim('"') used to be used here, but ToJsonString() produces
+            // the JSON-escaped form (backslashes doubled, etc.) and Trim('"') only strips the
+            // outer quote characters - it doesn't undo that escaping. A Windows source path like
+            // C:\Users\... turned into the literal two-backslash text C:\\Users\\... in the form
+            // parameter qBittorrent received, so it could never find the file and every task
+            // failed instantly at 0%. Read each value out through its actual .NET type instead.
+            var parameters = request.ToDictionary(static item => item.Key, static item => ToParameterValue(item.Value));
             return ParseObject(await api.PostForStringAsync("api/v2/torrentcreator/addTask", parameters, cancellationToken).ConfigureAwait(false));
         }
 
-        public Task<JsonObject> GetStatusAsync(int taskId, CancellationToken cancellationToken = default)
-            => api.GetObjectAsync("api/v2/torrentcreator/status", new Dictionary<string, string?> { ["taskID"] = taskId.ToString(CultureInfo.InvariantCulture) }, cancellationToken);
+        private static string? ToParameterValue(JsonNode? node) => node switch
+        {
+            null => null,
+            JsonValue value when value.TryGetValue<string>(out var text) => text,
+            JsonValue value when value.TryGetValue<bool>(out var flag) => flag ? "true" : "false",
+            _ => node.ToJsonString()
+        };
 
-        public Task<byte[]> GetTorrentFileAsync(int taskId, CancellationToken cancellationToken = default)
-            => api.GetBytesAsync("api/v2/torrentcreator/torrentFile", new Dictionary<string, string?> { ["taskID"] = taskId.ToString(CultureInfo.InvariantCulture) }, cancellationToken);
+        public async Task<JsonObject> GetStatusAsync(string taskId, CancellationToken cancellationToken = default)
+        {
+            // Unlike most other torrentcreator endpoints, status returns a JSON array (the same
+            // list shape qBittorrent uses for torrents/info etc.) even when filtered to a single
+            // taskID, not a bare object.
+            var tasks = await api.GetArrayAsync("api/v2/torrentcreator/status", new Dictionary<string, string?> { ["taskID"] = taskId }, cancellationToken).ConfigureAwait(false);
+            return tasks.Select(node => node as JsonObject).FirstOrDefault(task => task is not null)
+                ?? throw new QbittorrentApiException($"qBittorrent has no torrent creator task '{taskId}'.", response: tasks.ToJsonString());
+        }
 
-        public Task DeleteTaskAsync(int taskId, CancellationToken cancellationToken = default)
-            => api.PostAsync("api/v2/torrentcreator/deleteTask", new Dictionary<string, string?> { ["taskID"] = taskId.ToString(CultureInfo.InvariantCulture) }, cancellationToken);
+        public Task<byte[]> GetTorrentFileAsync(string taskId, CancellationToken cancellationToken = default)
+            => api.GetBytesAsync("api/v2/torrentcreator/torrentFile", new Dictionary<string, string?> { ["taskID"] = taskId }, cancellationToken);
+
+        public Task DeleteTaskAsync(string taskId, CancellationToken cancellationToken = default)
+            => api.PostAsync("api/v2/torrentcreator/deleteTask", new Dictionary<string, string?> { ["taskID"] = taskId }, cancellationToken);
     }
 
     private sealed class ClientDataApi(QbittorrentApi api) : IClientDataApi

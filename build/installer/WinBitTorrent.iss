@@ -65,6 +65,18 @@ MinVersion=10.0.19041
 Compression=lzma2/max
 SolidCompression=yes
 
+; The running app holds a mutex of this exact name for its whole lifetime (see App.xaml.cs).
+; Without this, a silent in-app update raced the app's own async shutdown: Setup would start
+; copying files while WinBitTorrent.exe (or a DLL it had loaded) was still locked, hit a sharing
+; violation, and roll back the whole install. With AppMutex set, Setup detects the running
+; instance itself and (combined with CloseApplications=force, requested via
+; /FORCECLOSEAPPLICATIONS on the update command line) waits for/terminates it before writing any
+; files. RestartApplications is off because the app already relaunches itself via the /RELAUNCH
+; entry in [Run] - leaving Setup's own restart on would launch it twice.
+AppMutex=WinBitTorrentAppMutex
+CloseApplications=force
+RestartApplications=no
+
 OutputDir={#OutputDir}
 OutputBaseFilename={#AppName}-{#AppVersion}-setup
 

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using System.Threading;
 using WinBitTorrent.Infrastructure;
 using WinBitTorrent.Services;
 using WinBitTorrent.ViewModels;
@@ -13,6 +14,12 @@ public partial class App : Application
 {
     private Window? _window;
     private AppInstance? _mainInstance;
+    // Held for the lifetime of the process purely so the installer can see it: Inno Setup's
+    // AppMutex check (see build/installer/WinBitTorrent.iss) is what makes a silent in-app
+    // update reliably wait for/close the running instance before overwriting its files.
+    // Without it, the installer used to race the app's own async shutdown and sometimes hit a
+    // sharing violation on a locked file, which made it roll back and abort the update.
+    private static Mutex? _appMutex;
 
     public static IServiceProvider Services { get; private set; } = null!;
 
@@ -93,6 +100,8 @@ public partial class App : Application
             _ = RedirectActivationAndExitAsync(_mainInstance, current.GetActivatedEventArgs());
             return;
         }
+
+        _appMutex = new Mutex(initiallyOwned: false, name: "WinBitTorrentAppMutex");
 
         RegisterActivation();
         _mainInstance.Activated += OnActivated;
