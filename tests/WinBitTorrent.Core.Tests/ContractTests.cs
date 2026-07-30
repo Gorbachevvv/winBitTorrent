@@ -17,6 +17,23 @@ public sealed class ContractTests
     }
 
     [Fact]
+    public void TorrentDtoTreatsNullNumericAndBooleanFieldsAsDefaults()
+    {
+        // qBittorrent can legitimately send null for these (e.g. eta/ratio_limit/availability on
+        // torrents that haven't started or don't apply) - the reader used to call GetInt64()/
+        // GetDouble()/GetBoolean() unconditionally and crash with
+        // "Cannot get the value of a token type 'Null' as a number." the first time a real
+        // response included one.
+        var torrent = JsonSerializer.Deserialize<TorrentInfo>(
+            """{"name":"Ubuntu","eta":null,"ratio_limit":null,"private":null,"num_seeds":null}""")!;
+        Assert.Equal("Ubuntu", torrent.Name);
+        Assert.Equal(0, torrent.Eta);
+        Assert.Equal(0, torrent.RatioLimit);
+        Assert.False(torrent.IsPrivate);
+        Assert.Equal(0, torrent.Seeds);
+    }
+
+    [Fact]
     public void ProfileJsonNeverContainsASecretProperty()
     {
         var profile = new ServerProfile(Guid.NewGuid(), "Remote", ProfileKind.Remote, new Uri("https://example.test/"), AuthenticationMode.ApiKey);

@@ -67,6 +67,14 @@
   <data name="ToolbarQueueUp.Label" xml:space="preserve"><value>Падняць у чарзе</value></data>
   <data name="ToolbarQueueDown.Label" xml:space="preserve"><value>Апусціць у чарзе</value></data>
   <data name="ToolbarAlternativeLimits.Label" xml:space="preserve"><value>Альтэрнатыўныя абмежаванні</value></data>
+  <data name="ToolbarAddTorrent.ToolTipService.ToolTip" xml:space="preserve"><value>Дадаць .torrent-файл</value></data>
+  <data name="ToolbarAddLink.ToolTipService.ToolTip" xml:space="preserve"><value>Дадаць magnet-спасылку або URL</value></data>
+  <data name="ToolbarStart.ToolTipService.ToolTip" xml:space="preserve"><value>Запусціць выбраныя торэнты</value></data>
+  <data name="ToolbarStop.ToolTipService.ToolTip" xml:space="preserve"><value>Спыніць выбраныя торэнты</value></data>
+  <data name="ToolbarDelete.ToolTipService.ToolTip" xml:space="preserve"><value>Выдаліць выбраныя торэнты</value></data>
+  <data name="ToolbarQueueUp.ToolTipService.ToolTip" xml:space="preserve"><value>Падняць у чарзе загрузкі</value></data>
+  <data name="ToolbarQueueDown.ToolTipService.ToolTip" xml:space="preserve"><value>Апусціць у чарзе загрузкі</value></data>
+  <data name="ToolbarAlternativeLimits.ToolTipService.ToolTip" xml:space="preserve"><value>Пераключыць альтэрнатыўныя абмежаванні хуткасці</value></data>
   <data name="RetryButton.Content" xml:space="preserve"><value>Паўтарыць</value></data>
   <data name="TorrentDropText.Text" xml:space="preserve"><value>Перацягніце сюды .torrent-файлы</value></data>
 

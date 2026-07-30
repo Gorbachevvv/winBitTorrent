@@ -67,6 +67,14 @@
   <data name="ToolbarQueueUp.Label" xml:space="preserve"><value>Поднять в очереди</value></data>
   <data name="ToolbarQueueDown.Label" xml:space="preserve"><value>Опустить в очереди</value></data>
   <data name="ToolbarAlternativeLimits.Label" xml:space="preserve"><value>Альтернативные ограничения</value></data>
+  <data name="ToolbarAddTorrent.ToolTipService.ToolTip" xml:space="preserve"><value>Добавить .torrent-файл</value></data>
+  <data name="ToolbarAddLink.ToolTipService.ToolTip" xml:space="preserve"><value>Добавить magnet-ссылку или URL</value></data>
+  <data name="ToolbarStart.ToolTipService.ToolTip" xml:space="preserve"><value>Запустить выбранные торренты</value></data>
+  <data name="ToolbarStop.ToolTipService.ToolTip" xml:space="preserve"><value>Остановить выбранные торренты</value></data>
+  <data name="ToolbarDelete.ToolTipService.ToolTip" xml:space="preserve"><value>Удалить выбранные торренты</value></data>
+  <data name="ToolbarQueueUp.ToolTipService.ToolTip" xml:space="preserve"><value>Поднять в очереди загрузки</value></data>
+  <data name="ToolbarQueueDown.ToolTipService.ToolTip" xml:space="preserve"><value>Опустить в очереди загрузки</value></data>
+  <data name="ToolbarAlternativeLimits.ToolTipService.ToolTip" xml:space="preserve"><value>Переключить альтернативные ограничения скорости</value></data>
   <data name="RetryButton.Content" xml:space="preserve"><value>Повторить</value></data>
   <data name="TorrentDropText.Text" xml:space="preserve"><value>Перетащите сюда .torrent-файлы</value></data>
 

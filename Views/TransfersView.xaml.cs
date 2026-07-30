@@ -439,9 +439,7 @@ public sealed partial class TransfersView : UserControl
 
     private async void SuperSeeding_Click(object sender, RoutedEventArgs e)
     {
-        // The backend does not report super-seeding state, so the icon is always shown unchecked;
-        // treat a click as a request to enable it.
-        var enabled = SuperSeedingCheckIcon.Glyph == UncheckedCheckGlyph;
+        var enabled = ViewModel.SelectedTorrent?.Model.SuperSeeding != true;
         await ExecuteMenuActionAsync(() => ViewModel.SetSuperSeedingSelectedAsync(enabled));
     }
 
@@ -552,12 +550,11 @@ public sealed partial class TransfersView : UserControl
         // Reflect the per-torrent flags on the checkbox items up front. These use a checkbox
         // glyph in the shared icon column (rather than a ToggleMenuFlyoutItem, whose checkmark
         // sits in a separate column and pushes everything right), so the click handler reads the
-        // current flag from the model and flips it. Super seeding state is not reported by the
-        // backend, so it always shows unchecked.
+        // current flag from the model and flips it.
         SetCheckIcon(ForceStartCheckIcon, model?.ForceStart == true);
         SetCheckIcon(SequentialCheckIcon, model?.SequentialDownload == true);
         SetCheckIcon(FirstLastCheckIcon, model?.FirstLastPiecePriority == true);
-        SetCheckIcon(SuperSeedingCheckIcon, false);
+        SetCheckIcon(SuperSeedingCheckIcon, model?.SuperSeeding == true);
 
         // File-system actions only make sense for the local managed backend; hide (not just
         // disable) them for remote profiles, the way qBittorrent omits them over WebUI.

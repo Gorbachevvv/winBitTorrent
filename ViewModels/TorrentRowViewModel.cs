@@ -78,6 +78,7 @@ public sealed class TorrentRowViewModel : ObservableObject
     public void ApplyForceStart(bool value) => SetFlag(() => _model.ForceStart = value);
     public void ApplySequentialDownload(bool value) => SetFlag(() => _model.SequentialDownload = value);
     public void ApplyFirstLastPiecePriority(bool value) => SetFlag(() => _model.FirstLastPiecePriority = value);
+    public void ApplySuperSeeding(bool value) => SetFlag(() => _model.SuperSeeding = value);
 
     private void SetFlag(Action mutate)
     {

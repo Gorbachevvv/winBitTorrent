@@ -67,6 +67,14 @@
   <data name="ToolbarQueueUp.Label" xml:space="preserve"><value>Move up</value></data>
   <data name="ToolbarQueueDown.Label" xml:space="preserve"><value>Move down</value></data>
   <data name="ToolbarAlternativeLimits.Label" xml:space="preserve"><value>Alternative speed limits</value></data>
+  <data name="ToolbarAddTorrent.ToolTipService.ToolTip" xml:space="preserve"><value>Add a .torrent file</value></data>
+  <data name="ToolbarAddLink.ToolTipService.ToolTip" xml:space="preserve"><value>Add a magnet link or URL</value></data>
+  <data name="ToolbarStart.ToolTipService.ToolTip" xml:space="preserve"><value>Start the selected torrents</value></data>
+  <data name="ToolbarStop.ToolTipService.ToolTip" xml:space="preserve"><value>Stop the selected torrents</value></data>
+  <data name="ToolbarDelete.ToolTipService.ToolTip" xml:space="preserve"><value>Delete the selected torrents</value></data>
+  <data name="ToolbarQueueUp.ToolTipService.ToolTip" xml:space="preserve"><value>Move up in the download queue</value></data>
+  <data name="ToolbarQueueDown.ToolTipService.ToolTip" xml:space="preserve"><value>Move down in the download queue</value></data>
+  <data name="ToolbarAlternativeLimits.ToolTipService.ToolTip" xml:space="preserve"><value>Toggle alternative speed limits</value></data>
   <data name="RetryButton.Content" xml:space="preserve"><value>Retry</value></data>
   <data name="TorrentDropText.Text" xml:space="preserve"><value>Drop .torrent files here</value></data>
 

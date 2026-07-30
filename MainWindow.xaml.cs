@@ -155,7 +155,7 @@ public sealed partial class MainWindow : Window
     }
 
     private void OpenAddTorrent(IReadOnlyList<string> files, IReadOnlyList<string> urls)
-        => DispatcherQueue.TryEnqueue(() => new AddTorrentWindow(files, urls).Activate());
+        => DispatcherQueue.TryEnqueue(async () => await OpenAddTorrentAfterDuplicateCheckAsync(files, urls));
 
     private async void AddTorrentFile_Click(object sender, RoutedEventArgs e)
     {
@@ -164,7 +164,19 @@ public sealed partial class MainWindow : Window
         WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(this));
         var files = await picker.PickMultipleFilesAsync();
         if (files.Count > 0)
-            new AddTorrentWindow(files.Select(static file => file.Path).ToList(), []).Activate();
+            await OpenAddTorrentAfterDuplicateCheckAsync(files.Select(static file => file.Path).ToList(), []);
+    }
+
+    // Matches qBittorrent: when the source is already known (a picked file, a dropped file, an
+    // activation from a .torrent/magnet association), check for duplicates and offer to merge
+    // trackers before the Add Torrent window ever opens - not after the user has filled it out.
+    // "Add Torrent Link…" opens with nothing typed yet, so it has no source to pre-check and
+    // keeps using the window's own later check once the user enters something.
+    private async Task OpenAddTorrentAfterDuplicateCheckAsync(IReadOnlyList<string> files, IReadOnlyList<string> urls)
+    {
+        var (pendingFiles, pendingUrls) = await TorrentDuplicateChecker.RemoveDuplicatesAsync(RootGrid.XamlRoot, ViewModel, files, urls);
+        if (pendingFiles.Count > 0 || pendingUrls.Count > 0)
+            new AddTorrentWindow(pendingFiles, pendingUrls).Activate();
     }
 
     private void RootGrid_DragOver(object sender, DragEventArgs e)
@@ -200,7 +212,7 @@ public sealed partial class MainWindow : Window
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
             if (files.Count > 0)
-                new AddTorrentWindow(files, []).Activate();
+                await OpenAddTorrentAfterDuplicateCheckAsync(files, []);
         }
         finally
         {

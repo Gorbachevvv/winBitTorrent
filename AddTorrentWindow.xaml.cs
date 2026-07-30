@@ -206,12 +206,12 @@ public sealed partial class AddTorrentWindow : Window
 
                 if (duplicate.Existing.Model.IsPrivate)
                 {
-                    await ShowPrivateDuplicateAsync(duplicate.Existing.Name);
+                    await TorrentDuplicateChecker.ShowPrivateDuplicateAsync(Root.XamlRoot, duplicate.Existing.Name);
                     continue;
                 }
 
-                if (await AskToMergeDuplicateAsync(duplicate.Existing.Name))
-                    await MergeDuplicateAsync(duplicate, request);
+                if (await TorrentDuplicateChecker.AskToMergeDuplicateAsync(Root.XamlRoot, duplicate.Existing.Name))
+                    await TorrentDuplicateChecker.MergeDuplicateAsync(_viewModel, duplicate.IsFile, duplicate.Source);
             }
 
             if (pendingFiles.Count > 0 || pendingUrls.Count > 0)
@@ -396,64 +396,6 @@ public sealed partial class AddTorrentWindow : Window
         }
 
         return duplicates;
-    }
-
-    private async Task<bool> AskToMergeDuplicateAsync(string name)
-    {
-        var dialog = new ContentDialog
-        {
-            XamlRoot = Root.XamlRoot,
-            Title = Localizer.Get("DuplicateTorrent_Title", "Torrent is already present"),
-            Content = string.Format(
-                Localizer.Get("DuplicateTorrent_Message", "Torrent '{0}' is already in the transfer list. Do you want to merge trackers from the new source?"),
-                name),
-            PrimaryButtonText = Localizer.Get("Common_Yes", "Yes"),
-            CloseButtonText = Localizer.Get("Common_No", "No"),
-            DefaultButton = ContentDialogButton.Close
-        };
-        return await dialog.ShowAsync() == ContentDialogResult.Primary;
-    }
-
-    private async Task ShowPrivateDuplicateAsync(string name)
-    {
-        var dialog = new ContentDialog
-        {
-            XamlRoot = Root.XamlRoot,
-            Title = Localizer.Get("DuplicateTorrent_Title", "Torrent is already present"),
-            Content = string.Format(
-                Localizer.Get("DuplicateTorrent_Private", "Torrent '{0}' is private. Its trackers cannot be merged."),
-                name),
-            CloseButtonText = Localizer.Get("Common_OK", "OK"),
-            DefaultButton = ContentDialogButton.Close
-        };
-        await dialog.ShowAsync();
-    }
-
-    private async Task MergeDuplicateAsync(DuplicateSource duplicate, TorrentAddRequest request)
-    {
-        var api = _viewModel.Api
-            ?? throw new InvalidOperationException(Localizer.Get("Connection_NotConnected", "Not connected to qBittorrent."));
-        var preferences = await api.Application.GetPreferencesAsync();
-        var mergeWasEnabled = preferences["merge_trackers"]?.GetValue<bool>() == true;
-        if (!mergeWasEnabled)
-            await api.Application.SetPreferencesAsync(new JsonObject { ["merge_trackers"] = true });
-
-        try
-        {
-            IReadOnlyList<string> files = duplicate.IsFile ? [duplicate.Source] : [];
-            IReadOnlyList<string> urls = duplicate.IsFile ? [] : [duplicate.Source];
-            var duplicateRequest = request with
-            {
-                TorrentFiles = files,
-                Urls = urls
-            };
-            await _viewModel.AddAsync(files, urls, duplicateRequest);
-        }
-        finally
-        {
-            if (!mergeWasEnabled)
-                await api.Application.SetPreferencesAsync(new JsonObject { ["merge_trackers"] = false });
-        }
     }
 
     private void PopulateMetadata(string source, JsonObject metadata)

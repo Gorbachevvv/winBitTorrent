@@ -147,6 +147,9 @@ public sealed class TorrentInfo
     [JsonPropertyName("f_l_piece_prio")]
     public bool FirstLastPiecePriority { get; set; }
 
+    [JsonPropertyName("super_seeding")]
+    public bool SuperSeeding { get; set; }
+
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalData { get; set; }
 
@@ -221,6 +224,7 @@ internal sealed class TorrentInfoJsonConverter : JsonConverter<TorrentInfo>
                 case "force_start": torrent.ForceStart = ReadBoolean(ref reader); break;
                 case "seq_dl": torrent.SequentialDownload = ReadBoolean(ref reader); break;
                 case "f_l_piece_prio": torrent.FirstLastPiecePriority = ReadBoolean(ref reader); break;
+                case "super_seeding": torrent.SuperSeeding = ReadBoolean(ref reader); break;
                 default:
                     torrent.AdditionalData ??= new Dictionary<string, JsonElement>(StringComparer.Ordinal);
                     torrent.AdditionalData[propertyName] = JsonElement.ParseValue(ref reader);
@@ -278,6 +282,7 @@ internal sealed class TorrentInfoJsonConverter : JsonConverter<TorrentInfo>
         writer.WriteBoolean("force_start", value.ForceStart);
         writer.WriteBoolean("seq_dl", value.SequentialDownload);
         writer.WriteBoolean("f_l_piece_prio", value.FirstLastPiecePriority);
+        writer.WriteBoolean("super_seeding", value.SuperSeeding);
 
         if (value.AdditionalData is not null)
         {
@@ -291,26 +296,49 @@ internal sealed class TorrentInfoJsonConverter : JsonConverter<TorrentInfo>
         writer.WriteEndObject();
     }
 
-    private static string ReadString(ref Utf8JsonReader reader)
+    private static string ReadString(ref Utf8JsonReader reader) => JsonReadHelpers.ReadString(ref reader);
+    private static int ReadInt32(ref Utf8JsonReader reader) => JsonReadHelpers.ReadInt32(ref reader);
+    private static long ReadInt64(ref Utf8JsonReader reader) => JsonReadHelpers.ReadInt64(ref reader);
+    private static double ReadDouble(ref Utf8JsonReader reader) => JsonReadHelpers.ReadDouble(ref reader);
+    private static bool ReadBoolean(ref Utf8JsonReader reader) => JsonReadHelpers.ReadBoolean(ref reader);
+}
+
+// Shared by TorrentInfoJsonConverter and ServerStateJsonConverter, which both need to read
+// fields that qBittorrent sometimes sends as JSON strings instead of numbers/booleans, and to
+// treat null as the type's default rather than throwing (a real response crashed with "Cannot
+// get the value of a token type 'Null' as a number." the first time a numeric field came back
+// null).
+internal static class JsonReadHelpers
+{
+    public static string ReadString(ref Utf8JsonReader reader)
         => reader.TokenType == JsonTokenType.Null ? string.Empty : reader.GetString() ?? string.Empty;
 
-    private static int ReadInt32(ref Utf8JsonReader reader)
+    public static int ReadInt32(ref Utf8JsonReader reader)
         => checked((int)ReadInt64(ref reader));
 
-    private static long ReadInt64(ref Utf8JsonReader reader)
-        => reader.TokenType == JsonTokenType.String && long.TryParse(reader.GetString(), out var value)
-            ? value
-            : reader.GetInt64();
+    public static long ReadInt64(ref Utf8JsonReader reader)
+        => reader.TokenType switch
+        {
+            JsonTokenType.Null => 0,
+            JsonTokenType.String when long.TryParse(reader.GetString(), out var value) => value,
+            _ => reader.GetInt64()
+        };
 
-    private static double ReadDouble(ref Utf8JsonReader reader)
-        => reader.TokenType == JsonTokenType.String && double.TryParse(reader.GetString(), out var value)
-            ? value
-            : reader.GetDouble();
+    public static double ReadDouble(ref Utf8JsonReader reader)
+        => reader.TokenType switch
+        {
+            JsonTokenType.Null => 0,
+            JsonTokenType.String when double.TryParse(reader.GetString(), out var value) => value,
+            _ => reader.GetDouble()
+        };
 
-    private static bool ReadBoolean(ref Utf8JsonReader reader)
-        => reader.TokenType == JsonTokenType.String && bool.TryParse(reader.GetString(), out var value)
-            ? value
-            : reader.GetBoolean();
+    public static bool ReadBoolean(ref Utf8JsonReader reader)
+        => reader.TokenType switch
+        {
+            JsonTokenType.Null => false,
+            JsonTokenType.String when bool.TryParse(reader.GetString(), out var value) => value,
+            _ => reader.GetBoolean()
+        };
 }
 
 public sealed class MainDataResponse
@@ -358,6 +386,13 @@ public sealed class TorrentCategory
     public string DownloadPath { get; set; } = string.Empty;
 }
 
+// qBittorrent's sync/maindata endpoint sends server_state as a delta too - most polls only
+// include the handful of fields that actually changed (e.g. just the speed counters), not the
+// whole object. Like TorrentInfo, this needs its own converter that tracks which fields were
+// actually present, so MainDataAccumulator can patch the accumulated state field-by-field
+// instead of replacing it wholesale and losing everything the delta didn't mention (queueing,
+// use_alt_speed_limits etc. would silently flip back to false on the very next poll).
+[JsonConverter(typeof(ServerStateJsonConverter))]
 public sealed class ServerState
 {
     [JsonPropertyName("connection_status")]
@@ -398,6 +433,82 @@ public sealed class ServerState
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalData { get; set; }
+
+    [JsonIgnore]
+    public HashSet<string> PresentFields { get; } = new(StringComparer.Ordinal);
+}
+
+internal sealed class ServerStateJsonConverter : JsonConverter<ServerState>
+{
+    public override ServerState Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+            throw new JsonException("Expected server_state object.");
+
+        var state = new ServerState();
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndObject)
+                return state;
+
+            if (reader.TokenType != JsonTokenType.PropertyName)
+                throw new JsonException("Expected server_state property.");
+
+            var propertyName = reader.GetString() ?? string.Empty;
+            reader.Read();
+            state.PresentFields.Add(propertyName);
+
+            switch (propertyName)
+            {
+                case "connection_status": state.ConnectionStatus = JsonReadHelpers.ReadString(ref reader); break;
+                case "dht_nodes": state.DhtNodes = JsonReadHelpers.ReadInt32(ref reader); break;
+                case "dl_info_speed": state.DownloadSpeed = JsonReadHelpers.ReadInt64(ref reader); break;
+                case "up_info_speed": state.UploadSpeed = JsonReadHelpers.ReadInt64(ref reader); break;
+                case "dl_info_data": state.DownloadedSession = JsonReadHelpers.ReadInt64(ref reader); break;
+                case "up_info_data": state.UploadedSession = JsonReadHelpers.ReadInt64(ref reader); break;
+                case "alltime_dl": state.DownloadedAllTime = JsonReadHelpers.ReadInt64(ref reader); break;
+                case "alltime_ul": state.UploadedAllTime = JsonReadHelpers.ReadInt64(ref reader); break;
+                case "free_space_on_disk": state.FreeSpaceOnDisk = JsonReadHelpers.ReadInt64(ref reader); break;
+                case "use_alt_speed_limits": state.UseAlternativeSpeedLimits = JsonReadHelpers.ReadBoolean(ref reader); break;
+                case "queueing": state.Queueing = JsonReadHelpers.ReadBoolean(ref reader); break;
+                case "refresh_interval": state.RefreshInterval = JsonReadHelpers.ReadInt32(ref reader); break;
+                default:
+                    state.AdditionalData ??= new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+                    state.AdditionalData[propertyName] = JsonElement.ParseValue(ref reader);
+                    break;
+            }
+        }
+
+        throw new JsonException("Unexpected end of server_state object.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, ServerState value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        writer.WriteString("connection_status", value.ConnectionStatus);
+        writer.WriteNumber("dht_nodes", value.DhtNodes);
+        writer.WriteNumber("dl_info_speed", value.DownloadSpeed);
+        writer.WriteNumber("up_info_speed", value.UploadSpeed);
+        writer.WriteNumber("dl_info_data", value.DownloadedSession);
+        writer.WriteNumber("up_info_data", value.UploadedSession);
+        writer.WriteNumber("alltime_dl", value.DownloadedAllTime);
+        writer.WriteNumber("alltime_ul", value.UploadedAllTime);
+        writer.WriteNumber("free_space_on_disk", value.FreeSpaceOnDisk);
+        writer.WriteBoolean("use_alt_speed_limits", value.UseAlternativeSpeedLimits);
+        writer.WriteBoolean("queueing", value.Queueing);
+        writer.WriteNumber("refresh_interval", value.RefreshInterval);
+
+        if (value.AdditionalData is not null)
+        {
+            foreach (var (key, element) in value.AdditionalData)
+            {
+                writer.WritePropertyName(key);
+                element.WriteTo(writer);
+            }
+        }
+
+        writer.WriteEndObject();
+    }
 }
 
 public sealed class TorrentProperties

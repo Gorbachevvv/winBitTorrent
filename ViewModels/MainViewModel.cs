@@ -124,6 +124,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     [ObservableProperty]
     private bool _useAlternativeSpeedLimits;
 
+    [ObservableProperty]
+    private bool _queueingEnabled;
+
     public IReadOnlyList<TorrentRowViewModel> SelectedTorrents { get; set; } = [];
     public bool HasActiveTorrents => _rows.Values.Any(static torrent => torrent.IsActive);
     public IQBittorrentApi? Api => _api;
@@ -278,8 +281,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         return rows.Select(row => (row, selector(row))).ToList();
     }
 
-    public Task SetSuperSeedingSelectedAsync(bool enabled)
-        => PostSelectedAsync("setSuperSeeding", new Dictionary<string, string?> { ["value"] = enabled.ToString().ToLowerInvariant() });
+    public async Task SetSuperSeedingSelectedAsync(bool enabled)
+    {
+        var targets = CaptureFlagTargets(_ => enabled);
+        await PostSelectedAsync("setSuperSeeding", new Dictionary<string, string?> { ["value"] = enabled.ToString().ToLowerInvariant() });
+        foreach (var (row, value) in targets)
+            row.ApplySuperSeeding(value);
+    }
 
     public Task SetCategorySelectedAsync(string category)
         => PostSelectedAsync("setCategory", new Dictionary<string, string?> { ["category"] = category });
@@ -428,21 +436,32 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         FreeSpace = ValueFormatter.Size(changeSet.ServerState.FreeSpaceOnDisk);
         DhtNodes = $"{Localizer.Get("Status_Dht", "DHT")}: {changeSet.ServerState.DhtNodes}";
         UseAlternativeSpeedLimits = changeSet.ServerState.UseAlternativeSpeedLimits;
+        QueueingEnabled = changeSet.ServerState.Queueing;
 
         RebuildFilters();
         RebuildVisibleRows();
     }
+
+    // A NUL key can never collide with a real qBittorrent category name (categories can't
+    // contain one), so it's safe as a sentinel for the pinned "All" entry qBittorrent itself
+    // shows above the per-category list, counting every torrent regardless of category.
+    private const string AllCategoriesKey = "\0";
 
     private void RebuildFilters()
     {
         foreach (var filter in StatusFilters)
             filter.Count = _rows.Values.Count(row => MatchesStatus(row, filter.Key));
 
+        if (CategoryFilters.Count == 0 || CategoryFilters[0].Key != AllCategoriesKey)
+            CategoryFilters.Insert(0, new FilterItemViewModel(TorrentFilterKind.Category, AllCategoriesKey, Localizer.Get("Filter_All", "All"), "\uE71D"));
+        CategoryFilters[0].Count = _rows.Count;
+
         ReplaceFilters(
             CategoryFilters,
             _rows.Values.GroupBy(static row => string.IsNullOrWhiteSpace(row.Model.Category) ? "Uncategorized" : row.Model.Category),
             TorrentFilterKind.Category,
-            "\uE8B7");
+            "\uE8B7",
+            offset: 1);
 
         var tags = _rows.Values
             .SelectMany(static row => row.Model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -456,7 +475,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ReplaceFilters(TrackerFilters, trackers, TorrentFilterKind.Tracker, "\uE774");
     }
 
-    private static void ReplaceFilters<T>(ObservableCollection<FilterItemViewModel> destination, IEnumerable<IGrouping<string, T>> groups, TorrentFilterKind kind, string glyph)
+    // offset lets a caller keep pinned entries at the front of destination (e.g. the "All"
+    // category above the per-category list) untouched by this method's own inserts/removals.
+    private static void ReplaceFilters<T>(ObservableCollection<FilterItemViewModel> destination, IEnumerable<IGrouping<string, T>> groups, TorrentFilterKind kind, string glyph, int offset = 0)
     {
         var desired = groups
             .OrderBy(static group => group.Key, StringComparer.CurrentCultureIgnoreCase)
@@ -473,19 +494,20 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         for (var index = 0; index < desired.Count; index++)
         {
             var item = desired[index];
-            var existingIndex = IndexOfFilter(destination, item.Key, index);
+            var position = index + offset;
+            var existingIndex = IndexOfFilter(destination, item.Key, position);
             if (existingIndex < 0)
             {
-                destination.Insert(index, new FilterItemViewModel(kind, item.Key, item.Title, glyph, item.Count));
+                destination.Insert(position, new FilterItemViewModel(kind, item.Key, item.Title, glyph, item.Count));
                 continue;
             }
 
-            if (existingIndex != index)
-                destination.Move(existingIndex, index);
-            destination[index].Count = item.Count;
+            if (existingIndex != position)
+                destination.Move(existingIndex, position);
+            destination[position].Count = item.Count;
         }
 
-        while (destination.Count > desired.Count)
+        while (destination.Count > desired.Count + offset)
             destination.RemoveAt(destination.Count - 1);
     }
 
@@ -532,6 +554,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         return filter.Kind switch
         {
             TorrentFilterKind.Status => MatchesStatus(row, filter.Key),
+            TorrentFilterKind.Category when filter.Key == AllCategoriesKey => true,
             TorrentFilterKind.Category => (string.IsNullOrWhiteSpace(row.Model.Category) ? "Uncategorized" : row.Model.Category)
                 .Equals(filter.Key, StringComparison.OrdinalIgnoreCase),
             TorrentFilterKind.Tag => row.Model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

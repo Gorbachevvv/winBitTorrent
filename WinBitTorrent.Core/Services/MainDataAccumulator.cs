@@ -78,7 +78,15 @@ public sealed class MainDataAccumulator
         }
 
         if (response.ServerState is not null)
-            ServerState = response.ServerState;
+        {
+            // A delta poll only includes the server_state fields that actually changed since the
+            // last one - patch them onto the accumulated state instead of replacing it wholesale,
+            // or every field the delta didn't mention would silently reset to its C# default.
+            if (response.FullUpdate)
+                ServerState = response.ServerState;
+            else
+                ApplyServerStatePatch(ServerState, response.ServerState);
+        }
 
         ResponseId = response.ResponseId;
         return new MainDataChangeSet(response.FullUpdate, changed, removed, ServerState);
@@ -145,6 +153,36 @@ public sealed class MainDataAccumulator
                 case "force_start": target.ForceStart = patch.ForceStart; break;
                 case "seq_dl": target.SequentialDownload = patch.SequentialDownload; break;
                 case "f_l_piece_prio": target.FirstLastPiecePriority = patch.FirstLastPiecePriority; break;
+                case "super_seeding": target.SuperSeeding = patch.SuperSeeding; break;
+            }
+        }
+
+        if (patch.AdditionalData is not null)
+        {
+            target.AdditionalData ??= new(StringComparer.Ordinal);
+            foreach (var (key, value) in patch.AdditionalData)
+                target.AdditionalData[key] = value;
+        }
+    }
+
+    private static void ApplyServerStatePatch(ServerState target, ServerState patch)
+    {
+        foreach (var field in patch.PresentFields)
+        {
+            switch (field)
+            {
+                case "connection_status": target.ConnectionStatus = patch.ConnectionStatus; break;
+                case "dht_nodes": target.DhtNodes = patch.DhtNodes; break;
+                case "dl_info_speed": target.DownloadSpeed = patch.DownloadSpeed; break;
+                case "up_info_speed": target.UploadSpeed = patch.UploadSpeed; break;
+                case "dl_info_data": target.DownloadedSession = patch.DownloadedSession; break;
+                case "up_info_data": target.UploadedSession = patch.UploadedSession; break;
+                case "alltime_dl": target.DownloadedAllTime = patch.DownloadedAllTime; break;
+                case "alltime_ul": target.UploadedAllTime = patch.UploadedAllTime; break;
+                case "free_space_on_disk": target.FreeSpaceOnDisk = patch.FreeSpaceOnDisk; break;
+                case "use_alt_speed_limits": target.UseAlternativeSpeedLimits = patch.UseAlternativeSpeedLimits; break;
+                case "queueing": target.Queueing = patch.Queueing; break;
+                case "refresh_interval": target.RefreshInterval = patch.RefreshInterval; break;
             }
         }
 

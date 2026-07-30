@@ -91,17 +91,17 @@
                 <ColumnDefinition Width="280" />
             </Grid.ColumnDefinitions>
             <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" IsOpen="False">
-                <AppBarButton x:Uid="ToolbarAddTorrent" Icon="OpenFile" Label="Add torrent" Click="AddTorrentFile_Click" />
-                <AppBarButton x:Uid="ToolbarAddLink" Icon="Link" Label="Add link" Click="AddTorrentLink_Click" />
+                <AppBarButton x:Uid="ToolbarAddTorrent" Icon="OpenFile" Label="Add torrent" Click="AddTorrentFile_Click" ToolTipService.ToolTip="Add a .torrent file" />
+                <AppBarButton x:Uid="ToolbarAddLink" Icon="Link" Label="Add link" Click="AddTorrentLink_Click" ToolTipService.ToolTip="Add a magnet link or URL" />
                 <AppBarSeparator />
-                <AppBarButton x:Uid="ToolbarStart" Icon="Play" Label="Start" Command="{Binding StartSelectedCommand}" />
-                <AppBarButton x:Uid="ToolbarStop" Icon="Stop" Label="Stop" Command="{Binding StopSelectedCommand}" />
-                <AppBarButton x:Uid="ToolbarDelete" Icon="Delete" Label="Delete" Click="Delete_Click" />
+                <AppBarButton x:Uid="ToolbarStart" Icon="Play" Label="Start" Command="{Binding StartSelectedCommand}" ToolTipService.ToolTip="Start the selected torrents" />
+                <AppBarButton x:Uid="ToolbarStop" Icon="Stop" Label="Stop" Command="{Binding StopSelectedCommand}" ToolTipService.ToolTip="Stop the selected torrents" />
+                <AppBarButton x:Uid="ToolbarDelete" Icon="Delete" Label="Delete" Click="Delete_Click" ToolTipService.ToolTip="Delete the selected torrents" />
+                <AppBarSeparator Visibility="{Binding QueueingEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <AppBarButton x:Uid="ToolbarQueueUp" Label="Queue up" Command="{Binding MoveUpSelectedCommand}" ToolTipService.ToolTip="Move up in the download queue" Visibility="{Binding QueueingEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"><AppBarButton.Icon><FontIcon Glyph="&#xE74A;" /></AppBarButton.Icon></AppBarButton>
+                <AppBarButton x:Uid="ToolbarQueueDown" Label="Queue down" Command="{Binding MoveDownSelectedCommand}" ToolTipService.ToolTip="Move down in the download queue" Visibility="{Binding QueueingEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"><AppBarButton.Icon><FontIcon Glyph="&#xE74B;" /></AppBarButton.Icon></AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton x:Uid="ToolbarQueueUp" Label="Queue up" Command="{Binding MoveUpSelectedCommand}"><AppBarButton.Icon><FontIcon Glyph="&#xE74A;" /></AppBarButton.Icon></AppBarButton>
-                <AppBarButton x:Uid="ToolbarQueueDown" Label="Queue down" Command="{Binding MoveDownSelectedCommand}"><AppBarButton.Icon><FontIcon Glyph="&#xE74B;" /></AppBarButton.Icon></AppBarButton>
-                <AppBarSeparator />
-                <AppBarToggleButton x:Uid="ToolbarAlternativeLimits" Icon="Switch" Label="Alternative limits" IsChecked="{Binding UseAlternativeSpeedLimits, Mode=OneWay}" Click="AlternativeSpeed_Click" />
+                <AppBarToggleButton x:Uid="ToolbarAlternativeLimits" Icon="Switch" Label="Alternative limits" IsChecked="{Binding UseAlternativeSpeedLimits, Mode=OneWay}" Click="AlternativeSpeed_Click" ToolTipService.ToolTip="Toggle alternative speed limits" />
             </CommandBar>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <FontIcon Glyph="&#xE721;" />
