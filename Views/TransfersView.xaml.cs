@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
@@ -25,12 +26,21 @@ namespace WinBitTorrent.Views;
 
 public sealed partial class TransfersView : UserControl
 {
+    private const double SidebarDefaultWidth = 220;
+    private const double SidebarMinExpandedWidth = 180;
+    private const double SidebarMaxWidth = 300;
+    private const double SidebarCollapseThreshold = 112;
+    private const double SidebarSplitterWidth = 6;
+    private const double SidebarRevealRailWidth = 40;
+
     private static readonly int[] FilePriorityValues = [0, 1, 6, 7];
     private readonly ObservableCollection<TorrentFileTreeNode> _fileTreeRoots = [];
     private readonly DispatcherTimer _filesRefreshTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool _fileEventsAttached;
     private bool _fileTreeRefreshQueued;
     private bool _isRefreshingFiles;
+    private bool _sidebarCollapsed;
+    private double _expandedSidebarWidth = SidebarDefaultWidth;
 
     // Torrent context menu layout: every command keyed by the Tag it carries in XAML, plus a pool
     // of separator instances, so the flyout can be re-ordered from the saved layout on each open.
@@ -49,6 +59,7 @@ public sealed partial class TransfersView : UserControl
     public TransfersView()
     {
         InitializeComponent();
+        ConfigureSidebarAccessibility();
         RestoreLayout();
         DataContext = App.Services.GetRequiredService<MainViewModel>();
         ContentFilesTree.ItemsSource = _fileTreeRoots;
@@ -221,9 +232,77 @@ public sealed partial class TransfersView : UserControl
 
     private void SidebarSplitter_DragDelta(object sender, DragDeltaEventArgs e)
     {
-        var sidebar = ((Grid)Content).ColumnDefinitions[0];
-        sidebar.Width = new GridLength(Math.Clamp(sidebar.ActualWidth + e.HorizontalChange, 150, 420));
+        if (_sidebarCollapsed)
+            return;
+
+        var targetWidth = Math.Clamp(SidebarColumn.ActualWidth + e.HorizontalChange, 0, SidebarMaxWidth);
+        if (targetWidth <= SidebarCollapseThreshold)
+        {
+            SetSidebarCollapsed(true);
+            return;
+        }
+
+        SidebarColumn.Width = new GridLength(targetWidth);
+        _expandedSidebarWidth = targetWidth;
+    }
+
+    private void SidebarSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        if (_sidebarCollapsed)
+            return;
+
+        if (SidebarColumn.ActualWidth < SidebarMinExpandedWidth)
+        {
+            SetSidebarCollapsed(true);
+            return;
+        }
+
+        _expandedSidebarWidth = Math.Clamp(SidebarColumn.ActualWidth, SidebarMinExpandedWidth, SidebarMaxWidth);
+        SidebarColumn.Width = new GridLength(_expandedSidebarWidth);
         SaveLayout();
+    }
+
+    private void SidebarCollapse_Click(object sender, RoutedEventArgs e)
+        => SetSidebarCollapsed(true);
+
+    private void SidebarExpand_Click(object sender, RoutedEventArgs e)
+        => SetSidebarCollapsed(false);
+
+    private void SidebarSplitter_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        => SetSidebarCollapsed(true);
+
+    private void ConfigureSidebarAccessibility()
+    {
+        var header = Localizer.Get("Sidebar_Filters", "Filters");
+        var collapse = Localizer.Get("Sidebar_Collapse", "Collapse filters");
+        var expand = Localizer.Get("Sidebar_Expand", "Expand filters");
+        var resize = Localizer.Get("Sidebar_Resize", "Drag to resize. Double-click to collapse.");
+
+        SidebarHeaderText.Text = header;
+        ToolTipService.SetToolTip(SidebarCollapseButton, collapse);
+        ToolTipService.SetToolTip(SidebarExpandButton, expand);
+        ToolTipService.SetToolTip(SidebarSplitter, resize);
+        AutomationProperties.SetName(SidebarCollapseButton, collapse);
+        AutomationProperties.SetName(SidebarExpandButton, expand);
+        AutomationProperties.SetName(SidebarSplitter, resize);
+    }
+
+    private void SetSidebarCollapsed(bool collapsed, bool save = true)
+    {
+        if (collapsed && !_sidebarCollapsed && SidebarColumn.ActualWidth >= SidebarCollapseThreshold)
+            _expandedSidebarWidth = Math.Clamp(SidebarColumn.ActualWidth, SidebarMinExpandedWidth, SidebarMaxWidth);
+
+        _sidebarCollapsed = collapsed;
+        SidebarPanel.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        SidebarSplitter.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        SidebarRevealRail.Visibility = collapsed ? Visibility.Visible : Visibility.Collapsed;
+        SidebarColumn.Width = collapsed
+            ? new GridLength(0)
+            : new GridLength(Math.Clamp(_expandedSidebarWidth, SidebarMinExpandedWidth, SidebarMaxWidth));
+        SidebarDividerColumn.Width = new GridLength(collapsed ? SidebarRevealRailWidth : SidebarSplitterWidth);
+
+        if (save)
+            SaveLayout();
     }
 
     private async void OpenDestination_Click(object sender, RoutedEventArgs e)
@@ -331,7 +410,8 @@ public sealed partial class TransfersView : UserControl
     private void RestoreLayout()
     {
         if (ClientSettings.GetValue("layout.sidebarWidth") is double sidebarWidth)
-            ((Grid)Content).ColumnDefinitions[0].Width = new GridLength(Math.Clamp(sidebarWidth, 150, 420));
+            _expandedSidebarWidth = Math.Clamp(sidebarWidth, SidebarMinExpandedWidth, SidebarMaxWidth);
+        SetSidebarCollapsed(ClientSettings.GetValue("layout.sidebarCollapsed") is true, save: false);
         if (ClientSettings.GetValue("layout.detailsHeight") is double detailsHeight)
             ContentGrid.RowDefinitions[2].Height = new GridLength(Math.Max(ContentGrid.RowDefinitions[2].MinHeight, detailsHeight));
 
@@ -388,7 +468,8 @@ public sealed partial class TransfersView : UserControl
     {
         if (!IsLoaded)
             return;
-        ClientSettings.SetValue("layout.sidebarWidth", ((Grid)Content).ColumnDefinitions[0].ActualWidth);
+        ClientSettings.SetValue("layout.sidebarWidth", _expandedSidebarWidth);
+        ClientSettings.SetValue("layout.sidebarCollapsed", _sidebarCollapsed);
         ClientSettings.SetValue("layout.detailsHeight", ContentGrid.RowDefinitions[2].ActualHeight);
         // The array's own sequence *is* the saved column order - see RestoreLayout.
         var columns = TorrentTable.Columns.Select(column => new ColumnState(

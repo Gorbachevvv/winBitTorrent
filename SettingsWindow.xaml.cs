@@ -40,6 +40,7 @@ public sealed partial class SettingsWindow : Window
         new("Behavior", "ui.language", "Language", SettingKind.Language, true, ""),
         new("Behavior", "ui.theme", "Application theme", SettingKind.Theme, true, "Default"),
         new("Behavior", "ui.confirmDelete", "Confirm torrent deletion", SettingKind.Boolean, true, true),
+        new("Behavior", UpdatePreferences.CheckOnStartupKey, "Check for updates when the program starts", SettingKind.Boolean, true, true),
         new("Downloads", "save_path", "Default save path", SettingKind.Text),
         new("Downloads", "temp_path_enabled", "Keep incomplete torrents in a separate folder", SettingKind.Boolean),
         new("Downloads", "temp_path", "Incomplete torrent path", SettingKind.Text),

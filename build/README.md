@@ -56,8 +56,9 @@ added through the IDE (not the registry):
 
 - The native backend must be present at `Backend\qbittorrent-nox.exe`
   (build it with `build-backend.ps1` or extract the CI artifact).
-- [Inno Setup 6](https://jrsoftware.org/isinfo.php) for the installer
+- [Inno Setup 6.6 or newer](https://jrsoftware.org/isinfo.php) for the installer
   (`winget install JRSoftware.InnoSetup`). Not needed for portable-only builds.
+  Version 6.6+ is required for the installer's automatic light/dark Windows theme.
 
 ## Other scripts
 

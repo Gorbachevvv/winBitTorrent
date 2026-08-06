@@ -29,6 +29,10 @@
   <data name="CategoriesFilter.Header" xml:space="preserve"><value>Categories</value></data>
   <data name="TagsFilter.Header" xml:space="preserve"><value>Tags</value></data>
   <data name="TrackersFilter.Header" xml:space="preserve"><value>Trackers</value></data>
+  <data name="Sidebar_Filters" xml:space="preserve"><value>Filters</value></data>
+  <data name="Sidebar_Collapse" xml:space="preserve"><value>Collapse filters</value></data>
+  <data name="Sidebar_Expand" xml:space="preserve"><value>Expand filters</value></data>
+  <data name="Sidebar_Resize" xml:space="preserve"><value>Drag to resize. Double-click to collapse.</value></data>
   <data name="AlternativeSpeedLimits.Text" xml:space="preserve"><value>Alternative speed limits</value></data>
   <data name="TransfersMenu.Text" xml:space="preserve"><value>Transfers</value></data>
   <data name="RssMenu.Text" xml:space="preserve"><value>RSS Reader</value></data>
@@ -51,6 +55,7 @@
   <data name="Update_WhatsNew" xml:space="preserve"><value>What's new</value></data>
   <data name="Update_UpdateNow" xml:space="preserve"><value>Update now</value></data>
   <data name="Update_Later" xml:space="preserve"><value>Later</value></data>
+  <data name="Update_CheckOnStartup" xml:space="preserve"><value>Check for updates when the program starts</value></data>
   <data name="Update_Downloading" xml:space="preserve"><value>Downloading update…</value></data>
   <data name="Update_DownloadingPercent" xml:space="preserve"><value>Downloading update… {0:P0}</value></data>
   <data name="Update_UpToDateTitle" xml:space="preserve"><value>You're up to date</value></data>
@@ -222,6 +227,7 @@
   <data name="Setting_ui_language" xml:space="preserve"><value>Language</value></data>
   <data name="Setting_ui_theme" xml:space="preserve"><value>Application theme</value></data>
   <data name="Setting_ui_confirmDelete" xml:space="preserve"><value>Confirm torrent deletion</value></data>
+  <data name="Setting_updates_checkOnStartup" xml:space="preserve"><value>Check for updates when the program starts</value></data>
   <data name="Setting_ui_compactDensity" xml:space="preserve"><value>Use compact interface density</value></data>
   <data name="Setting_save_path" xml:space="preserve"><value>Default save path</value></data>
   <data name="Setting_temp_path_enabled" xml:space="preserve"><value>Keep incomplete torrents in a separate folder</value></data>

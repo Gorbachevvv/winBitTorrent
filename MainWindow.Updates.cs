@@ -18,7 +18,7 @@ public sealed partial class MainWindow
     /// </summary>
     public void ScheduleStartupUpdateCheck()
     {
-        if (_updateCheckStarted)
+        if (_updateCheckStarted || !UpdatePreferences.CheckOnStartup)
             return;
         _updateCheckStarted = true;
 
@@ -107,6 +107,14 @@ public sealed partial class MainWindow
             });
         }
 
+        var checkOnStartup = new CheckBox
+        {
+            Content = Localizer.Get("Update_CheckOnStartup", "Check for updates when the program starts"),
+            IsChecked = UpdatePreferences.CheckOnStartup,
+            Margin = new Thickness(0, 4, 0, 0)
+        };
+        body.Children.Add(checkOnStartup);
+
         var dialog = new ContentDialog
         {
             XamlRoot = RootGrid.XamlRoot,
@@ -117,7 +125,10 @@ public sealed partial class MainWindow
             DefaultButton = ContentDialogButton.Primary
         };
 
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        var result = await dialog.ShowAsync();
+        UpdatePreferences.CheckOnStartup = checkOnStartup.IsChecked == true;
+
+        if (result == ContentDialogResult.Primary)
             await StartUpdateAsync(release);
     }
 

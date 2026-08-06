@@ -29,6 +29,10 @@
   <data name="CategoriesFilter.Header" xml:space="preserve"><value>Катэгорыя</value></data>
   <data name="TagsFilter.Header" xml:space="preserve"><value>Меткі</value></data>
   <data name="TrackersFilter.Header" xml:space="preserve"><value>Трэкеры</value></data>
+  <data name="Sidebar_Filters" xml:space="preserve"><value>Фільтры</value></data>
+  <data name="Sidebar_Collapse" xml:space="preserve"><value>Згарнуць панэль фільтраў</value></data>
+  <data name="Sidebar_Expand" xml:space="preserve"><value>Разгарнуць панэль фільтраў</value></data>
+  <data name="Sidebar_Resize" xml:space="preserve"><value>Пацягніце, каб змяніць шырыню. Двайная пстрычка згорне панэль.</value></data>
   <data name="AlternativeSpeedLimits.Text" xml:space="preserve"><value>Альтэрнатыўныя абмежаванні хуткасці</value></data>
   <data name="TransfersMenu.Text" xml:space="preserve"><value>Перадачы</value></data>
   <data name="RssMenu.Text" xml:space="preserve"><value>RSS-стужка</value></data>
@@ -51,6 +55,7 @@
   <data name="Update_WhatsNew" xml:space="preserve"><value>Што новага</value></data>
   <data name="Update_UpdateNow" xml:space="preserve"><value>Абнавіцца зараз</value></data>
   <data name="Update_Later" xml:space="preserve"><value>Пазней</value></data>
+  <data name="Update_CheckOnStartup" xml:space="preserve"><value>Правяраць абнаўленні пры запуску праграмы</value></data>
   <data name="Update_Downloading" xml:space="preserve"><value>Загрузка абнаўлення…</value></data>
   <data name="Update_DownloadingPercent" xml:space="preserve"><value>Загрузка абнаўлення… {0:P0}</value></data>
   <data name="Update_UpToDateTitle" xml:space="preserve"><value>Усталявана апошняя версія</value></data>
@@ -225,6 +230,7 @@
   <data name="Setting_ui_language" xml:space="preserve"><value>Мова</value></data>
   <data name="Setting_ui_theme" xml:space="preserve"><value>Тэма дадатку</value></data>
   <data name="Setting_ui_confirmDelete" xml:space="preserve"><value>Пацвярджаць выдаленне торэнтаў</value></data>
+  <data name="Setting_updates_checkOnStartup" xml:space="preserve"><value>Правяраць абнаўленні пры запуску праграмы</value></data>
   <data name="Setting_ui_compactDensity" xml:space="preserve"><value>Выкарыстоўваць кампактную шчыльнасць інтэрфейсу</value></data>
   <data name="Setting_save_path" xml:space="preserve"><value>Шлях захавання па змаўчанні</value></data>
   <data name="Setting_temp_path_enabled" xml:space="preserve"><value>Захоўваць незавершаныя торэнты ў асобнай папцы</value></data>

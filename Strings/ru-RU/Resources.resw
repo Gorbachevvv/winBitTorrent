@@ -29,6 +29,10 @@
   <data name="CategoriesFilter.Header" xml:space="preserve"><value>Категории</value></data>
   <data name="TagsFilter.Header" xml:space="preserve"><value>Метки</value></data>
   <data name="TrackersFilter.Header" xml:space="preserve"><value>Трекеры</value></data>
+  <data name="Sidebar_Filters" xml:space="preserve"><value>Фильтры</value></data>
+  <data name="Sidebar_Collapse" xml:space="preserve"><value>Свернуть панель фильтров</value></data>
+  <data name="Sidebar_Expand" xml:space="preserve"><value>Развернуть панель фильтров</value></data>
+  <data name="Sidebar_Resize" xml:space="preserve"><value>Потяните для изменения ширины. Двойной щелчок свернёт панель.</value></data>
   <data name="AlternativeSpeedLimits.Text" xml:space="preserve"><value>Альтернативные ограничения скорости</value></data>
   <data name="TransfersMenu.Text" xml:space="preserve"><value>Передачи</value></data>
   <data name="RssMenu.Text" xml:space="preserve"><value>RSS-лента</value></data>
@@ -51,6 +55,7 @@
   <data name="Update_WhatsNew" xml:space="preserve"><value>Что нового</value></data>
   <data name="Update_UpdateNow" xml:space="preserve"><value>Обновиться сейчас</value></data>
   <data name="Update_Later" xml:space="preserve"><value>Позже</value></data>
+  <data name="Update_CheckOnStartup" xml:space="preserve"><value>Проверять обновления при запуске программы</value></data>
   <data name="Update_Downloading" xml:space="preserve"><value>Загрузка обновления…</value></data>
   <data name="Update_DownloadingPercent" xml:space="preserve"><value>Загрузка обновления… {0:P0}</value></data>
   <data name="Update_UpToDateTitle" xml:space="preserve"><value>Установлена последняя версия</value></data>
@@ -222,6 +227,7 @@
   <data name="Setting_ui_language" xml:space="preserve"><value>Язык</value></data>
   <data name="Setting_ui_theme" xml:space="preserve"><value>Тема приложения</value></data>
   <data name="Setting_ui_confirmDelete" xml:space="preserve"><value>Подтверждать удаление торрентов</value></data>
+  <data name="Setting_updates_checkOnStartup" xml:space="preserve"><value>Проверять обновления при запуске программы</value></data>
   <data name="Setting_ui_compactDensity" xml:space="preserve"><value>Использовать компактную плотность интерфейса</value></data>
   <data name="Setting_save_path" xml:space="preserve"><value>Путь сохранения по умолчанию</value></data>
   <data name="Setting_temp_path_enabled" xml:space="preserve"><value>Хранить незавершённые торренты в отдельной папке</value></data>

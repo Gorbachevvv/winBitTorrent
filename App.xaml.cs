@@ -86,6 +86,18 @@ public partial class App : Application
             Environment.Exit(0);
             return;
         }
+        if (commandLine.Any(a => a.Equals("--register-torrent-association", StringComparison.OrdinalIgnoreCase)))
+        {
+            RegisterTorrentActivation();
+            Environment.Exit(0);
+            return;
+        }
+        if (commandLine.Any(a => a.Equals("--register-magnet-association", StringComparison.OrdinalIgnoreCase)))
+        {
+            RegisterMagnetActivation();
+            Environment.Exit(0);
+            return;
+        }
         if (commandLine.Any(a => a.Equals("--unregister-associations", StringComparison.OrdinalIgnoreCase)))
         {
             UnregisterActivation();
@@ -103,7 +115,6 @@ public partial class App : Application
 
         _appMutex = new Mutex(initiallyOwned: false, name: "WinBitTorrentAppMutex");
 
-        RegisterActivation();
         _mainInstance.Activated += OnActivated;
         _window = Services.GetRequiredService<MainWindow>();
         _window.Activate();
@@ -139,18 +150,36 @@ public partial class App : Application
 
     internal static void RegisterActivation()
     {
+        RegisterTorrentActivation();
+        RegisterMagnetActivation();
+    }
+
+    private static string ActivationIcon =>
+        $"{Path.Combine(AppContext.BaseDirectory, "Assets", "WinBitTorrent.ico")},0";
+
+    internal static void RegisterTorrentActivation()
+    {
         try
         {
-            var icon = $"{Path.Combine(AppContext.BaseDirectory, "Assets", "WinBitTorrent.ico")},0";
             ActivationRegistrationManager.RegisterForFileTypeActivation(
                 AssociatedFileTypes,
-                icon,
+                ActivationIcon,
                 "Torrent file",
                 [],
                 string.Empty);
+        }
+        catch
+        {
+        }
+    }
+
+    internal static void RegisterMagnetActivation()
+    {
+        try
+        {
             ActivationRegistrationManager.RegisterForProtocolActivation(
                 MagnetScheme,
-                icon,
+                ActivationIcon,
                 "Magnet link",
                 string.Empty);
         }
