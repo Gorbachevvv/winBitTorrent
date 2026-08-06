@@ -18,7 +18,7 @@
         Drop="RootGrid_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="36" />
-            <RowDefinition Height="34" />
+            <RowDefinition Height="36" />
             <RowDefinition Height="50" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -43,8 +43,8 @@
             </StackPanel>
         </Grid>
 
-        <MenuBar Grid.Row="1" Padding="4,0">
-            <MenuBarItem x:Uid="FileMenu" Title="File">
+        <MenuBar Grid.Row="1" Padding="6,0" VerticalAlignment="Stretch">
+            <MenuBarItem x:Uid="FileMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="File">
                 <MenuFlyoutItem x:Uid="AddTorrentFile" Text="Add Torrent File…" Icon="OpenFile" Click="AddTorrentFile_Click" KeyboardAcceleratorTextOverride="Ctrl+O" />
                 <MenuFlyoutItem x:Uid="AddTorrentLink" Text="Add Torrent Link…" Icon="Link" Click="AddTorrentLink_Click" />
                 <MenuFlyoutSeparator />
@@ -52,7 +52,7 @@
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="Exit" Text="Exit" Icon="Cancel" Click="Exit_Click" />
             </MenuBarItem>
-            <MenuBarItem x:Uid="EditMenu" Title="Edit">
+            <MenuBarItem x:Uid="EditMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Edit">
                 <MenuFlyoutItem x:Uid="Start" Text="Start" Icon="Play" Command="{Binding StartSelectedCommand}" />
                 <MenuFlyoutItem x:Uid="Stop" Text="Stop" Icon="Stop" Command="{Binding StopSelectedCommand}" />
                 <MenuFlyoutItem x:Uid="Delete" Text="Delete…" Icon="Delete" Click="Delete_Click" />
@@ -60,7 +60,7 @@
                 <MenuFlyoutItem x:Uid="ForceRecheck" Text="Force recheck" Command="{Binding RecheckSelectedCommand}" />
                 <MenuFlyoutItem x:Uid="Reannounce" Text="Reannounce" Command="{Binding ReannounceSelectedCommand}" />
             </MenuBarItem>
-            <MenuBarItem x:Uid="ViewMenu" Title="View">
+            <MenuBarItem x:Uid="ViewMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="View">
                 <ToggleMenuFlyoutItem x:Uid="AlternativeSpeedLimits" Text="Alternative speed limits" IsChecked="{Binding UseAlternativeSpeedLimits, Mode=OneWay}" Click="AlternativeSpeed_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="TransfersMenu" Text="Transfers" Tag="0" Click="NavigateMenu_Click" />
@@ -69,14 +69,14 @@
                 <MenuFlyoutItem x:Uid="TrackersMenu" Text="Tracker Search" Tag="3" Click="NavigateMenu_Click" />
                 <MenuFlyoutItem x:Uid="LogMenu" Text="Execution Log" Tag="4" Click="NavigateMenu_Click" />
             </MenuBarItem>
-            <MenuBarItem x:Uid="ToolsMenu" Title="Tools">
+            <MenuBarItem x:Uid="ToolsMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Tools">
                 <MenuFlyoutItem x:Uid="ServerProfiles" Text="Server profiles…" Icon="World" Click="Profiles_Click" />
                 <MenuFlyoutItem x:Uid="Options" Text="Options…" Icon="Setting" Click="Options_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="CookiesMenu" Text="Cookies…" Click="Cookies_Click" />
                 <MenuFlyoutItem x:Uid="StatisticsMenu" Text="Statistics…" Click="Statistics_Click" />
             </MenuBarItem>
-            <MenuBarItem x:Uid="HelpMenu" Title="Help">
+            <MenuBarItem x:Uid="HelpMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Help">
                 <MenuFlyoutItem x:Uid="CheckUpdatesMenu" Text="Check for updates…" Icon="Sync" Click="CheckForUpdates_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="DocumentationMenu" Text="qBittorrent documentation" Icon="Help" Click="Documentation_Click" />
@@ -84,13 +84,13 @@
             </MenuBarItem>
         </MenuBar>
 
-        <Grid Grid.Row="2" Padding="8,4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <Grid Grid.Row="2" Padding="8,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="280" />
             </Grid.ColumnDefinitions>
-            <CommandBar Background="Transparent" DefaultLabelPosition="Collapsed" IsOpen="False">
+            <CommandBar Height="48" VerticalAlignment="Center" Background="Transparent" DefaultLabelPosition="Collapsed" IsOpen="False">
                 <AppBarButton x:Uid="ToolbarAddTorrent" Icon="OpenFile" Label="Add torrent" Click="AddTorrentFile_Click" ToolTipService.ToolTip="Add a .torrent file" />
                 <AppBarButton x:Uid="ToolbarAddLink" Icon="Link" Label="Add link" Click="AddTorrentLink_Click" ToolTipService.ToolTip="Add a magnet link or URL" />
                 <AppBarSeparator />
@@ -125,25 +125,41 @@
         <TabView
             x:Name="WorkspaceTabs"
             Grid.Row="4"
-            Margin="4,4,4,0"
+            Margin="8,4,8,8"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
+            Background="Transparent"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
             IsAddTabButtonVisible="False"
             TabCloseRequested="WorkspaceTabs_TabCloseRequested"
             SelectionChanged="WorkspaceTabs_SelectionChanged">
-            <TabViewItem x:Uid="TransfersTab" Tag="0" Header="Transfers" IconSource="{StaticResource TransfersIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <TabView.Resources>
+                <!-- Keep the tabs visually independent from the content card instead of using
+                     the browser-like connected-tab silhouette from the stock WinUI template. -->
+                <Thickness x:Key="TabViewHeaderPadding">4,4,4,6</Thickness>
+                <DataTemplate x:Key="WorkspaceTabHeaderTemplate">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        LineHeight="16"
+                        Text="{Binding}"
+                        TextLineBounds="TrimToBaseline" />
+                </DataTemplate>
+            </TabView.Resources>
+            <TabViewItem x:Uid="TransfersTab" Tag="0" Header="Transfers" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource TransfersIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <views:TransfersView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </TabViewItem>
-            <TabViewItem x:Uid="RssTab" Tag="1" Header="RSS Reader" IconSource="{StaticResource RssIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <TabViewItem x:Uid="RssTab" Tag="1" Header="RSS Reader" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource RssIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <views:RssView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </TabViewItem>
-            <TabViewItem x:Uid="SearchTab" Tag="2" Header="Search" IconSource="{StaticResource SearchIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <TabViewItem x:Uid="SearchTab" Tag="2" Header="Search" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource SearchIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <views:SearchView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </TabViewItem>
-            <TabViewItem x:Uid="TrackersTab" Tag="3" Header="Trackers" IconSource="{StaticResource TrackerIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <TabViewItem x:Uid="TrackersTab" Tag="3" Header="Trackers" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource TrackerIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <views:TrackerSearchView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </TabViewItem>
-            <TabViewItem x:Uid="LogTab" Tag="4" Header="Execution Log" IconSource="{StaticResource LogIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <TabViewItem x:Uid="LogTab" Tag="4" Header="Execution Log" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource LogIcon}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <views:LogsView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </TabViewItem>
         </TabView>
