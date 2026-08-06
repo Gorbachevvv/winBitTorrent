@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using WinBitTorrent.Services;
+using Windows.Graphics;
 
 namespace WinBitTorrent;
 
@@ -21,17 +22,97 @@ internal static class WindowUtilities
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
         var appWindow = AppWindow.GetFromWindowId(id);
         ApplyAppChrome(window, appWindow);
-        appWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
 
         var owner = App.Services.GetService(typeof(MainWindow)) as MainWindow;
+        AppWindow? ownerWindow = null;
         if (owner is not null && !ReferenceEquals(owner, window))
         {
             var ownerHandle = WinRT.Interop.WindowNative.GetWindowHandle(owner);
             SetWindowLongPtr(handle, GwlpHwndParent, ownerHandle);
+            var ownerId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(ownerHandle);
+            ownerWindow = AppWindow.GetFromWindowId(ownerId);
         }
+
+        ResizeAndCenter(appWindow, handle, width, height, ownerWindow);
 
         return appWindow;
     }
+
+    /// <summary>
+    /// Restores the main window in device-independent units. AppWindow uses physical pixels,
+    /// which made every configured size appear 25-50% smaller on a scaled display.
+    /// </summary>
+    public static void RestoreMainWindow(AppWindow appWindow, nint handle)
+    {
+        var width = (int)Math.Round(ClientSettings.Get("window.main.widthDip", 1240d));
+        var height = (int)Math.Round(ClientSettings.Get("window.main.heightDip", 800d));
+        ResizeAndCenter(appWindow, handle, Math.Clamp(width, 720, 2400), Math.Clamp(height, 480, 1600));
+
+        if (appWindow.Presenter is OverlappedPresenter presenter
+            && ClientSettings.Get("window.main.maximized", true))
+        {
+            presenter.Maximize();
+        }
+    }
+
+    public static void SaveMainWindowPlacement(nint handle)
+    {
+        var placement = new WindowPlacement { Length = Marshal.SizeOf<WindowPlacement>() };
+        if (!GetWindowPlacement(handle, ref placement))
+            return;
+
+        const int showMinimized = 2;
+        const int showMaximized = 3;
+        const int restoreToMaximized = 2;
+        var maximized = placement.ShowCommand == showMaximized
+            || (placement.ShowCommand == showMinimized && (placement.Flags & restoreToMaximized) != 0);
+        ClientSettings.SetValue("window.main.maximized", maximized);
+
+        // rcNormalPosition is maintained by Windows even while the window is maximized. Reading
+        // AppWindow.Size here lost the user's restored size whenever the app was closed from a
+        // maximized state, leaving only window.main.maximized in the settings file.
+        var normalWidth = placement.NormalPosition.Right - placement.NormalPosition.Left;
+        var normalHeight = placement.NormalPosition.Bottom - placement.NormalPosition.Top;
+        if (normalWidth <= 0 || normalHeight <= 0)
+            return;
+        var scale = GetScale(handle);
+        ClientSettings.SetValue("window.main.widthDip", Math.Round(normalWidth / scale));
+        ClientSettings.SetValue("window.main.heightDip", Math.Round(normalHeight / scale));
+    }
+
+    private static void ResizeAndCenter(
+        AppWindow appWindow,
+        nint handle,
+        int widthDip,
+        int heightDip,
+        AppWindow? ownerWindow = null)
+    {
+        var scale = GetScale(handle);
+        var requestedWidth = (int)Math.Round(widthDip * scale);
+        var requestedHeight = (int)Math.Round(heightDip * scale);
+
+        var display = ownerWindow is not null
+            ? DisplayArea.GetFromWindowId(ownerWindow.Id, DisplayAreaFallback.Primary)
+            : DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
+        var workArea = display.WorkArea;
+        var edgeInset = Math.Max(16, (int)Math.Round(32 * scale));
+        var width = Math.Min(requestedWidth, Math.Max(320, workArea.Width - (edgeInset * 2)));
+        var height = Math.Min(requestedHeight, Math.Max(240, workArea.Height - (edgeInset * 2)));
+
+        var centerX = ownerWindow is null
+            ? workArea.X + ((workArea.Width - width) / 2)
+            : ownerWindow.Position.X + ((ownerWindow.Size.Width - width) / 2);
+        var centerY = ownerWindow is null
+            ? workArea.Y + ((workArea.Height - height) / 2)
+            : ownerWindow.Position.Y + ((ownerWindow.Size.Height - height) / 2);
+        var x = Math.Clamp(centerX, workArea.X + edgeInset, workArea.X + workArea.Width - width - edgeInset);
+        var y = Math.Clamp(centerY, workArea.Y + edgeInset, workArea.Y + workArea.Height - height - edgeInset);
+
+        appWindow.MoveAndResize(new RectInt32(x, y, width, height));
+    }
+
+    private static double GetScale(nint handle)
+        => Math.Max(1d, GetDpiForWindow(handle) / 96d);
 
     private static void ApplyAppChrome(Window window, AppWindow appWindow)
     {
@@ -133,4 +214,38 @@ internal static class WindowUtilities
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
     private static extern nint SetWindowLongPtr(nint windowHandle, int index, nint newValue);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetDpiForWindow(nint windowHandle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowPlacement(nint windowHandle, ref WindowPlacement placement);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WindowPlacement
+    {
+        public int Length;
+        public int Flags;
+        public int ShowCommand;
+        public NativePoint MinimumPosition;
+        public NativePoint MaximumPosition;
+        public NativeRect NormalPosition;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
 }
