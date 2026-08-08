@@ -44,7 +44,11 @@
                                 VerticalAlignment="Center"
                                 FontWeight="SemiBold"
                                 Text="Torrent management mode:" />
-                            <ComboBox x:Name="AutoTmmModeBox" Grid.Column="1" SelectedIndex="0">
+                            <ComboBox
+                                x:Name="AutoTmmModeBox"
+                                Grid.Column="1"
+                                SelectedIndex="0"
+                                SelectionChanged="AutoTmmModeBox_SelectionChanged">
                                 <ComboBoxItem x:Uid="AddTorrentManagementManual" Content="Manual" />
                                 <ComboBoxItem x:Uid="AddTorrentManagementAutomatic" Content="Automatic" />
                             </ComboBox>
@@ -59,6 +63,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="SavePathBox" />
                                 <Button
+                                    x:Name="SavePathBrowseButton"
                                     x:Uid="CommonBrowse"
                                     Grid.Column="1"
                                     MinWidth="36"
@@ -99,7 +104,7 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock x:Uid="AddTorrentCategoryLabel" VerticalAlignment="Center" Text="Category:" />
-                                <TextBox x:Name="CategoryBox" Grid.Column="1" />
+                                <TextBox x:Name="CategoryBox" Grid.Column="1" TextChanged="CategoryBox_TextChanged" />
                             </Grid>
                             <Grid ColumnSpacing="6">
                                 <Grid.ColumnDefinitions>

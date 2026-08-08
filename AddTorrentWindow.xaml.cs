@@ -24,6 +24,13 @@ public sealed partial class AddTorrentWindow : Window
     private string? _metadataName;
     private JsonObject? _metadata;
     private bool _initialized;
+    private bool _updatingPathControls;
+    private string _defaultSavePath;
+    private string _defaultDownloadPath = string.Empty;
+    private bool _defaultUseDownloadPath;
+    private string _manualSavePath;
+    private string _manualDownloadPath = string.Empty;
+    private bool _manualUseDownloadPath;
     private CancellationTokenSource? _previewLifetime;
 
     public AddTorrentWindow(IReadOnlyList<string> torrentFiles, IReadOnlyList<string> urls)
@@ -34,7 +41,9 @@ public sealed partial class AddTorrentWindow : Window
         _viewModel = App.Services.GetRequiredService<MainViewModel>();
         _files = torrentFiles.ToList();
         MetadataFilesTree.ItemsSource = _visibleMetadataTree;
-        SavePathBox.Text = DefaultDownloadsPath();
+        _defaultSavePath = DefaultDownloadsPath();
+        _manualSavePath = _defaultSavePath;
+        SavePathBox.Text = _defaultSavePath;
         SourcesBox.Text = string.Join(Environment.NewLine, torrentFiles.Concat(urls));
         Activated += AddTorrentWindow_Activated;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -59,7 +68,8 @@ public sealed partial class AddTorrentWindow : Window
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(MainViewModel.IsConnected) || !_viewModel.IsConnected || _viewModel.Api is null)
+        if (e.PropertyName is not nameof(MainViewModel.IsConnected) and not nameof(MainViewModel.Api)
+            || _viewModel.Api is null)
             return;
 
         _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
@@ -72,9 +82,139 @@ public sealed partial class AddTorrentWindow : Window
             return;
         _initialized = true;
 
+        try
+        {
+            var preferences = await _viewModel.Api!.Application.GetPreferencesAsync();
+            var savePath = StringPreference(preferences, "save_path");
+            if (string.IsNullOrWhiteSpace(savePath))
+                savePath = await _viewModel.Api.Application.GetDefaultSavePathAsync();
+
+            _defaultSavePath = string.IsNullOrWhiteSpace(savePath) ? DefaultDownloadsPath() : savePath.Trim();
+            _defaultDownloadPath = StringPreference(preferences, "temp_path")?.Trim() ?? string.Empty;
+            _defaultUseDownloadPath = BooleanPreference(preferences, "temp_path_enabled");
+            _manualSavePath = _defaultSavePath;
+            _manualDownloadPath = _defaultDownloadPath;
+            _manualUseDownloadPath = _defaultUseDownloadPath;
+
+            _updatingPathControls = true;
+            AutoTmmModeBox.SelectedIndex = BooleanPreference(preferences, "auto_tmm_enabled") ? 1 : 0;
+            _updatingPathControls = false;
+            ApplyPathMode(restoreManualValues: true);
+        }
+        catch (Exception exception)
+        {
+            // Metadata preview can still work even if this older/remote backend did not expose
+            // preferences. Keep the safe local fallback visible and surface the real API error.
+            ShowError(exception);
+        }
+
         if (ParseSources().FirstOrDefault() is { } source)
             await PreviewSourceAsync(source);
     }
+
+    private void AutoTmmModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_updatingPathControls || SavePathBox is null)
+            return;
+
+        if (AutoTmmModeBox.SelectedIndex == 1)
+        {
+            _manualSavePath = SavePathBox.Text;
+            _manualDownloadPath = TempPathBox.Text;
+            _manualUseDownloadPath = UseTempPathBox.IsChecked == true;
+            ApplyPathMode(restoreManualValues: false);
+        }
+        else
+        {
+            ApplyPathMode(restoreManualValues: true);
+        }
+    }
+
+    private void CategoryBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_updatingPathControls && AutoTmmModeBox.SelectedIndex == 1)
+            ShowAutomaticPaths();
+    }
+
+    private void ApplyPathMode(bool restoreManualValues)
+    {
+        var automatic = AutoTmmModeBox.SelectedIndex == 1;
+        _updatingPathControls = true;
+        SavePathBox.IsEnabled = !automatic;
+        SavePathBrowseButton.IsEnabled = !automatic;
+        UseTempPathBox.IsEnabled = !automatic;
+        if (automatic)
+        {
+            ShowAutomaticPaths();
+        }
+        else if (restoreManualValues)
+        {
+            SavePathBox.Text = string.IsNullOrWhiteSpace(_manualSavePath) ? _defaultSavePath : _manualSavePath;
+            TempPathBox.Text = _manualDownloadPath;
+            UseTempPathBox.IsChecked = _manualUseDownloadPath;
+            UpdateDownloadPathEditors();
+        }
+        _updatingPathControls = false;
+    }
+
+    private void ShowAutomaticPaths()
+    {
+        var category = CategoryBox.Text.Trim();
+        SavePathBox.Text = ResolveAutomaticSavePath(category);
+        var hasCategoryDownloadPath = false;
+        var categoryDownloadPath = _defaultDownloadPath;
+        if (category.Length > 0
+            && _viewModel.Categories.TryGetValue(category, out var categoryOptions)
+            && !string.IsNullOrWhiteSpace(categoryOptions.DownloadPath))
+        {
+            hasCategoryDownloadPath = true;
+            categoryDownloadPath = categoryOptions.DownloadPath;
+        }
+        TempPathBox.Text = categoryDownloadPath;
+        UseTempPathBox.IsChecked = hasCategoryDownloadPath
+            || (_defaultUseDownloadPath && !string.IsNullOrWhiteSpace(categoryDownloadPath));
+        UpdateDownloadPathEditors();
+    }
+
+    private string ResolveAutomaticSavePath(string category)
+    {
+        if (string.IsNullOrWhiteSpace(category))
+            return _defaultSavePath;
+
+        if (_viewModel.Categories.TryGetValue(category, out var options)
+            && !string.IsNullOrWhiteSpace(options.SavePath))
+        {
+            return IsAbsoluteServerPath(options.SavePath)
+                ? options.SavePath
+                : CombineServerPath(_defaultSavePath, options.SavePath);
+        }
+
+        var separator = category.LastIndexOf('/');
+        var parent = separator < 0 ? string.Empty : category[..separator];
+        var leaf = separator < 0 ? category : category[(separator + 1)..];
+        return string.IsNullOrWhiteSpace(leaf)
+            ? ResolveAutomaticSavePath(parent)
+            : CombineServerPath(ResolveAutomaticSavePath(parent), leaf);
+    }
+
+    private static bool IsAbsoluteServerPath(string path)
+        => path.StartsWith("/", StringComparison.Ordinal)
+            || path.StartsWith("\\\\", StringComparison.Ordinal)
+            || (path.Length >= 3 && char.IsLetter(path[0]) && path[1] == ':' && path[2] is '\\' or '/');
+
+    private static string CombineServerPath(string parent, string child)
+    {
+        if (string.IsNullOrWhiteSpace(parent))
+            return child;
+        var separator = parent.Contains('\\') && !parent.Contains('/') ? '\\' : '/';
+        return $"{parent.TrimEnd('\\', '/')}{separator}{child.TrimStart('\\', '/')}";
+    }
+
+    private static string? StringPreference(JsonObject preferences, string key)
+        => preferences[key] is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
+
+    private static bool BooleanPreference(JsonObject preferences, string key)
+        => preferences[key] is JsonValue value && value.TryGetValue<bool>(out var enabled) && enabled;
 
     private async void Browse_Click(object sender, RoutedEventArgs e)
     {
@@ -104,8 +244,11 @@ public sealed partial class AddTorrentWindow : Window
     }
 
     private void UseTempPath_Checked(object sender, RoutedEventArgs e)
+        => UpdateDownloadPathEditors();
+
+    private void UpdateDownloadPathEditors()
     {
-        var enabled = UseTempPathBox.IsChecked == true;
+        var enabled = AutoTmmModeBox.SelectedIndex != 1 && UseTempPathBox.IsChecked == true;
         TempPathBox.IsEnabled = enabled;
         TempPathBrowseButton.IsEnabled = enabled;
     }
@@ -179,6 +322,18 @@ public sealed partial class AddTorrentWindow : Window
         if (files.Count == 0 && urls.Count == 0)
         {
             ShowError(new InvalidOperationException(Localizer.Get("AddTorrent_SourceRequired", "Add at least one .torrent file, URL, or magnet link.")));
+            return;
+        }
+
+        var automatic = AutoTmmModeBox.SelectedIndex == 1;
+        if (!automatic && string.IsNullOrWhiteSpace(SavePathBox.Text))
+        {
+            ShowError(new InvalidOperationException(Localizer.Get("AddTorrent_SavePathRequired", "Select a save path.")));
+            return;
+        }
+        if (!automatic && UseTempPathBox.IsChecked == true && string.IsNullOrWhiteSpace(TempPathBox.Text))
+        {
+            ShowError(new InvalidOperationException(Localizer.Get("AddTorrent_DownloadPathRequired", "Select a path for incomplete torrent data.")));
             return;
         }
 
@@ -268,20 +423,25 @@ public sealed partial class AddTorrentWindow : Window
         IReadOnlyList<string> urls,
         int? uploadLimit,
         int? downloadLimit)
-        => new(
+    {
+        var automatic = AutoTmmModeBox.SelectedIndex == 1;
+        var useDownloadPath = !automatic && UseTempPathBox.IsChecked == true;
+        return new(
             urls,
             files,
-            NullIfWhiteSpace(SavePathBox.Text),
-            DownloadPath: UseTempPathBox.IsChecked == true ? NullIfWhiteSpace(TempPathBox.Text) : null,
+            automatic ? null : NullIfWhiteSpace(SavePathBox.Text),
+            DownloadPath: useDownloadPath ? NullIfWhiteSpace(TempPathBox.Text) : null,
+            UseDownloadPath: automatic ? null : useDownloadPath,
             Category: NullIfWhiteSpace(CategoryBox.Text),
             Tags: NullIfWhiteSpace(TagsBox.Text),
             StartTorrent: StartBox.IsChecked == true,
             SequentialDownload: SequentialBox.IsChecked == true,
             FirstLastPiecePriority: FirstLastBox.IsChecked == true,
-            AutomaticTorrentManagement: AutoTmmModeBox.SelectedIndex == 1,
+            AutomaticTorrentManagement: automatic,
             SkipChecking: SkipCheckingBox.IsChecked == true,
             UploadLimit: uploadLimit,
             DownloadLimit: downloadLimit);
+    }
 
     private IReadOnlyList<int>? GetRequestedFilePriorities(IReadOnlyList<string> files, IReadOnlyList<string> urls)
     {

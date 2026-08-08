@@ -88,6 +88,20 @@ public sealed partial class TransfersView : UserControl
         ViewModel.SetSelectedRows(rows);
     }
 
+    private async void DeleteKeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        // Delete remains an editing key inside text controls. Everywhere else on the active
+        // Transfers page it acts on the selected torrents, regardless of whether selection came
+        // from row clicks, Ctrl/Shift clicks, or the rubber-band marquee.
+        var focused = FocusManager.GetFocusedElement(XamlRoot);
+        if (focused is TextBox or PasswordBox or RichEditBox or NumberBox
+            || ViewModel.SelectedTorrents.Count == 0)
+            return;
+
+        args.Handled = true;
+        await TorrentActions.ConfirmDeleteSelectedAsync(XamlRoot, ViewModel);
+    }
+
     /// <summary>
     /// Matches the desktop convention (and qBittorrent): right-clicking a row that is not part of
     /// the current selection moves the selection to that single row before the menu opens, unless
@@ -113,6 +127,10 @@ public sealed partial class TransfersView : UserControl
             || IsOverRowOrHeader(e.OriginalSource))
             return;
 
+        // A row click focuses the table natively, but a drag that starts on its empty surface does
+        // not. Give marquee selection the same keyboard semantics so Delete and navigation keys
+        // work immediately after the mouse button is released.
+        TorrentTable.Focus(FocusState.Pointer);
         _rubberBanding = true;
         _rubberMoved = false;
         _rubberAdditive = IsKeyDown(VirtualKey.Control) || IsKeyDown(VirtualKey.Shift);

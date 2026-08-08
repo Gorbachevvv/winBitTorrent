@@ -164,6 +164,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             _rows.Clear();
             Torrents.Clear();
             _api = await _connection.ConnectAsync(SelectedProfile, _lifetime.Token);
+            // ConnectionState.Connected can be dispatched just before ConnectAsync returns. In
+            // that narrow window IsConnected becomes true while Api is still null, so consumers
+            // waiting for IsConnected (notably AddTorrentWindow during file activation) miss the
+            // moment the usable API actually becomes available. Notify it explicitly.
+            OnPropertyChanged(nameof(Api));
             await _profileStore.SelectAsync(SelectedProfile.Id, _lifetime.Token);
             IsConnected = true;
             _ = RunSyncLoopAsync(_lifetime.Token);

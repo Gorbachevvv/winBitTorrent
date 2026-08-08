@@ -52,7 +52,9 @@ public static class TorrentActions
             var dialog = new ContentDialog
             {
                 XamlRoot = xamlRoot,
-                Title = Localizer.Get("Dialog_DeleteSelectedTorrents", "Delete selected torrents?"),
+                Title = string.Format(
+                    Localizer.Get("Dialog_DeleteSelectedTorrents", "Delete selected torrents ({0})?"),
+                    selected.Count),
                 Content = content,
                 PrimaryButtonText = Localizer.Get("Common_Delete", "Delete"),
                 CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"),

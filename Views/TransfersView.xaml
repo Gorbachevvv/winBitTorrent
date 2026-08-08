@@ -7,6 +7,10 @@
     xmlns:viewModels="using:WinBitTorrent.ViewModels"
     xmlns:tv="using:WinUI.TableView">
 
+    <UserControl.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Delete" Invoked="DeleteKeyboardAccelerator_Invoked" />
+    </UserControl.KeyboardAccelerators>
+
     <UserControl.Resources>
         <!-- Preserve TableView's native cell template (it owns column geometry),
              but neutralize only its per-cell hover/selection/focus brushes. -->

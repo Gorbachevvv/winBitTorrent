@@ -34,9 +34,11 @@ public static class PreferenceVerifier
             if (requestedValue.TryGetValue<string>(out var requestedText)
                 && actualValue.TryGetValue<string>(out var actualText))
             {
-                return key.Equals("banned_IPs", StringComparison.Ordinal)
-                    ? NormalizeIpList(requestedText) == NormalizeIpList(actualText)
-                    : string.Equals(requestedText, actualText, StringComparison.Ordinal);
+                if (key.Equals("banned_IPs", StringComparison.Ordinal))
+                    return NormalizeIpList(requestedText) == NormalizeIpList(actualText);
+                if (key is "save_path" or "temp_path")
+                    return PathsEqual(requestedText, actualText);
+                return string.Equals(requestedText, actualText, StringComparison.Ordinal);
             }
         }
 
@@ -58,4 +60,27 @@ public static class PreferenceVerifier
         => string.Join('\n', value
             .Replace("\r", string.Empty, StringComparison.Ordinal)
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+
+    private static bool PathsEqual(string left, string right)
+    {
+        var normalizedLeft = NormalizePath(left);
+        var normalizedRight = NormalizePath(right);
+        var comparison = LooksLikeWindowsPath(normalizedLeft) || LooksLikeWindowsPath(normalizedRight)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        return string.Equals(normalizedLeft, normalizedRight, comparison);
+    }
+
+    private static string NormalizePath(string value)
+    {
+        var path = value.Trim().Replace('\\', '/');
+        while (path.Length > 1 && path.EndsWith("/", StringComparison.Ordinal)
+            && !(path.Length == 3 && path[1] == ':'))
+            path = path[..^1];
+        return path;
+    }
+
+    private static bool LooksLikeWindowsPath(string path)
+        => path.StartsWith("//", StringComparison.Ordinal)
+            || (path.Length >= 2 && char.IsLetter(path[0]) && path[1] == ':');
 }

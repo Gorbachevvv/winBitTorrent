@@ -338,6 +338,12 @@ public sealed class QbittorrentApi : IQBittorrentApi
 
             AddString(content, "savepath", request.SavePath);
             AddString(content, "downloadPath", request.DownloadPath);
+            AddString(content, "useDownloadPath", request.UseDownloadPath switch
+            {
+                true => "true",
+                false => "false",
+                null => null
+            });
             AddString(content, "category", request.Category);
             AddString(content, "tags", request.Tags);
             AddString(content, "stopped", request.StartTorrent ? "false" : "true");

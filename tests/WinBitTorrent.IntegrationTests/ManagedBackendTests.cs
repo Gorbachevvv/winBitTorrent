@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging.Abstractions;
 using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
+using WinBitTorrent.Core.Services;
 using WinBitTorrent.Infrastructure.Api;
 using WinBitTorrent.Infrastructure.Backend;
 
@@ -77,20 +78,32 @@ public sealed class ManagedBackendTests
             var changedMaxConnections = originalMaxConnections == 237 ? 238 : 237;
             var changedUploadSlots = originalUploadSlots == 7 ? 8 : 7;
             var changedProtocol = originalProtocol == 1 ? 0 : 1;
+            var completedPath = Path.Combine(dataRoot, "Downloads", "Complete");
+            var incompletePath = Path.Combine(dataRoot, "Downloads", "Incomplete");
+            Directory.CreateDirectory(completedPath);
+            Directory.CreateDirectory(incompletePath);
 
             try
             {
-                await api.Application.SetPreferencesAsync(new JsonObject
+                var requested = new JsonObject
                 {
                     ["max_connec"] = changedMaxConnections,
                     ["max_uploads_per_torrent"] = changedUploadSlots,
-                    ["bittorrent_protocol"] = changedProtocol
-                });
+                    ["bittorrent_protocol"] = changedProtocol,
+                    ["save_path"] = completedPath,
+                    ["temp_path_enabled"] = true,
+                    ["temp_path"] = incompletePath
+                };
+                await api.Application.SetPreferencesAsync(requested);
 
                 var applied = await api.Application.GetPreferencesAsync();
                 Assert.Equal(changedMaxConnections, applied["max_connec"]!.GetValue<int>());
                 Assert.Equal(changedUploadSlots, applied["max_uploads_per_torrent"]!.GetValue<int>());
                 Assert.Equal(changedProtocol, applied["bittorrent_protocol"]!.GetValue<int>());
+                Assert.Empty(PreferenceVerifier.FindMismatchedKeys(requested, applied));
+                Assert.Empty(PreferenceVerifier.FindMismatchedKeys(
+                    new JsonObject { ["save_path"] = completedPath },
+                    new JsonObject { ["save_path"] = await api.Application.GetDefaultSavePathAsync() }));
             }
             finally
             {
@@ -98,7 +111,10 @@ public sealed class ManagedBackendTests
                 {
                     ["max_connec"] = originalMaxConnections,
                     ["max_uploads_per_torrent"] = originalUploadSlots,
-                    ["bittorrent_protocol"] = originalProtocol
+                    ["bittorrent_protocol"] = originalProtocol,
+                    ["save_path"] = original["save_path"]?.DeepClone(),
+                    ["temp_path_enabled"] = original["temp_path_enabled"]?.DeepClone(),
+                    ["temp_path"] = original["temp_path"]?.DeepClone()
                 });
             }
         }

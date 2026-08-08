@@ -221,6 +221,9 @@ public sealed partial class SettingsWindow : Window
         {
             foreach (var spec in sectionSpecs)
                 AddEditor(SettingsPanel, spec, localManaged, connected);
+
+            if (connected && _section == "Downloads")
+                ConfigureDownloadDependencies();
         }
 
         if (_section == "Behavior")
@@ -345,6 +348,10 @@ public sealed partial class SettingsWindow : Window
 
         if (spec.Key == "listen_port")
             view = EditorButtonGrid(editor, Localizer.Get("SettingsConnection_RandomPort", "Random port"), RandomPort_Click);
+        else if (localManaged && spec.Key == "save_path")
+            view = EditorButtonGrid(editor, Localizer.Get("CommonBrowse.Content", "Browse…"), BrowseDefaultSavePath_Click);
+        else if (localManaged && spec.Key == "temp_path")
+            view = EditorButtonGrid(editor, Localizer.Get("CommonBrowse.Content", "Browse…"), BrowseTempPath_Click);
         else if (spec.Key == "ip_filter_path" && localManaged)
             view = EditorButtonGrid(editor, Localizer.Get("CommonBrowse.Content", "Browse…"), BrowseIpFilter_Click);
         else if (spec.Key == "catalog.tmdb.apiKey")
@@ -460,6 +467,15 @@ public sealed partial class SettingsWindow : Window
         }
     }
 
+    private void ConfigureDownloadDependencies()
+    {
+        if (_editors.GetValueOrDefault("temp_path_enabled") is not ToggleSwitch incompletePathEnabled)
+            return;
+
+        incompletePathEnabled.Toggled += (_, _) => SetEditorEnabled("temp_path", incompletePathEnabled.IsOn);
+        SetEditorEnabled("temp_path", incompletePathEnabled.IsOn);
+    }
+
     private void UpdateProxyEditors()
     {
         var proxyEnabled = _editors.GetValueOrDefault("proxy_type") is ComboBox
@@ -516,6 +532,22 @@ public sealed partial class SettingsWindow : Window
         var file = await picker.PickSingleFileAsync();
         if (file is not null && _editors.GetValueOrDefault("ip_filter_path") is TextBox path)
             path.Text = file.Path;
+    }
+
+    private async void BrowseDefaultSavePath_Click(object sender, RoutedEventArgs e)
+        => await BrowseSettingsFolderAsync("save_path");
+
+    private async void BrowseTempPath_Click(object sender, RoutedEventArgs e)
+        => await BrowseSettingsFolderAsync("temp_path");
+
+    private async Task BrowseSettingsFolderAsync(string settingKey)
+    {
+        var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.Downloads };
+        picker.FileTypeFilter.Add("*");
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(this));
+        var folder = await picker.PickSingleFolderAsync();
+        if (folder is not null && _editors.GetValueOrDefault(settingKey) is TextBox path)
+            path.Text = folder.Path;
     }
 
     private static async void GetTmdbKey_Click(object sender, RoutedEventArgs e)

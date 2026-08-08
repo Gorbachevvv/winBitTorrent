@@ -154,99 +154,256 @@
             </Grid>
         </NavigationView>
 
-        <Grid Visibility="{Binding IsDetailsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <ScrollViewer>
-                <StackPanel Padding="24,20,24,24" Spacing="16">
-                    <Button HorizontalAlignment="Left" Command="{Binding BackToBrowseCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE72B;" /><TextBlock x:Uid="CatalogBackText" Text="Catalog" /></StackPanel>
-                    </Button>
-                    <Border
-                        Height="220"
-                        HorizontalAlignment="Stretch"
-                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        CornerRadius="8">
-                        <Image Source="{Binding SelectedDetails.BackdropUrl}" Stretch="UniformToFill" />
-                    </Border>
-                    <Grid ColumnSpacing="20">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <Border
-                            Width="200"
-                            Height="290"
-                            VerticalAlignment="Top"
-                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8">
-                            <Image Source="{Binding SelectedDetails.PosterUrl}" Stretch="UniformToFill" />
-                        </Border>
-                        <StackPanel Grid.Column="1" Spacing="10">
-                            <TextBlock FontSize="26" FontWeight="SemiBold" Text="{Binding SelectedDetails.Title}" TextWrapping="Wrap" />
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding SelectedMetaText}" />
-                            <TextBlock
-                                FontStyle="Italic"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="{Binding SelectedTagline}"
-                                TextWrapping="Wrap"
-                                Visibility="{Binding SelectedTagline, Converter={StaticResource StringToVisibilityConverter}}" />
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding SelectedGenresText}" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding SelectedDetails.Overview}" TextWrapping="Wrap" />
-                            <TextBlock
-                                Text="{Binding SelectedCrewText}"
-                                TextWrapping="Wrap"
-                                Visibility="{Binding SelectedCrewText, Converter={StaticResource StringToVisibilityConverter}}" />
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock x:Uid="CatalogCastLabel" FontWeight="SemiBold" Text="Cast:" />
-                                <TextBlock Text="{Binding SelectedCastText}" TextWrapping="Wrap" />
-                            </StackPanel>
+        <Grid
+            x:Name="DetailsPage"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+            Visibility="{Binding IsDetailsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup>
+                    <VisualState x:Name="CompactDetails">
+                        <VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="0" /></VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="Hero.Height" Value="Auto" />
+                            <Setter Target="HeroContent.Margin" Value="20,52,20,20" />
+                            <Setter Target="PosterColumn.Width" Value="*" />
+                            <Setter Target="DetailsPoster.Width" Value="180" />
+                            <Setter Target="DetailsPoster.Height" Value="270" />
+                            <Setter Target="DetailsPoster.HorizontalAlignment" Value="Center" />
+                            <Setter Target="HeroInfo.(Grid.Column)" Value="0" />
+                            <Setter Target="HeroInfo.(Grid.Row)" Value="1" />
+                            <Setter Target="HeroInfo.Margin" Value="0,24,0,0" />
+                            <Setter Target="DetailsTitle.FontSize" Value="34" />
+                            <Setter Target="DetailsActions.Orientation" Value="Vertical" />
+                            <Setter Target="DetailsActions.HorizontalAlignment" Value="Stretch" />
+                            <Setter Target="DetailsBody.Padding" Value="20,26,20,32" />
+                            <Setter Target="CreditsSecondColumn.Width" Value="0" />
+                            <Setter Target="CastCard.(Grid.Column)" Value="0" />
+                            <Setter Target="CastCard.(Grid.Row)" Value="1" />
+                            <Setter Target="CastCard.Margin" Value="0,12,0,0" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="WideDetails">
+                        <VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="920" /></VisualState.StateTriggers>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <Grid x:Name="Hero" Height="500" MinHeight="430">
+                        <Image
+                            Opacity="0.82"
+                            Source="{Binding SelectedDetails.BackdropUrl}"
+                            Stretch="UniformToFill" />
+                        <Rectangle>
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                    <GradientStop Offset="0" Color="#F5000000" />
+                                    <GradientStop Offset="0.58" Color="#9E000000" />
+                                    <GradientStop Offset="1" Color="#52000000" />
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <Rectangle VerticalAlignment="Bottom" Height="180">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                                    <GradientStop Offset="0" Color="#00000000" />
+                                    <GradientStop Offset="1" Color="#E8000000" />
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+
+                        <Grid
+                            x:Name="HeroContent"
+                            Margin="32,40,32,24"
+                            ColumnSpacing="34"
+                            VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="PosterColumn" Width="230" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border
+                                x:Name="DetailsPoster"
+                                Width="230"
+                                Height="345"
+                                VerticalAlignment="Center"
+                                Background="#CC171717"
+                                BorderBrush="#55FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="14">
+                                <Image Source="{Binding SelectedDetails.PosterUrl}" Stretch="UniformToFill" />
+                            </Border>
+
                             <StackPanel
-                                Margin="0,10,0,0"
-                                Orientation="Horizontal"
-                                Spacing="10"
-                                Visibility="{Binding HasSeasons, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock x:Uid="CatalogSeasonLabel" VerticalAlignment="Center" FontWeight="SemiBold" Text="Season" />
-                                <ComboBox
-                                    MinWidth="220"
-                                    DisplayMemberPath="DisplayName"
-                                    ItemsSource="{Binding Seasons}"
-                                    SelectedItem="{Binding SelectedSeason, Mode=TwoWay}" />
+                                x:Name="HeroInfo"
+                                Grid.Column="1"
+                                MaxWidth="920"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Spacing="13">
+                                <TextBlock
+                                    Foreground="#D9FFFFFF"
+                                    Text="{Binding SelectedMetaText}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Name="DetailsTitle"
+                                    FontSize="46"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    MaxLines="2"
+                                    Text="{Binding SelectedDetails.Title}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    FontSize="20"
+                                    FontStyle="Italic"
+                                    Foreground="#E6FFFFFF"
+                                    Text="{Binding SelectedTagline}"
+                                    TextWrapping="Wrap"
+                                    Visibility="{Binding SelectedTagline, Converter={StaticResource StringToVisibilityConverter}}" />
+                                <Border
+                                    Padding="10,5"
+                                    HorizontalAlignment="Left"
+                                    Background="#8A171717"
+                                    CornerRadius="8">
+                                    <TextBlock
+                                        Foreground="White"
+                                        Text="{Binding SelectedGenresText}"
+                                        TextWrapping="Wrap" />
+                                </Border>
+
+                                <StackPanel
+                                    Margin="0,4,0,0"
+                                    Orientation="Horizontal"
+                                    Spacing="10"
+                                    Visibility="{Binding HasSeasons, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock x:Uid="CatalogSeasonLabel" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="White" Text="Season" />
+                                    <ComboBox
+                                        MinWidth="220"
+                                        DisplayMemberPath="DisplayName"
+                                        ItemsSource="{Binding Seasons}"
+                                        SelectedItem="{Binding SelectedSeason, Mode=TwoWay}" />
+                                </StackPanel>
+
+                                <StackPanel
+                                    x:Name="DetailsActions"
+                                    Margin="0,10,0,0"
+                                    Orientation="Horizontal"
+                                    Spacing="10">
+                                    <Button
+                                        x:Uid="CatalogDownload"
+                                        Padding="18,10"
+                                        Command="{Binding DownloadCommand}"
+                                        Content="Download"
+                                        Style="{StaticResource AccentButtonStyle}" />
+                                    <Button
+                                        x:Uid="CatalogWatch"
+                                        Padding="18,10"
+                                        Command="{Binding WatchCommand}"
+                                        Content="Watch"
+                                        IsEnabled="{Binding CanWatch}"
+                                        ToolTipService.ToolTip="{Binding WatchUnavailableReason}" />
+                                    <Button Padding="16,10" Command="{Binding ToggleSelectedFavoriteCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon FontSize="16" Foreground="#FFD54A" Glyph="{Binding FavoriteGlyph}" />
+                                            <TextBlock Text="{Binding FavoriteButtonText}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <ProgressRing Width="22" Height="22" VerticalAlignment="Center" IsActive="{Binding IsBusy}" />
+                                </StackPanel>
+                                <InfoBar
+                                    MaxWidth="720"
+                                    IsOpen="{Binding ErrorMessage, Converter={StaticResource NonEmptyStringConverter}}"
+                                    IsClosable="False"
+                                    Severity="Error"
+                                    Message="{Binding ErrorMessage}" />
                             </StackPanel>
-                            <StackPanel Margin="0,10,0,0" Orientation="Horizontal" Spacing="10">
-                                <Button x:Uid="CatalogDownload" Command="{Binding DownloadCommand}" Content="Download" Style="{StaticResource AccentButtonStyle}" />
-                                <Button x:Uid="CatalogWatch" Command="{Binding WatchCommand}" Content="Watch" IsEnabled="{Binding CanWatch}" ToolTipService.ToolTip="{Binding WatchUnavailableReason}" />
-                                <Button Command="{Binding ToggleSelectedFavoriteCommand}">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon FontSize="16" Foreground="#FFD54A" Glyph="{Binding FavoriteGlyph}" />
-                                        <TextBlock Text="{Binding FavoriteButtonText}" />
-                                    </StackPanel>
-                                </Button>
-                                <ProgressRing Width="20" Height="20" IsActive="{Binding IsBusy}" />
-                            </StackPanel>
-                            <InfoBar IsOpen="{Binding ErrorMessage, Converter={StaticResource NonEmptyStringConverter}}" IsClosable="False" Severity="Error" Message="{Binding ErrorMessage}" />
-                        </StackPanel>
+                        </Grid>
                     </Grid>
 
-                    <StackPanel Spacing="8" Visibility="{Binding SimilarItems.Count, Converter={StaticResource CountToVisibilityConverter}}">
-                        <TextBlock x:Uid="CatalogSimilarTitle" FontSize="18" FontWeight="SemiBold" Text="Similar titles" />
-                        <ListView
-                            IsItemClickEnabled="True"
-                            ItemClick="CatalogGrid_ItemClick"
-                            ItemTemplate="{StaticResource PosterCardTemplate}"
-                            ItemsSource="{Binding SimilarItems}"
-                            Loaded="RowList_Loaded"
-                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                            ScrollViewer.HorizontalScrollMode="Enabled"
-                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                            ScrollViewer.VerticalScrollMode="Disabled"
-                            SelectionMode="None">
-                            <ListView.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ListView.ItemsPanel>
-                        </ListView>
+                    <StackPanel
+                        x:Name="DetailsBody"
+                        MaxWidth="1280"
+                        Padding="32,30,32,40"
+                        HorizontalAlignment="Center"
+                        Spacing="28">
+                        <StackPanel Spacing="12">
+                            <TextBlock x:Uid="CatalogDetailsHeading" FontSize="24" FontWeight="SemiBold" Text="Details" />
+                            <TextBlock
+                                MaxWidth="1040"
+                                HorizontalAlignment="Left"
+                                FontSize="16"
+                                LineHeight="24"
+                                Text="{Binding SelectedDetails.Overview}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Grid ColumnSpacing="28">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition x:Name="CreditsSecondColumn" Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border x:Name="CrewCard" Padding="18" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+                                <TextBlock
+                                    Text="{Binding SelectedCrewText}"
+                                    TextWrapping="Wrap"
+                                    Visibility="{Binding SelectedCrewText, Converter={StaticResource StringToVisibilityConverter}}" />
+                            </Border>
+                            <Border x:Name="CastCard" Grid.Column="1" Padding="18" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <TextBlock x:Uid="CatalogCastLabel" FontWeight="SemiBold" Text="Cast:" />
+                                    <TextBlock Text="{Binding SelectedCastText}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <StackPanel Spacing="10" Visibility="{Binding SimilarItems.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                            <TextBlock x:Uid="CatalogSimilarTitle" FontSize="22" FontWeight="SemiBold" Text="Similar titles" />
+                            <ListView
+                                IsItemClickEnabled="True"
+                                ItemClick="CatalogGrid_ItemClick"
+                                ItemTemplate="{StaticResource PosterCardTemplate}"
+                                ItemsSource="{Binding SimilarItems}"
+                                Loaded="RowList_Loaded"
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                ScrollViewer.HorizontalScrollMode="Enabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollMode="Disabled"
+                                SelectionMode="None">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                            </ListView>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- Kept outside the ScrollViewer so navigation back to the catalog is always available. -->
+            <Button
+                Margin="24,18,0,0"
+                Padding="12,7"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Canvas.ZIndex="10"
+                Background="#D9212121"
+                Command="{Binding BackToBrowseCommand}"
+                CornerRadius="18"
+                Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE72B;" />
+                    <TextBlock x:Uid="CatalogBackText" VerticalAlignment="Center" Text="Catalog" />
+                </StackPanel>
+            </Button>
         </Grid>
 
         <!-- Tracker chooser: slides in from the right edge when "Download" is pressed. Visibility is

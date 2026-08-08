@@ -615,6 +615,7 @@ public sealed record TorrentAddRequest(
     IReadOnlyList<string> TorrentFiles,
     string? SavePath = null,
     string? DownloadPath = null,
+    bool? UseDownloadPath = null,
     string? Category = null,
     string? Tags = null,
     bool StartTorrent = true,

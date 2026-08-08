@@ -349,6 +349,8 @@
   <data name="AddTorrentManagementAutomatic.Content" xml:space="preserve"><value>Автоматический</value></data>
   <data name="AddTorrentSavePathLabel.Text" xml:space="preserve"><value>Путь сохранения</value></data>
   <data name="AddTorrentUseTempPath.Content" xml:space="preserve"><value>Отдельный путь для неполного торрента</value></data>
+  <data name="AddTorrent_SavePathRequired" xml:space="preserve"><value>Выберите путь сохранения.</value></data>
+  <data name="AddTorrent_DownloadPathRequired" xml:space="preserve"><value>Выберите путь для незавершённых данных торрента.</value></data>
   <data name="AddTorrentSettingsTitle.Text" xml:space="preserve"><value>Настройки торрента</value></data>
   <data name="AddTorrentCategoryLabel.Text" xml:space="preserve"><value>Категория:</value></data>
   <data name="AddTorrentTagsLabel.Text" xml:space="preserve"><value>Метки:</value></data>
@@ -453,7 +455,7 @@
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Ожидаемый путь</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Также удалить файлы с диска</value></data>
   <data name="Dialog_AlsoDeleteSourceFile" xml:space="preserve"><value>Также удалить .torrent-файл, из которого добавлен</value></data>
-  <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Удалить выбранные торренты?</value></data>
+  <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Удалить выбранные торренты ({0})?</value></data>
   <data name="Filter_Uncategorized" xml:space="preserve"><value>Без категории</value></data>
   <data name="Log_Blocked" xml:space="preserve"><value>Заблокировано</value></data>
   <data name="Log_Allowed" xml:space="preserve"><value>Разрешено</value></data>
@@ -622,6 +624,7 @@
   <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Скоро выйдет</value></data>
   <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>Сериалы в эфире</value></data>
   <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Похожее</value></data>
+  <data name="CatalogDetailsHeading.Text" xml:space="preserve"><value>Подробнее</value></data>
   <data name="CatalogTrackerPickerTitle.Text" xml:space="preserve"><value>Выберите трекер</value></data>
   <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Режиссёр</value></data>
   <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Создатели</value></data>

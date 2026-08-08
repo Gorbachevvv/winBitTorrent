@@ -41,4 +41,21 @@ public sealed class PreferenceVerifierTests
 
         Assert.Equal(["upnp", "max_uploads"], PreferenceVerifier.FindMismatchedKeys(requested, actual));
     }
+
+    [Fact]
+    public void AcceptsQbittorrentPathSeparatorAndTrailingSlashNormalization()
+    {
+        var requested = new JsonObject
+        {
+            ["save_path"] = @"D:\Downloads",
+            ["temp_path"] = @"D:\Incomplete\"
+        };
+        var actual = new JsonObject
+        {
+            ["save_path"] = "D:/Downloads/",
+            ["temp_path"] = "d:/Incomplete"
+        };
+
+        Assert.Empty(PreferenceVerifier.FindMismatchedKeys(requested, actual));
+    }
 }

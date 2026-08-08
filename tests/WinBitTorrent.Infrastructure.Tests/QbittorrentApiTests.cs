@@ -122,6 +122,36 @@ public sealed class QbittorrentApiTests
         Assert.True(sent["proxy_peer_connections"]!.GetValue<bool>());
     }
 
+    [Fact]
+    public async Task SendsExplicitManualDownloadPathsWhenAddingTorrent()
+    {
+        string? requestPath = null;
+        string? requestBody = null;
+        var handler = new RecordingHandler(request =>
+        {
+            requestPath = request.RequestUri!.AbsolutePath;
+            requestBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return Text(string.Empty);
+        });
+        await using var api = QbittorrentApi.Create(ServerProfile.CreateLocal(new Uri("http://127.0.0.1:1/")), handler: handler);
+
+        await api.Torrents.AddAsync(new TorrentAddRequest(
+            ["magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567"],
+            [],
+            SavePath: @"D:\Completed",
+            DownloadPath: @"D:\Incomplete",
+            UseDownloadPath: true));
+
+        Assert.Equal("/api/v2/torrents/add", requestPath);
+        Assert.NotNull(requestBody);
+        Assert.Contains("name=savepath", requestBody, StringComparison.Ordinal);
+        Assert.Contains(@"D:\Completed", requestBody, StringComparison.Ordinal);
+        Assert.Contains("name=downloadPath", requestBody, StringComparison.Ordinal);
+        Assert.Contains(@"D:\Incomplete", requestBody, StringComparison.Ordinal);
+        Assert.Contains("name=useDownloadPath", requestBody, StringComparison.Ordinal);
+        Assert.Contains("true", requestBody, StringComparison.Ordinal);
+    }
+
     private static HttpResponseMessage Text(string value) => new(HttpStatusCode.OK) { Content = new StringContent(value, Encoding.UTF8, "text/plain") };
     private static HttpResponseMessage Json(string value, HttpStatusCode status = HttpStatusCode.OK) => new(status) { Content = new StringContent(value, Encoding.UTF8, "application/json") };
 

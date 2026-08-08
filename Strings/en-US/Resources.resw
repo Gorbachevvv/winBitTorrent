@@ -349,6 +349,8 @@
   <data name="AddTorrentManagementAutomatic.Content" xml:space="preserve"><value>Automatic</value></data>
   <data name="AddTorrentSavePathLabel.Text" xml:space="preserve"><value>Save path</value></data>
   <data name="AddTorrentUseTempPath.Content" xml:space="preserve"><value>Use another path for incomplete torrent</value></data>
+  <data name="AddTorrent_SavePathRequired" xml:space="preserve"><value>Select a save path.</value></data>
+  <data name="AddTorrent_DownloadPathRequired" xml:space="preserve"><value>Select a path for incomplete torrent data.</value></data>
   <data name="AddTorrentSettingsTitle.Text" xml:space="preserve"><value>Torrent settings</value></data>
   <data name="AddTorrentCategoryLabel.Text" xml:space="preserve"><value>Category:</value></data>
   <data name="AddTorrentTagsLabel.Text" xml:space="preserve"><value>Tags:</value></data>
@@ -453,7 +455,7 @@
   <data name="Dialog_ExpectedPath" xml:space="preserve"><value>Expected path</value></data>
   <data name="Dialog_AlsoDeleteFiles" xml:space="preserve"><value>Also delete files from disk</value></data>
   <data name="Dialog_AlsoDeleteSourceFile" xml:space="preserve"><value>Also delete the .torrent file it was added from</value></data>
-  <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Delete selected torrents?</value></data>
+  <data name="Dialog_DeleteSelectedTorrents" xml:space="preserve"><value>Delete selected torrents ({0})?</value></data>
   <data name="Filter_Uncategorized" xml:space="preserve"><value>Uncategorized</value></data>
   <data name="Log_Blocked" xml:space="preserve"><value>Blocked</value></data>
   <data name="Log_Allowed" xml:space="preserve"><value>Allowed</value></data>
@@ -622,6 +624,7 @@
   <data name="Catalog_Section_Upcoming" xml:space="preserve"><value>Coming soon</value></data>
   <data name="Catalog_Section_OnTheAir" xml:space="preserve"><value>TV shows on the air</value></data>
   <data name="CatalogSimilarTitle.Text" xml:space="preserve"><value>Similar titles</value></data>
+  <data name="CatalogDetailsHeading.Text" xml:space="preserve"><value>Details</value></data>
   <data name="CatalogTrackerPickerTitle.Text" xml:space="preserve"><value>Choose a tracker</value></data>
   <data name="Catalog_DirectorLabel" xml:space="preserve"><value>Director</value></data>
   <data name="Catalog_CreatorsLabel" xml:space="preserve"><value>Creators</value></data>
