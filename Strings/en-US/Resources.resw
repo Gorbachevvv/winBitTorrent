@@ -276,6 +276,16 @@
   <data name="DetailsHttpSources.Header" xml:space="preserve"><value>HTTP Sources</value></data>
   <data name="DetailsContent.Header" xml:space="preserve"><value>Files</value></data>
   <data name="DetailsSpeed.Header" xml:space="preserve"><value>Speed</value></data>
+  <data name="SpeedGraphTitle.Text" xml:space="preserve"><value>Transfer speed</value></data>
+  <data name="SpeedGraphWindow.Text" xml:space="preserve"><value>History for the last 3 minutes</value></data>
+  <data name="SpeedGraphDownload.Text" xml:space="preserve"><value>Download</value></data>
+  <data name="SpeedGraphUpload.Text" xml:space="preserve"><value>Upload</value></data>
+  <data name="SpeedGraphPeak.Text" xml:space="preserve"><value>Peak</value></data>
+  <data name="SpeedGraphAverage.Text" xml:space="preserve"><value>Average</value></data>
+  <data name="SpeedGraph_ThreeMinutesAgo" xml:space="preserve"><value>−3 min</value></data>
+  <data name="SpeedGraph_TwoMinutesAgo" xml:space="preserve"><value>−2 min</value></data>
+  <data name="SpeedGraph_OneMinuteAgo" xml:space="preserve"><value>−1 min</value></data>
+  <data name="SpeedGraph_Now" xml:space="preserve"><value>Now</value></data>
   <data name="DetailsProgress.Text" xml:space="preserve"><value>Progress</value></data>
   <data name="DetailsAvailability.Text" xml:space="preserve"><value>Availability</value></data>
   <data name="DetailsTimeActive.Text" xml:space="preserve"><value>Time active</value></data>

@@ -687,7 +687,10 @@
                     </Grid>
                 </TabViewItem>
                 <TabViewItem x:Uid="DetailsSpeed" Header="Speed" IsClosable="False" IconSource="{StaticResource DetailsSpeedIcon}">
-                    <controls:SpeedGraphControl DownloadSpeed="{Binding SelectedTorrent.Model.DownloadSpeed}" UploadSpeed="{Binding SelectedTorrent.Model.UploadSpeed}" />
+                    <controls:SpeedGraphControl
+                        DownloadSpeed="{Binding SelectedTorrent.Model.DownloadSpeed}"
+                        SourceId="{Binding SelectedTorrent.Hash}"
+                        UploadSpeed="{Binding SelectedTorrent.Model.UploadSpeed}" />
                 </TabViewItem>
             </TabView>
         </Grid>

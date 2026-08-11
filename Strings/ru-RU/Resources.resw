@@ -276,6 +276,16 @@
   <data name="DetailsHttpSources.Header" xml:space="preserve"><value>HTTP-источники</value></data>
   <data name="DetailsContent.Header" xml:space="preserve"><value>Файлы</value></data>
   <data name="DetailsSpeed.Header" xml:space="preserve"><value>Скорость</value></data>
+  <data name="SpeedGraphTitle.Text" xml:space="preserve"><value>Скорость передачи</value></data>
+  <data name="SpeedGraphWindow.Text" xml:space="preserve"><value>История за последние 3 минуты</value></data>
+  <data name="SpeedGraphDownload.Text" xml:space="preserve"><value>Загрузка</value></data>
+  <data name="SpeedGraphUpload.Text" xml:space="preserve"><value>Отдача</value></data>
+  <data name="SpeedGraphPeak.Text" xml:space="preserve"><value>Пик</value></data>
+  <data name="SpeedGraphAverage.Text" xml:space="preserve"><value>Средняя</value></data>
+  <data name="SpeedGraph_ThreeMinutesAgo" xml:space="preserve"><value>−3 мин</value></data>
+  <data name="SpeedGraph_TwoMinutesAgo" xml:space="preserve"><value>−2 мин</value></data>
+  <data name="SpeedGraph_OneMinuteAgo" xml:space="preserve"><value>−1 мин</value></data>
+  <data name="SpeedGraph_Now" xml:space="preserve"><value>Сейчас</value></data>
   <data name="DetailsProgress.Text" xml:space="preserve"><value>Прогресс</value></data>
   <data name="DetailsAvailability.Text" xml:space="preserve"><value>Доступность</value></data>
   <data name="DetailsTimeActive.Text" xml:space="preserve"><value>Время активности</value></data>
