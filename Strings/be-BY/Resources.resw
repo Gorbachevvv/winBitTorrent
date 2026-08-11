@@ -741,4 +741,16 @@
   <data name="MenuEditor_DropRemove" xml:space="preserve"><value>Прыбраць з меню</value></data>
   <data name="MenuEditor_MenuEmpty" xml:space="preserve"><value>Меню пустое. Дадайце каманды са спіса справа — пустое меню замяняецца стандартным.</value></data>
   <data name="MenuEditor_AvailableEmpty" xml:space="preserve"><value>Усе каманды ўжо дададзеныя ў меню.</value></data>
+  <data name="Setting_notifications_enabled" xml:space="preserve"><value>Паказваць натыўныя апавяшчэнні Windows</value></data>
+  <data name="Setting_notifications_torrentAdded" xml:space="preserve"><value>Паказваць апавяшчэнні пра дададзеныя торэнты</value></data>
+  <data name="Setting_notifications_enabled_Description" xml:space="preserve"><value>Паказваць у цэнтры апавяшчэнняў Windows паведамленні аб завяршэнні спампоўвання, памылках торэнтаў і няўдалым даданні.</value></data>
+  <data name="Setting_notifications_torrentAdded_Description" xml:space="preserve"><value>Таксама паведамляць пры даданні торэнта. Пры аўтаматычным даданні апавяшчэнняў можа быць шмат.</value></data>
+  <data name="Notification_DownloadCompleted_Title" xml:space="preserve"><value>Спампоўванне завершана</value></data>
+  <data name="Notification_DownloadCompleted_Message" xml:space="preserve"><value>Торэнт «{0}» цалкам спампаваны.</value></data>
+  <data name="Notification_TorrentError_Title" xml:space="preserve"><value>Памылка торэнта</value></data>
+  <data name="Notification_TorrentError_Message" xml:space="preserve"><value>У торэнце «{0}» адбылася памылка. Падрабязнасці даступныя ў яго статусе.</value></data>
+  <data name="Notification_TorrentAdded_Title" xml:space="preserve"><value>Торэнт дададзены</value></data>
+  <data name="Notification_TorrentAdded_Message" xml:space="preserve"><value>«{0}» дададзены.</value></data>
+  <data name="Notification_AddFailed_Title" xml:space="preserve"><value>Не ўдалося дадаць торэнт</value></data>
+  <data name="Notification_AddFailed_Message" xml:space="preserve"><value>Не ўдалося дадаць торэнт. Прычына: {0}</value></data>
 </root>

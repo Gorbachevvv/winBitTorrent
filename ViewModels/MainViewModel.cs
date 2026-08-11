@@ -27,9 +27,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly IConnectionCoordinator _connection;
     private readonly IManagedBackendHost _backend;
     private readonly IServerProfileStore _profileStore;
+    private readonly IAppNotificationService _notifications;
     private readonly ILogger<MainViewModel> _logger;
     private readonly DispatcherQueue _dispatcher;
     private readonly MainDataAccumulator _mainData = new();
+    private readonly TorrentLifecycleMonitor _torrentLifecycle = new();
     private readonly Dictionary<string, TorrentRowViewModel> _rows = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PeerRowViewModel> _peers = new(StringComparer.OrdinalIgnoreCase);
     private CancellationTokenSource? _lifetime;
@@ -42,11 +44,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         IConnectionCoordinator connection,
         IManagedBackendHost backend,
         IServerProfileStore profileStore,
+        IAppNotificationService notifications,
         ILogger<MainViewModel> logger)
     {
         _connection = connection;
         _backend = backend;
         _profileStore = profileStore;
+        _notifications = notifications;
         _logger = logger;
         _dispatcher = DispatcherQueue.GetForCurrentThread();
 
@@ -161,6 +165,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         try
         {
             _mainData.Reset();
+            _torrentLifecycle.Reset();
             _rows.Clear();
             Torrents.Clear();
             _api = await _connection.ConnectAsync(SelectedProfile, _lifetime.Token);
@@ -190,8 +195,16 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         EnsureApi();
         options ??= new TorrentAddRequest(urls, torrentFiles);
-        await _api!.Torrents.AddAsync(options, _lifetime?.Token ?? default);
-        await RefreshNowAsync();
+        try
+        {
+            await _api!.Torrents.AddAsync(options, _lifetime?.Token ?? default);
+            await RefreshNowAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notifications.ShowTorrentAddFailed(exception.Message);
+            throw;
+        }
     }
 
     public TorrentRowViewModel? FindDuplicateTorrent(IEnumerable<string> hashes)
@@ -411,6 +424,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
         var response = await _api.Sync.GetMainDataAsync(_mainData.ResponseId, _lifetime?.Token ?? default);
         var changeSet = _mainData.Apply(response);
+        _notifications.Publish(_torrentLifecycle.Observe(changeSet));
         ApplyChangeSet(changeSet);
         IsConnected = true;
         ConnectionStatus = Localizer.Get("Connection_Connected", "Connected");

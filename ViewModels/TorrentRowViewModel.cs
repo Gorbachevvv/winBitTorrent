@@ -23,8 +23,8 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string Name => _model.Name;
     public string Size => ValueFormatter.Size(_model.Size);
     public string TotalSize => ValueFormatter.Size(_model.TotalSize);
-    public double ProgressValue => Math.Clamp(_model.Progress * 100, 0, 100);
-    public string Progress => ValueFormatter.Percentage(_model.Progress);
+    public double ProgressValue => Math.Clamp(EffectiveProgress * 100, 0, 100);
+    public string Progress => ValueFormatter.Percentage(EffectiveProgress);
     public string State => _model.State;
     public string Status => TorrentStateText(_model.State);
     public string StatusGlyph => StatusVisual(_model.State).Glyph;
@@ -93,6 +93,15 @@ public sealed class TorrentRowViewModel : ObservableObject
     // glyphs: direction arrows for transfers (dimmed while stalled), a pause for stopped
     // downloads, a filled check for finished torrents, a spinner for checking/moving, and a
     // warning for errors.
+    // The initial maindata snapshot can contain the authoritative UP state one poll before its
+    // progress field. qBittorrent only assigns an UP state after the selected content is
+    // complete, so avoid briefly painting an established seed as 0% while that field catches up.
+    private double EffectiveProgress
+        => _model.State.Equals("uploading", StringComparison.OrdinalIgnoreCase)
+            || _model.State.EndsWith("UP", StringComparison.OrdinalIgnoreCase)
+                ? 1d
+                : _model.Progress;
+
     private static (string Glyph, SolidColorBrush Brush) StatusVisual(string state) => state switch
     {
         "error" or "missingFiles" => ("", GetBrush(0xDC2626)),

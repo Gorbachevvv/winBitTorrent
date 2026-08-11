@@ -413,9 +413,25 @@
                     Visibility="Collapsed" />
             </Canvas>
 
-            <Thumb x:Name="DetailsSplitter" Grid.Row="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" DragDelta="DetailsSplitter_DragDelta" />
+            <Grid x:Name="DetailsSplitter" Grid.Row="1">
+                <Border
+                    Height="1"
+                    VerticalAlignment="Center"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    IsHitTestVisible="False" />
+                <Thumb Background="Transparent" DragDelta="DetailsSplitter_DragDelta" />
+            </Grid>
 
-            <TabView x:Name="DetailsTabs" Grid.Row="2" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent">
+            <!-- The details area is a secondary surface belonging to the selected torrent. The
+                 subtle selected-element fill ties it to the active tab, while the card stroke
+                 keeps it visually distinct from the torrent table in both color themes. -->
+            <Border
+                Grid.Row="2"
+                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <TabView x:Name="DetailsTabs" Background="Transparent" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent">
                 <TabViewItem x:Uid="DetailsGeneral" Header="General" IsClosable="False" IconSource="{StaticResource DetailsGeneralIcon}">
                     <ScrollViewer Padding="12,8">
                         <StackPanel Spacing="12">
@@ -692,7 +708,8 @@
                         SourceId="{Binding SelectedTorrent.Hash}"
                         UploadSpeed="{Binding SelectedTorrent.Model.UploadSpeed}" />
                 </TabViewItem>
-            </TabView>
+                </TabView>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

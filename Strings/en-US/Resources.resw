@@ -741,4 +741,16 @@
   <data name="MenuEditor_DropRemove" xml:space="preserve"><value>Remove from the menu</value></data>
   <data name="MenuEditor_MenuEmpty" xml:space="preserve"><value>The menu is empty. Add commands from the list on the right — an empty menu falls back to the default one.</value></data>
   <data name="MenuEditor_AvailableEmpty" xml:space="preserve"><value>Every command is already in the menu.</value></data>
+  <data name="Setting_notifications_enabled" xml:space="preserve"><value>Display native Windows notifications</value></data>
+  <data name="Setting_notifications_torrentAdded" xml:space="preserve"><value>Display notifications for added torrents</value></data>
+  <data name="Setting_notifications_enabled_Description" xml:space="preserve"><value>Show download completion, torrent error, and add failure messages in the Windows notification center.</value></data>
+  <data name="Setting_notifications_torrentAdded_Description" xml:space="preserve"><value>Also notify when a torrent is added. This can be noisy when torrents are added automatically.</value></data>
+  <data name="Notification_DownloadCompleted_Title" xml:space="preserve"><value>Download completed</value></data>
+  <data name="Notification_DownloadCompleted_Message" xml:space="preserve"><value>'{0}' has finished downloading.</value></data>
+  <data name="Notification_TorrentError_Title" xml:space="preserve"><value>Torrent error</value></data>
+  <data name="Notification_TorrentError_Message" xml:space="preserve"><value>An error occurred for torrent '{0}'. Check its status for details.</value></data>
+  <data name="Notification_TorrentAdded_Title" xml:space="preserve"><value>Torrent added</value></data>
+  <data name="Notification_TorrentAdded_Message" xml:space="preserve"><value>'{0}' was added.</value></data>
+  <data name="Notification_AddFailed_Title" xml:space="preserve"><value>Add torrent failed</value></data>
+  <data name="Notification_AddFailed_Message" xml:space="preserve"><value>Couldn't add the torrent. Reason: {0}</value></data>
 </root>

@@ -30,7 +30,7 @@ public sealed partial class MainWindow : Window
     private bool _closing;
     private bool _isWindowVisible = true;
 
-    public MainWindow(MainViewModel viewModel)
+    public MainWindow(MainViewModel viewModel, IAppNotificationService notifications)
     {
         ViewModel = viewModel;
         InitializeComponent();
@@ -63,6 +63,7 @@ public sealed partial class MainWindow : Window
             () => _isWindowVisible,
             () => ViewModel.IsConnected,
             () => ViewModel.UseAlternativeSpeedLimits);
+        notifications.SetFallbackPresenter(_trayIcon.ShowNotification);
     }
 
     public MainViewModel ViewModel { get; }

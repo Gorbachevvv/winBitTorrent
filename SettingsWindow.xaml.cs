@@ -98,6 +98,8 @@ public sealed partial class SettingsWindow : Window
         new("WebUI", "web_ui_username", "Username", SettingKind.Text),
         new("WebUI", "web_ui_upnp", "Use UPnP / NAT-PMP", SettingKind.Boolean),
         new("WebUI", "web_ui_csrf_protection_enabled", "Enable CSRF protection", SettingKind.Boolean),
+        new("Advanced", NotificationPreferences.EnabledKey, "Display native Windows notifications", SettingKind.Boolean, true, true),
+        new("Advanced", NotificationPreferences.TorrentAddedKey, "Display notifications for added torrents", SettingKind.Boolean, true, false),
         new("Advanced", "resume_data_storage_type", "Resume data storage type", SettingKind.ResumeStorage),
         new("Advanced", "memory_working_set_limit", "Physical memory usage limit (MiB)", SettingKind.Number),
         new("Advanced", "disk_cache", "Disk cache (MiB, -1 = auto)", SettingKind.Number),
@@ -224,6 +226,8 @@ public sealed partial class SettingsWindow : Window
 
             if (connected && _section == "Downloads")
                 ConfigureDownloadDependencies();
+            else if (_section == "Advanced")
+                ConfigureNotificationDependencies();
         }
 
         if (_section == "Behavior")
@@ -365,6 +369,8 @@ public sealed partial class SettingsWindow : Window
             "i2p_mixed_mode" => Localizer.Get("Setting_i2p_mixed_mode_Description", "Mixed mode can connect to regular IP peers and therefore does not provide I2P anonymity."),
             "ip_filter_path" when !localManaged => Localizer.Get("Setting_ip_filter_path_RemoteDescription", "Enter a path that is accessible on the remote qBittorrent server."),
             "catalog.tmdb.apiKey" => Localizer.Get("Setting_catalog_tmdb_apiKey_Description", "Free API key from themoviedb.org, used to load the movie/TV catalog. You need to register on themoviedb.org yourself and generate the key — WinBitTorrent cannot do this for you."),
+            NotificationPreferences.EnabledKey => Localizer.Get("Setting_notifications_enabled_Description", "Show download completion, torrent error, and add failure messages in the Windows notification center."),
+            NotificationPreferences.TorrentAddedKey => Localizer.Get("Setting_notifications_torrentAdded_Description", "Also notify when a torrent is added. This can be noisy when torrents are added automatically."),
             _ => string.Empty
         };
         if (string.IsNullOrWhiteSpace(description))
@@ -474,6 +480,16 @@ public sealed partial class SettingsWindow : Window
 
         incompletePathEnabled.Toggled += (_, _) => SetEditorEnabled("temp_path", incompletePathEnabled.IsOn);
         SetEditorEnabled("temp_path", incompletePathEnabled.IsOn);
+    }
+
+    private void ConfigureNotificationDependencies()
+    {
+        if (_editors.GetValueOrDefault(NotificationPreferences.EnabledKey) is not ToggleSwitch notificationsEnabled)
+            return;
+
+        notificationsEnabled.Toggled += (_, _) =>
+            SetEditorEnabled(NotificationPreferences.TorrentAddedKey, notificationsEnabled.IsOn);
+        SetEditorEnabled(NotificationPreferences.TorrentAddedKey, notificationsEnabled.IsOn);
     }
 
     private void UpdateProxyEditors()

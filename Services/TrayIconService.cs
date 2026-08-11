@@ -12,7 +12,9 @@ internal sealed class TrayIconService : IDisposable
     private const uint NIF_MESSAGE = 0x00000001;
     private const uint NIF_ICON = 0x00000002;
     private const uint NIF_TIP = 0x00000004;
+    private const uint NIF_INFO = 0x00000010;
     private const uint NIF_SHOWTIP = 0x00000080;
+    private const uint NIIF_INFO = 0x00000001;
     private const uint NOTIFYICON_VERSION_4 = 4;
     private const uint WM_APP = 0x8000;
     private const uint WM_NULL = 0x0000;
@@ -20,6 +22,7 @@ internal sealed class TrayIconService : IDisposable
     private const uint WM_LBUTTONDBLCLK = 0x0203;
     private const uint WM_RBUTTONUP = 0x0205;
     private const uint WM_MBUTTONUP = 0x0208;
+    private const uint NIN_BALLOONUSERCLICK = 0x0405;
     private const int GWLP_WNDPROC = -4;
     private const int IDI_APPLICATION = 32512;
     private const uint MF_STRING = 0x00000000;
@@ -95,6 +98,10 @@ internal sealed class TrayIconService : IDisposable
                 case WM_LBUTTONDBLCLK:
                     _executeCommand(TrayIconCommand.ToggleWindow);
                     return IntPtr.Zero;
+                case NIN_BALLOONUSERCLICK:
+                    if (!_isWindowVisible())
+                        _executeCommand(TrayIconCommand.ToggleWindow);
+                    return IntPtr.Zero;
             }
         }
         else if (message == _taskbarCreatedMessage)
@@ -132,6 +139,27 @@ internal sealed class TrayIconService : IDisposable
         Shell_NotifyIconW(NIM_DELETE, ref data);
         _isIconAdded = false;
     }
+
+    /// <summary>
+    /// Shows the same native Windows tray notification mechanism used by qBittorrent on
+    /// Windows. Unlike AppNotificationManager this works for a portable executable without
+    /// requiring a matching Windows App Runtime Singleton package to be installed.
+    /// </summary>
+    public bool ShowNotification(string title, string message)
+    {
+        if (_disposed || !_isIconAdded)
+            return false;
+
+        var data = CreateIconData();
+        data.uFlags = NIF_INFO;
+        data.szInfoTitle = Truncate(title, 63);
+        data.szInfo = Truncate(message, 255);
+        data.dwInfoFlags = NIIF_INFO;
+        return Shell_NotifyIconW(NIM_MODIFY, ref data);
+    }
+
+    private static string Truncate(string value, int maximumLength)
+        => value.Length <= maximumLength ? value : value[..maximumLength];
 
     private NOTIFYICONDATA CreateIconData()
         => new()

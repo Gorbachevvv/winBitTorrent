@@ -741,4 +741,16 @@
   <data name="MenuEditor_DropRemove" xml:space="preserve"><value>Убрать из меню</value></data>
   <data name="MenuEditor_MenuEmpty" xml:space="preserve"><value>Меню пустое. Добавьте команды из списка справа — пустое меню заменяется стандартным.</value></data>
   <data name="MenuEditor_AvailableEmpty" xml:space="preserve"><value>Все команды уже добавлены в меню.</value></data>
+  <data name="Setting_notifications_enabled" xml:space="preserve"><value>Показывать нативные уведомления Windows</value></data>
+  <data name="Setting_notifications_torrentAdded" xml:space="preserve"><value>Показывать уведомления о добавленных торрентах</value></data>
+  <data name="Setting_notifications_enabled_Description" xml:space="preserve"><value>Показывать в центре уведомлений Windows сообщения о завершении загрузки, ошибках торрентов и неудачном добавлении.</value></data>
+  <data name="Setting_notifications_torrentAdded_Description" xml:space="preserve"><value>Также уведомлять при добавлении торрента. При автоматическом добавлении уведомлений может быть много.</value></data>
+  <data name="Notification_DownloadCompleted_Title" xml:space="preserve"><value>Загрузка завершена</value></data>
+  <data name="Notification_DownloadCompleted_Message" xml:space="preserve"><value>Торрент «{0}» полностью загружен.</value></data>
+  <data name="Notification_TorrentError_Title" xml:space="preserve"><value>Ошибка торрента</value></data>
+  <data name="Notification_TorrentError_Message" xml:space="preserve"><value>В торренте «{0}» произошла ошибка. Подробности доступны в его статусе.</value></data>
+  <data name="Notification_TorrentAdded_Title" xml:space="preserve"><value>Торрент добавлен</value></data>
+  <data name="Notification_TorrentAdded_Message" xml:space="preserve"><value>«{0}» добавлен.</value></data>
+  <data name="Notification_AddFailed_Title" xml:space="preserve"><value>Не удалось добавить торрент</value></data>
+  <data name="Notification_AddFailed_Message" xml:space="preserve"><value>Не удалось добавить торрент. Причина: {0}</value></data>
 </root>

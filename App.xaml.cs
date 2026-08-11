@@ -14,6 +14,7 @@ public partial class App : Application
 {
     private Window? _window;
     private AppInstance? _mainInstance;
+    private IAppNotificationService? _notifications;
     // Held for the lifetime of the process purely so the installer can see it: Inno Setup's
     // AppMutex check (see build/installer/WinBitTorrent.iss) is what makes a silent in-app
     // update reliably wait for/close the running instance before overwriting its files.
@@ -40,6 +41,7 @@ public partial class App : Application
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.AddDebug().SetMinimumLevel(LogLevel.Information));
         services.AddWinBitTorrentInfrastructure();
+        services.AddSingleton<IAppNotificationService, AppNotificationService>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<RssViewModel>();
         services.AddSingleton<SearchViewModel>();
@@ -117,6 +119,10 @@ public partial class App : Application
 
         _mainInstance.Activated += OnActivated;
         _window = Services.GetRequiredService<MainWindow>();
+        _window.Closed += OnMainWindowClosed;
+        _notifications = Services.GetRequiredService<IAppNotificationService>();
+        _notifications.NotificationInvoked += OnNotificationInvoked;
+        _notifications.Initialize();
         _window.Activate();
         if (_window is MainWindow mainWindow)
         {
@@ -137,6 +143,24 @@ public partial class App : Application
                 window.HandleActivation(args);
             }
         });
+    }
+
+    private void OnNotificationInvoked(object? sender, EventArgs args)
+    {
+        _window?.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_window is MainWindow window)
+                window.ShowMainWindow();
+        });
+    }
+
+    private void OnMainWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (_notifications is not null)
+        {
+            _notifications.NotificationInvoked -= OnNotificationInvoked;
+            _notifications.Shutdown();
+        }
     }
 
     private static async Task RedirectActivationAndExitAsync(AppInstance target, AppActivationArguments args)
