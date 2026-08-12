@@ -753,4 +753,10 @@
   <data name="Notification_TorrentAdded_Message" xml:space="preserve"><value>«{0}» добавлен.</value></data>
   <data name="Notification_AddFailed_Title" xml:space="preserve"><value>Не удалось добавить торрент</value></data>
   <data name="Notification_AddFailed_Message" xml:space="preserve"><value>Не удалось добавить торрент. Причина: {0}</value></data>
+  <data name="Dialog_AddTorrentLinks_Title" xml:space="preserve"><value>Загрузить торренты по ссылкам</value></data>
+  <data name="Dialog_AddTorrentLinks_Label" xml:space="preserve"><value>Добавьте ссылки на торренты</value></data>
+  <data name="Dialog_AddTorrentLinks_Hint" xml:space="preserve"><value>По одной на строку (поддерживаются HTTP-ссылки, magnet-ссылки и инфо-хеши)</value></data>
+  <data name="Dialog_AddTorrentLinks_Primary" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="Dialog_AddTorrentLinks_Required" xml:space="preserve"><value>Введите хотя бы одну ссылку на торрент.</value></data>
+  <data name="Dialog_AddTorrentLinks_Invalid" xml:space="preserve"><value>Строка {0} не является допустимой ссылкой на торрент или инфо-хешем.</value></data>
 </root>

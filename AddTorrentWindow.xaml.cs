@@ -37,7 +37,7 @@ public sealed partial class AddTorrentWindow : Window
     {
         InitializeComponent();
         Title = Localizer.Get("WindowTitle_AddTorrent", "Add torrent");
-        this.ConfigureOwned(1120, 720);
+        this.ConfigureOwned(1120, 720, minimumWidth: 860, minimumHeight: 580);
         _viewModel = App.Services.GetRequiredService<MainViewModel>();
         _files = torrentFiles.ToList();
         MetadataFilesTree.ItemsSource = _visibleMetadataTree;

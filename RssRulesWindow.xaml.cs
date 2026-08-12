@@ -16,7 +16,7 @@ public sealed partial class RssRulesWindow : Window
     {
         InitializeComponent();
         Title = WinBitTorrent.Services.Localizer.Get("WindowTitle_RssRules", "RSS downloader rules");
-        this.ConfigureOwned(900, 690);
+        this.ConfigureOwned(900, 690, minimumWidth: 780, minimumHeight: 560);
         _main = App.Services.GetRequiredService<MainViewModel>();
         Activated += RssRulesWindow_Activated;
     }

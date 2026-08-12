@@ -18,7 +18,7 @@ public sealed partial class CreateTorrentWindow : Window
     {
         InitializeComponent();
         Title = WinBitTorrent.Services.Localizer.Get("WindowTitle_CreateTorrent", "Create torrent");
-        this.ConfigureOwned(850, 660);
+        this.ConfigureOwned(850, 660, minimumWidth: 760, minimumHeight: 520);
         _main = App.Services.GetRequiredService<MainViewModel>();
     }
 

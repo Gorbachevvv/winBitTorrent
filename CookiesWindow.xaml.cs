@@ -14,7 +14,7 @@ public sealed partial class CookiesWindow : Window
     {
         InitializeComponent();
         Title = WinBitTorrent.Services.Localizer.Get("WindowTitle_Cookies", "Cookies");
-        this.ConfigureOwned(760, 580);
+        this.ConfigureOwned(760, 580, minimumWidth: 560, minimumHeight: 420);
         _main = App.Services.GetRequiredService<MainViewModel>();
         Activated += CookiesWindow_Activated;
     }

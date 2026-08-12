@@ -753,4 +753,10 @@
   <data name="Notification_TorrentAdded_Message" xml:space="preserve"><value>«{0}» дададзены.</value></data>
   <data name="Notification_AddFailed_Title" xml:space="preserve"><value>Не ўдалося дадаць торэнт</value></data>
   <data name="Notification_AddFailed_Message" xml:space="preserve"><value>Не ўдалося дадаць торэнт. Прычына: {0}</value></data>
+  <data name="Dialog_AddTorrentLinks_Title" xml:space="preserve"><value>Спампаваць торэнты па спасылках</value></data>
+  <data name="Dialog_AddTorrentLinks_Label" xml:space="preserve"><value>Дадайце спасылкі на торэнты</value></data>
+  <data name="Dialog_AddTorrentLinks_Hint" xml:space="preserve"><value>Па адной на радок (падтрымліваюцца HTTP-спасылкі, magnet-спасылкі і інфа-хэшы)</value></data>
+  <data name="Dialog_AddTorrentLinks_Primary" xml:space="preserve"><value>Працягнуць</value></data>
+  <data name="Dialog_AddTorrentLinks_Required" xml:space="preserve"><value>Увядзіце хаця б адну спасылку на торэнт.</value></data>
+  <data name="Dialog_AddTorrentLinks_Invalid" xml:space="preserve"><value>Радок {0} не з'яўляецца дапушчальнай спасылкай на торэнт або інфа-хэшам.</value></data>
 </root>

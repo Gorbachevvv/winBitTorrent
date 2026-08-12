@@ -14,6 +14,7 @@ using Windows.System;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using WinBitTorrent.Core.Models;
+using WinBitTorrent.Core.Services;
 
 namespace WinBitTorrent;
 
@@ -29,6 +30,7 @@ public sealed partial class MainWindow : Window
     private bool _allowClose;
     private bool _closing;
     private bool _isWindowVisible = true;
+    private bool _addTorrentLinksDialogOpen;
 
     public MainWindow(MainViewModel viewModel, IAppNotificationService notifications)
     {
@@ -176,11 +178,8 @@ public sealed partial class MainWindow : Window
             await OpenAddTorrentAfterDuplicateCheckAsync(files.Select(static file => file.Path).ToList(), []);
     }
 
-    // Matches qBittorrent: when the source is already known (a picked file, a dropped file, an
-    // activation from a .torrent/magnet association), check for duplicates and offer to merge
-    // trackers before the Add Torrent window ever opens - not after the user has filled it out.
-    // "Add Torrent Link…" opens with nothing typed yet, so it has no source to pre-check and
-    // keeps using the window's own later check once the user enters something.
+    // Matches qBittorrent: once a file, activation payload, or link dialog has supplied a source,
+    // check for duplicates and offer to merge trackers before the options window opens.
     private async Task OpenAddTorrentAfterDuplicateCheckAsync(IReadOnlyList<string> files, IReadOnlyList<string> urls)
     {
         var (pendingFiles, pendingUrls) = await TorrentDuplicateChecker.RemoveDuplicatesAsync(RootGrid.XamlRoot, ViewModel, files, urls);
@@ -229,7 +228,84 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void AddTorrentLink_Click(object sender, RoutedEventArgs e) => new AddTorrentWindow([], []).Activate();
+    private async void AddTorrentLink_Click(object sender, RoutedEventArgs e)
+        => await ShowAddTorrentLinksDialogAsync();
+
+    private async Task ShowAddTorrentLinksDialogAsync()
+    {
+        if (_addTorrentLinksDialogOpen)
+            return;
+
+        _addTorrentLinksDialogOpen = true;
+        try
+        {
+            var input = new TextBox
+            {
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.NoWrap,
+                MinWidth = 520,
+                Height = 150
+            };
+            ScrollViewer.SetHorizontalScrollBarVisibility(input, ScrollBarVisibility.Auto);
+            ScrollViewer.SetVerticalScrollBarVisibility(input, ScrollBarVisibility.Auto);
+            var error = new InfoBar
+            {
+                IsOpen = false,
+                IsClosable = false,
+                Severity = InfoBarSeverity.Error
+            };
+            var content = new StackPanel { Spacing = 8 };
+            content.Children.Add(new TextBlock
+            {
+                Text = Localizer.Get("Dialog_AddTorrentLinks_Label", "Add torrent links"),
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
+            });
+            content.Children.Add(input);
+            content.Children.Add(new TextBlock
+            {
+                Text = Localizer.Get(
+                    "Dialog_AddTorrentLinks_Hint",
+                    "One per line (HTTP links, magnet links, and info-hashes are accepted)"),
+                FontStyle = Windows.UI.Text.FontStyle.Italic,
+                Opacity = 0.75,
+                TextWrapping = TextWrapping.Wrap
+            });
+            content.Children.Add(error);
+
+            IReadOnlyList<string> links = [];
+            var dialog = new ContentDialog
+            {
+                XamlRoot = RootGrid.XamlRoot,
+                Title = Localizer.Get("Dialog_AddTorrentLinks_Title", "Download torrents from links"),
+                Content = content,
+                PrimaryButtonText = Localizer.Get("Dialog_AddTorrentLinks_Primary", "Continue"),
+                CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"),
+                DefaultButton = ContentDialogButton.Primary
+            };
+            dialog.PrimaryButtonClick += (_, args) =>
+            {
+                if (TorrentLinkParser.TryParse(input.Text, out links, out var invalidLine))
+                    return;
+
+                args.Cancel = true;
+                error.Message = invalidLine == 0
+                    ? Localizer.Get("Dialog_AddTorrentLinks_Required", "Enter at least one torrent link.")
+                    : string.Format(
+                        Localizer.Get("Dialog_AddTorrentLinks_Invalid", "Line {0} is not a valid torrent link or info-hash."),
+                        invalidLine);
+                error.IsOpen = true;
+                input.Focus(FocusState.Programmatic);
+            };
+            dialog.Opened += (_, _) => input.Focus(FocusState.Programmatic);
+
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                await OpenAddTorrentAfterDuplicateCheckAsync([], links);
+        }
+        finally
+        {
+            _addTorrentLinksDialogOpen = false;
+        }
+    }
     private void CreateTorrent_Click(object sender, RoutedEventArgs e) => new CreateTorrentWindow().Activate();
     private void Profiles_Click(object sender, RoutedEventArgs e) => new ProfilesWindow().Activate();
     private void Options_Click(object sender, RoutedEventArgs e) => new SettingsWindow().Activate();
@@ -480,7 +556,7 @@ public sealed partial class MainWindow : Window
                 break;
             case TrayIconCommand.AddTorrentLink:
                 ShowMainWindow();
-                new AddTorrentWindow([], []).Activate();
+                _ = ShowAddTorrentLinksDialogAsync();
                 break;
             case TrayIconCommand.ToggleAlternativeSpeedLimits:
                 _ = ToggleAlternativeSpeedLimitsFromTrayAsync();

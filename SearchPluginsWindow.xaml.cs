@@ -14,7 +14,7 @@ public sealed partial class SearchPluginsWindow : Window
     {
         InitializeComponent();
         Title = WinBitTorrent.Services.Localizer.Get("WindowTitle_SearchPlugins", "Search plugins");
-        this.ConfigureOwned(820, 560);
+        this.ConfigureOwned(820, 560, minimumWidth: 620, minimumHeight: 400);
         _main = App.Services.GetRequiredService<MainViewModel>();
         _search = App.Services.GetRequiredService<SearchViewModel>();
         Activated += SearchPluginsWindow_Activated;

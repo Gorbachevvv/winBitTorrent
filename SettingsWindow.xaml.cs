@@ -17,6 +17,7 @@ public sealed partial class SettingsWindow : Window
 {
     private readonly MainViewModel _main;
     private readonly Dictionary<string, Control> _editors = [];
+    private readonly HashSet<string> _dirtyRemoteKeys = new(StringComparer.Ordinal);
     private readonly Dictionary<string, object?> _localValues = [];
     private JsonObject _preferences = [];
     // Snapshot of what qBittorrent last reported, so CaptureSection can tell a genuinely edited
@@ -115,7 +116,7 @@ public sealed partial class SettingsWindow : Window
         MenuEditorTitle.Text = Localizer.Get("MenuEditor_Title", "Context menu editor");
         MenuEditorReset.Content = Localizer.Get("MenuEditor_Reset", "Restore defaults");
         ToolTipService.SetToolTip(MenuEditorBack, Localizer.Get("MenuEditor_Back", "Back to settings"));
-        this.ConfigureOwned(980, 720);
+        this.ConfigureOwned(980, 720, minimumWidth: 720, minimumHeight: 520);
         _main = App.Services.GetRequiredService<MainViewModel>();
         foreach (var spec in Specs.Where(static spec => spec.Local))
             _localValues[spec.Key] = ClientSettings.GetValue(spec.Key) ?? spec.DefaultValue;
@@ -210,7 +211,7 @@ public sealed partial class SettingsWindow : Window
         {
             foreach (var group in sectionSpecs.GroupBy(static spec => spec.Group ?? "General"))
             {
-                var groupPanel = new StackPanel { Spacing = 12 };
+                var groupPanel = new StackPanel { Spacing = 1 };
                 foreach (var spec in group)
                     AddEditor(groupPanel, spec, localManaged, connected);
                 SettingsPanel.Children.Add(CreateConnectionGroup(group.Key, groupPanel));
@@ -250,20 +251,22 @@ public sealed partial class SettingsWindow : Window
     /// </summary>
     private FrameworkElement CreateMenuEditorLauncher()
     {
-        var label = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
-        label.Children.Add(new FontIcon { Glyph = "", FontSize = 15 });
-        label.Children.Add(new TextBlock { Text = Localizer.Get("Settings_EditContextMenu", "Edit the context menu…"), VerticalAlignment = VerticalAlignment.Center });
-        var button = new Button { Content = label, HorizontalAlignment = HorizontalAlignment.Left };
+        var button = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE76C", FontSize = 14 },
+            Width = 64,
+            Height = 32,
+            Padding = new Thickness(0),
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        ToolTipService.SetToolTip(button, Localizer.Get("Settings_EditContextMenu", "Edit the context menu…"));
         button.Click += OpenMenuEditor_Click;
 
-        var stack = new StackPanel { Spacing = 6, Margin = new Thickness(0, 6, 0, 0) };
-        stack.Children.Add(button);
-        stack.Children.Add(new TextBlock
-        {
-            Text = Localizer.Get("Settings_EditContextMenuDescription", "Choose which commands the menu shows when you right-click a torrent, and in what order."),
-            Style = SecondaryTextStyle
-        });
-        return stack;
+        return CreateSettingsCard(
+            Localizer.Get("Settings_EditContextMenu", "Edit the context menu…"),
+            Localizer.Get("Settings_EditContextMenuDescription", "Choose which commands the menu shows when you right-click a torrent, and in what order."),
+            button,
+            fullWidthEditor: false);
     }
 
     private void OpenMenuEditor_Click(object sender, RoutedEventArgs e)
@@ -295,7 +298,33 @@ public sealed partial class SettingsWindow : Window
         }
 
         _editors[spec.Key] = editor;
+        if (!spec.Local)
+            TrackUserEdits(spec.Key, editor);
         parent.Children.Add(view);
+    }
+
+    private void TrackUserEdits(string key, Control editor)
+    {
+        void MarkDirty() => _dirtyRemoteKeys.Add(key);
+
+        switch (editor)
+        {
+            case ToggleSwitch toggle:
+                toggle.Toggled += (_, _) => MarkDirty();
+                break;
+            case NumberBox number:
+                number.ValueChanged += (_, _) => MarkDirty();
+                break;
+            case ComboBox combo:
+                combo.SelectionChanged += (_, _) => MarkDirty();
+                break;
+            case PasswordBox password:
+                password.PasswordChanged += (_, _) => MarkDirty();
+                break;
+            case TextBox text:
+                text.TextChanged += (_, _) => MarkDirty();
+                break;
+        }
     }
 
     private static Expander CreateConnectionGroup(string group, StackPanel content)
@@ -325,21 +354,55 @@ public sealed partial class SettingsWindow : Window
             _ => (group, string.Empty, true)
         };
 
-        var header = new StackPanel { Spacing = 2 };
-        header.Children.Add(new TextBlock { Text = title, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        var headerText = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
+        headerText.Children.Add(new TextBlock { Text = title, FontSize = 14, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         if (!string.IsNullOrWhiteSpace(description))
-            header.Children.Add(new TextBlock
+            headerText.Children.Add(new TextBlock
             {
                 Text = description,
-                Style = SecondaryTextStyle
+                Style = SecondaryTextStyle,
+                FontSize = 12,
+                MaxLines = 2,
+                TextTrimming = TextTrimming.CharacterEllipsis
             });
+        var header = new Grid
+        {
+            ColumnSpacing = 12,
+            MinHeight = 36,
+            Margin = new Thickness(0, 7, 0, 7)
+        };
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(24) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.Children.Add(new FontIcon
+        {
+            Glyph = ConnectionGroupIcon(group),
+            FontSize = 17,
+            VerticalAlignment = VerticalAlignment.Center
+        });
+        Grid.SetColumn(headerText, 1);
+        header.Children.Add(headerText);
 
-        content.Margin = new Thickness(0, 8, 0, 4);
+        for (var index = 0; index < content.Children.Count; index++)
+        {
+            if (content.Children[index] is not Border row)
+                continue;
+            row.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+            row.BorderThickness = index == content.Children.Count - 1
+                ? new Thickness(0)
+                : new Thickness(0, 0, 0, 1);
+            row.CornerRadius = new CornerRadius(0);
+        }
+        content.Margin = new Thickness(0);
         return new Expander
         {
             Header = header,
             Content = content,
             IsExpanded = expanded,
+            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
+            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(7),
+            Padding = new Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch
         };
@@ -347,6 +410,7 @@ public sealed partial class SettingsWindow : Window
 
     private FrameworkElement CreateEditorView(SettingSpec spec, object? value, bool localManaged, out Control editor)
     {
+        var label = Localizer.Get($"Setting_{spec.Key.Replace('.', '_')}", spec.Label);
         editor = CreateEditor(spec, value);
         FrameworkElement view = editor;
 
@@ -373,26 +437,100 @@ public sealed partial class SettingsWindow : Window
             NotificationPreferences.TorrentAddedKey => Localizer.Get("Setting_notifications_torrentAdded_Description", "Also notify when a torrent is added. This can be noisy when torrents are added automatically."),
             _ => string.Empty
         };
-        if (string.IsNullOrWhiteSpace(description))
-            return view;
-
-        var stack = new StackPanel { Spacing = 4 };
-        stack.Children.Add(view);
-        stack.Children.Add(new TextBlock
-        {
-            Text = description,
-            Style = SecondaryTextStyle
-        });
-        return stack;
+        return CreateSettingsCard(
+            label,
+            description,
+            view,
+            spec.Kind == SettingKind.Multiline);
     }
+
+    private static Border CreateSettingsCard(
+        string title,
+        string description,
+        FrameworkElement editorView,
+        bool fullWidthEditor)
+    {
+        var labelText = new StackPanel
+        {
+            Spacing = string.IsNullOrWhiteSpace(description) ? 0 : 2,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        labelText.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontSize = 14,
+            TextWrapping = TextWrapping.Wrap
+        });
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            labelText.Children.Add(new TextBlock
+            {
+                Text = description,
+                Style = SecondaryTextStyle,
+                FontSize = 12,
+                MaxLines = 2,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            });
+        }
+        FrameworkElement content;
+        if (fullWidthEditor)
+        {
+            var stack = new StackPanel { Spacing = 8 };
+            stack.Children.Add(labelText);
+            editorView.HorizontalAlignment = HorizontalAlignment.Stretch;
+            stack.Children.Add(editorView);
+            content = stack;
+        }
+        else
+        {
+            var grid = new Grid { ColumnSpacing = 16, MinHeight = 32 };
+            grid.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                Width = new GridLength(1, GridUnitType.Star),
+                MinWidth = 150
+            });
+            grid.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                Width = new GridLength(280)
+            });
+            grid.Children.Add(labelText);
+            editorView.HorizontalAlignment = editorView is ToggleSwitch or Button
+                ? HorizontalAlignment.Right
+                : HorizontalAlignment.Stretch;
+            editorView.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(editorView, 1);
+            grid.Children.Add(editorView);
+            content = grid;
+        }
+
+        return new Border
+        {
+            Padding = new Thickness(14, 8, 14, 8),
+            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
+            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Child = content
+        };
+    }
+
+    private static string ConnectionGroupIcon(string group) => group switch
+    {
+        "Protocol" => "\uE968",
+        "Limits" => "\uE9E9",
+        "Proxy" => "\uE774",
+        "I2P" => "\uE128",
+        "IpFilter" => "\uE72E",
+        _ => "\uE713"
+    };
 
     private static Grid EditorButtonGrid(Control editor, string buttonText, RoutedEventHandler click)
     {
-        var grid = new Grid { ColumnSpacing = 8 };
+        var grid = new Grid { ColumnSpacing = 8, HorizontalAlignment = HorizontalAlignment.Stretch };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.Children.Add(editor);
-        var button = new Button { Content = buttonText, VerticalAlignment = VerticalAlignment.Bottom };
+        var button = new Button { Content = buttonText, VerticalAlignment = VerticalAlignment.Center };
         button.SetBinding(Control.IsEnabledProperty, new Microsoft.UI.Xaml.Data.Binding
         {
             Source = editor,
@@ -409,10 +547,9 @@ public sealed partial class SettingsWindow : Window
         var label = Localizer.Get($"Setting_{spec.Key.Replace('.', '_')}", spec.Label);
         return spec.Kind switch
         {
-            SettingKind.Boolean => new ToggleSwitch { Header = label, IsOn = value as bool? ?? false },
+            SettingKind.Boolean => new ToggleSwitch { IsOn = value as bool? ?? false, HorizontalAlignment = HorizontalAlignment.Right },
             SettingKind.Number => new NumberBox
             {
-                Header = label,
                 Value = NumberValue(value),
                 Minimum = spec.Minimum ?? double.MinValue,
                 Maximum = spec.Maximum ?? double.MaxValue,
@@ -421,21 +558,21 @@ public sealed partial class SettingsWindow : Window
                 SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
                 ValidationMode = NumberBoxValidationMode.InvalidInputOverwritten
             },
-            SettingKind.Password => new PasswordBox { Header = label, Password = value?.ToString() ?? string.Empty },
-            SettingKind.Multiline => new TextBox { Header = label, Text = value?.ToString() ?? string.Empty, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 110 },
+            SettingKind.Password => new PasswordBox { Password = value?.ToString() ?? string.Empty },
+            SettingKind.Multiline => new TextBox { Text = value?.ToString() ?? string.Empty, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 110 },
             SettingKind.Language => ChoiceBox(label, value, [("", "Choice_System", "System default"), ("en-US", "Choice_English", "English"), ("ru-RU", "Choice_Russian", "Русский"), ("be-BY", "Choice_Belarusian", "Беларуская")]),
             SettingKind.Theme => ChoiceBox(label, value, [("Default", "Choice_SystemTheme", "Use system setting"), ("Light", "Choice_Light", "Light"), ("Dark", "Choice_Dark", "Dark")]),
             SettingKind.ProxyType => ChoiceBox(label, value, [("None", "Choice_None", "None"), ("HTTP", "Choice_HttpProxy", "HTTP"), ("SOCKS4", "Choice_Socks4", "SOCKS4"), ("SOCKS5", "Choice_Socks5", "SOCKS5")]),
             SettingKind.PeerProtocol => ChoiceBox(label, value, [(0, "Choice_ProtocolBoth", "TCP and µTP"), (1, "Choice_ProtocolTcp", "TCP only"), (2, "Choice_ProtocolUtp", "µTP only")]),
             SettingKind.Encryption => ChoiceBox(label, value, [(0, "Choice_EncryptionPrefer", "Prefer encryption"), (1, "Choice_EncryptionForce", "Require encryption"), (2, "Choice_EncryptionDisable", "Disable encryption")]),
             SettingKind.ResumeStorage => ChoiceBox(label, value, [("Legacy", "Choice_ResumeLegacy", "Fastresume files"), ("SQLite", "Choice_ResumeSqlite", "SQLite database")]),
-            _ => new TextBox { Header = label, Text = value?.ToString() ?? string.Empty }
+            _ => new TextBox { Text = value?.ToString() ?? string.Empty }
         };
     }
 
     private static ComboBox ChoiceBox(string header, object? value, IReadOnlyList<(object Value, string ResourceKey, string Fallback)> choices)
     {
-        var combo = new ComboBox { Header = header };
+        var combo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         foreach (var choice in choices)
             combo.Items.Add(new ComboBoxItem { Content = Localizer.Get(choice.ResourceKey, choice.Fallback), Tag = choice.Value });
         combo.SelectedIndex = choices.Select(static choice => choice.Value).ToList().FindIndex(choice => ValuesEqual(choice, value));
@@ -608,6 +745,8 @@ public sealed partial class SettingsWindow : Window
         {
             if (!_editors.TryGetValue(spec.Key, out var editor))
                 continue;
+            if (!spec.Local && !_dirtyRemoteKeys.Contains(spec.Key))
+                continue;
             if (!editor.IsEnabled)
             {
                 if (!spec.Local)
@@ -645,12 +784,10 @@ public sealed partial class SettingsWindow : Window
             return;
         }
 
-        // Only fields that actually differ from what qBittorrent last reported are queued for
-        // saving and verification. Without this, merely opening a tab - without changing
-        // anything in it - would resend and re-verify every setting shown there, and any field
-        // qBittorrent happens to echo back in a differently-shaped but equivalent form (e.g. a
-        // banned-IP list with normalized line endings) would get wrongly reported as "did not
-        // apply" for a setting the user never touched.
+        // Only controls that raised a user-edit event reach this point. Comparing every rendered
+        // editor with the API snapshot is not a valid dirty check: qBittorrent can normalize or
+        // omit preference values, making an untouched field look different after merely opening
+        // its section.
         var candidate = new JsonObject();
         foreach (var (key, value) in captured)
             candidate[key] = JsonValue.Create(value);
@@ -695,7 +832,10 @@ public sealed partial class SettingsWindow : Window
                 _originalPreferences = (JsonObject)_preferences.DeepClone();
                 mismatched = PreferenceVerifier.FindMismatchedKeys(requested, _preferences);
                 if (mismatched.Count == 0)
+                {
                     _changedPreferences.Clear();
+                    _dirtyRemoteKeys.Clear();
+                }
             }
 
             foreach (var (key, value) in _localValues)

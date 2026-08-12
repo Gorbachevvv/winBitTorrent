@@ -6,6 +6,10 @@
     xmlns:controls="using:WinBitTorrent.Controls"
     Title="Options">
     <Grid x:Name="Root">
+        <Grid.Resources>
+            <Thickness x:Key="ExpanderContentPadding">0</Thickness>
+            <Thickness x:Key="ExpanderHeaderPadding">16,0,8,0</Thickness>
+        </Grid.Resources>
         <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
         <NavigationView x:Name="Sections" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" IsPaneToggleButtonVisible="False" PaneDisplayMode="Left" IsPaneOpen="True" OpenPaneLength="210" SelectionChanged="Sections_SelectionChanged">
             <NavigationView.MenuItems>
@@ -20,7 +24,7 @@
                 <NavigationViewItem x:Uid="SettingsWebUi" Content="Web UI" Tag="WebUI"><NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem x:Uid="SettingsAdvanced" Content="Advanced" Tag="Advanced"><NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon></NavigationViewItem>
             </NavigationView.MenuItems>
-            <ScrollViewer Padding="22,18,28,24"><StackPanel x:Name="SettingsPanel" MaxWidth="780" HorizontalAlignment="Stretch" Spacing="14"><TextBlock x:Name="SectionTitle" Style="{StaticResource TitleTextBlockStyle}" /><InfoBar x:Name="MessageBar" IsClosable="True" IsOpen="False" /></StackPanel></ScrollViewer>
+            <ScrollViewer Padding="24,18,28,24"><StackPanel x:Name="SettingsPanel" MaxWidth="860" HorizontalAlignment="Stretch" Spacing="8"><TextBlock x:Name="SectionTitle" Margin="0,0,0,8" Style="{StaticResource TitleTextBlockStyle}" /><InfoBar x:Name="MessageBar" Margin="0,0,0,4" IsClosable="True" IsOpen="False" /></StackPanel></ScrollViewer>
         </NavigationView>
 
         <!-- Full-pane editor for the torrent context menu. It replaces the section list while it is

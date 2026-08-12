@@ -19,7 +19,7 @@ public sealed partial class ProfilesWindow : Window
     {
         InitializeComponent();
         Title = WinBitTorrent.Services.Localizer.Get("WindowTitle_Profiles", "Server profiles");
-        this.ConfigureOwned(820, 590);
+        this.ConfigureOwned(820, 590, minimumWidth: 700, minimumHeight: 500);
         _profiles = App.Services.GetRequiredService<IServerProfileStore>();
         _credentials = App.Services.GetRequiredService<ICredentialStore>();
         _main = App.Services.GetRequiredService<MainViewModel>();

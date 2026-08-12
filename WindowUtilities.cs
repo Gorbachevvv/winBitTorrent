@@ -15,8 +15,15 @@ internal static class WindowUtilities
     private const int GwlpHwndParent = -8;
     private const int CaptionButtonReservedWidth = 138;
     private const int TitleBarHeight = 36;
+    private const int MainWindowMinimumWidth = 820;
+    private const int MainWindowMinimumHeight = 560;
 
-    public static AppWindow ConfigureOwned(this Window window, int width, int height)
+    public static AppWindow ConfigureOwned(
+        this Window window,
+        int width,
+        int height,
+        int minimumWidth,
+        int minimumHeight)
     {
         var handle = WinRT.Interop.WindowNative.GetWindowHandle(window);
         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
@@ -33,6 +40,7 @@ internal static class WindowUtilities
             ownerWindow = AppWindow.GetFromWindowId(ownerId);
         }
 
+        SetMinimumSize(appWindow, handle, minimumWidth, minimumHeight);
         ResizeAndCenter(appWindow, handle, width, height, ownerWindow);
 
         return appWindow;
@@ -46,7 +54,12 @@ internal static class WindowUtilities
     {
         var width = (int)Math.Round(ClientSettings.Get("window.main.widthDip", 1240d));
         var height = (int)Math.Round(ClientSettings.Get("window.main.heightDip", 800d));
-        ResizeAndCenter(appWindow, handle, Math.Clamp(width, 720, 2400), Math.Clamp(height, 480, 1600));
+        SetMinimumSize(appWindow, handle, MainWindowMinimumWidth, MainWindowMinimumHeight);
+        ResizeAndCenter(
+            appWindow,
+            handle,
+            Math.Clamp(width, MainWindowMinimumWidth, 2400),
+            Math.Clamp(height, MainWindowMinimumHeight, 1600));
 
         if (appWindow.Presenter is OverlappedPresenter presenter
             && ClientSettings.Get("window.main.maximized", true))
@@ -109,6 +122,26 @@ internal static class WindowUtilities
         var y = Math.Clamp(centerY, workArea.Y + edgeInset, workArea.Y + workArea.Height - height - edgeInset);
 
         appWindow.MoveAndResize(new RectInt32(x, y, width, height));
+    }
+
+    private static void SetMinimumSize(
+        AppWindow appWindow,
+        nint handle,
+        int minimumWidthDip,
+        int minimumHeightDip)
+    {
+        if (appWindow.Presenter is not OverlappedPresenter presenter)
+            return;
+
+        var scale = GetScale(handle);
+        var display = DisplayArea.GetFromWindowId(appWindow.Id, DisplayAreaFallback.Primary);
+        var edgeInset = Math.Max(16, (int)Math.Round(32 * scale));
+        presenter.PreferredMinimumWidth = Math.Min(
+            (int)Math.Round(minimumWidthDip * scale),
+            Math.Max(320, display.WorkArea.Width - (edgeInset * 2)));
+        presenter.PreferredMinimumHeight = Math.Min(
+            (int)Math.Round(minimumHeightDip * scale),
+            Math.Max(240, display.WorkArea.Height - (edgeInset * 2)));
     }
 
     private static double GetScale(nint handle)
