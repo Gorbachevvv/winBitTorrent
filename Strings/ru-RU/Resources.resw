@@ -343,7 +343,7 @@
   <data name="AddTorrentCategory.Header" xml:space="preserve"><value>Категория</value></data>
   <data name="AddTorrentTags.Header" xml:space="preserve"><value>Метки</value></data>
   <data name="AddTorrentTags.PlaceholderText" xml:space="preserve"><value>метка1, метка2</value></data>
-  <data name="AddTorrentStart.Content" xml:space="preserve"><value>Запустить торрент</value></data>
+  <data name="AddTorrentStart.Content" xml:space="preserve"><value>Запустить после добавления</value></data>
   <data name="AddTorrentAutoTmm.Content" xml:space="preserve"><value>Автоматическое управление торрентом</value></data>
   <data name="AddTorrentSequential.Content" xml:space="preserve"><value>Последовательная загрузка</value></data>
   <data name="AddTorrentFirstLast.Content" xml:space="preserve"><value>Сначала загрузить первую и последнюю части</value></data>
@@ -354,7 +354,7 @@
   <data name="CommonSelectAll.Content" xml:space="preserve"><value>Выбрать всё</value></data>
   <data name="CommonSelectNone.Content" xml:space="preserve"><value>Снять выделение</value></data>
   <data name="AddTorrentRawMetadata.Header" xml:space="preserve"><value>Исходные метаданные</value></data>
-  <data name="AddTorrentManagementMode.Text" xml:space="preserve"><value>Режим управления торрентом:</value></data>
+  <data name="AddTorrentManagementMode.Text" xml:space="preserve"><value>Режим управления торрентом</value></data>
   <data name="AddTorrentManagementManual.Content" xml:space="preserve"><value>Ручной</value></data>
   <data name="AddTorrentManagementAutomatic.Content" xml:space="preserve"><value>Автоматический</value></data>
   <data name="AddTorrentSavePathLabel.Text" xml:space="preserve"><value>Путь сохранения</value></data>
@@ -376,6 +376,32 @@
   <data name="AddTorrentInfoHashV2.Text" xml:space="preserve"><value>Инфо-хеш v2:</value></data>
   <data name="AddTorrentInfoComment.Text" xml:space="preserve"><value>Комментарий:</value></data>
   <data name="AddTorrentSourcesPanel.Header" xml:space="preserve"><value>Источники торрента</value></data>
+  <data name="AddTorrentDestinationTitle.Text" xml:space="preserve"><value>Сохранение</value></data>
+  <data name="AddTorrentDestinationDescription.Text" xml:space="preserve"><value>Выберите, как и куда будет сохранён торрент.</value></data>
+  <data name="AddTorrentOrganizationTitle.Text" xml:space="preserve"><value>Организация</value></data>
+  <data name="AddTorrentStartLabel.Text" xml:space="preserve"><value>Запустить после добавления</value></data>
+  <data name="AddTorrentStartDescription.Text" xml:space="preserve"><value>Сразу начать загрузку выбранных файлов.</value></data>
+  <data name="AddTorrentAdvancedTitle.Text" xml:space="preserve"><value>Дополнительные параметры</value></data>
+  <data name="AddTorrentAdvancedDescription.Text" xml:space="preserve"><value>Временный путь, порядок загрузки, проверка и ограничения скорости.</value></data>
+  <data name="AddTorrentUseTempPathLabel.Text" xml:space="preserve"><value>Отдельный путь для незавершённых данных</value></data>
+  <data name="AddTorrentSequentialLabel.Text" xml:space="preserve"><value>Загружать последовательно</value></data>
+  <data name="AddTorrentFirstLastLabel.Text" xml:space="preserve"><value>Сначала загрузить первую и последнюю части</value></data>
+  <data name="AddTorrentSkipCheckLabel.Text" xml:space="preserve"><value>Пропустить проверку хеша</value></data>
+  <data name="AddTorrentInfoDescription.Text" xml:space="preserve"><value>Дата создания, хеши и комментарий.</value></data>
+  <data name="AddTorrentSourcesDescription.Text" xml:space="preserve"><value>Измените исходную ссылку или добавьте другой .torrent-файл.</value></data>
+  <data name="AddTorrentSourcesTitle.Text" xml:space="preserve"><value>Источники торрента</value></data>
+  <data name="AddTorrentChangePath.Content" xml:space="preserve"><value>Изменить</value></data>
+  <data name="AddTorrentManagementGroupTitle.Text" xml:space="preserve"><value>Управление и расположение</value></data>
+  <data name="AddTorrentManagementGroupDescription.Text" xml:space="preserve"><value>Режим управления и путь для незавершённых данных</value></data>
+  <data name="AddTorrentDownloadGroupTitle.Text" xml:space="preserve"><value>Проверка и загрузка</value></data>
+  <data name="AddTorrentDownloadGroupDescription.Text" xml:space="preserve"><value>Проверка хеша, последовательная загрузка и приоритет частей</value></data>
+  <data name="AddTorrentLimitsGroupTitle.Text" xml:space="preserve"><value>Ограничения скорости</value></data>
+  <data name="AddTorrentLimitsGroupDescription.Text" xml:space="preserve"><value>Лимиты загрузки и отдачи</value></data>
+  <data name="AddTorrentOtherGroupTitle.Text" xml:space="preserve"><value>Разное</value></data>
+  <data name="AddTorrentOtherGroupDescription.Text" xml:space="preserve"><value>Исходные ссылки и дополнительные торрент-файлы</value></data>
+  <data name="AddTorrent_MetadataNotLoaded" xml:space="preserve"><value>Метаданные ещё не загружены</value></data>
+  <data name="AddTorrentFilesTitle.Text" xml:space="preserve"><value>Файлы</value></data>
+  <data name="AddTorrent_MetadataReady" xml:space="preserve"><value>Метаданные загружены. Выберите файлы для скачивания.</value></data>
   <data name="AddTorrentBrowseFile.Content" xml:space="preserve"><value>Добавить .torrent…</value></data>
   <data name="AddTorrentFilesFilter.PlaceholderText" xml:space="preserve"><value>Фильтр файлов…</value></data>
   <data name="AddTorrentFileNameHeader.Text" xml:space="preserve"><value>Имя</value></data>

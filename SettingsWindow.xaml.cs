@@ -329,29 +329,24 @@ public sealed partial class SettingsWindow : Window
 
     private static Expander CreateConnectionGroup(string group, StackPanel content)
     {
-        var (title, description, expanded) = group switch
+        var (title, description) = group switch
         {
             "Protocol" => (
                 Localizer.Get("SettingsConnection_ProtocolTitle", "Protocol and listening port"),
-                Localizer.Get("SettingsConnection_ProtocolDescription", "Controls how peers reach this client. Port 0 lets the operating system select an available port."),
-                true),
+                Localizer.Get("SettingsConnection_ProtocolDescription", "Controls how peers reach this client. Port 0 lets the operating system select an available port.")),
             "Limits" => (
                 Localizer.Get("SettingsConnection_LimitsTitle", "Connection limits"),
-                Localizer.Get("SettingsConnection_LimitsDescription", "Use -1 for no limit. Conservative limits can reduce router and memory load."),
-                true),
+                Localizer.Get("SettingsConnection_LimitsDescription", "Use -1 for no limit. Conservative limits can reduce router and memory load.")),
             "Proxy" => (
                 Localizer.Get("SettingsConnection_ProxyTitle", "Proxy server"),
-                Localizer.Get("SettingsConnection_ProxyDescription", "Choose which qBittorrent traffic is routed through the proxy."),
-                true),
+                Localizer.Get("SettingsConnection_ProxyDescription", "Choose which qBittorrent traffic is routed through the proxy.")),
             "I2P" => (
                 Localizer.Get("SettingsConnection_I2pTitle", "I2P (experimental)"),
-                Localizer.Get("SettingsConnection_I2pDescription", "Requires a running I2P router with a SAM bridge."),
-                false),
+                Localizer.Get("SettingsConnection_I2pDescription", "Requires a running I2P router with a SAM bridge.")),
             "IpFilter" => (
                 Localizer.Get("SettingsConnection_FilterTitle", "IP filtering"),
-                Localizer.Get("SettingsConnection_FilterDescription", "Load a compatible filter list or block individual addresses manually."),
-                false),
-            _ => (group, string.Empty, true)
+                Localizer.Get("SettingsConnection_FilterDescription", "Load a compatible filter list or block individual addresses manually.")),
+            _ => (group, string.Empty)
         };
 
         var headerText = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
@@ -397,7 +392,7 @@ public sealed partial class SettingsWindow : Window
         {
             Header = header,
             Content = content,
-            IsExpanded = expanded,
+            IsExpanded = false,
             Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
             BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
             BorderThickness = new Thickness(1),

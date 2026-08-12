@@ -189,6 +189,15 @@ else {
     Write-Info "Reusing existing dist\$portableName (NoClean)"
 }
 
+# A stale packaged-app resource index makes the unpackaged WinUI executable fail before its
+# first window is shown. The installer removes this legacy 1.1.x artifact during upgrades; keep
+# this assertion next to staging so a future installer refactor cannot silently regress it.
+$installerScriptPath = Join-Path $repoRoot 'build\installer\WinBitTorrent.iss'
+$installerScript = Get-Content -Path $installerScriptPath -Raw
+if ($installerScript -notmatch '(?im)^Type:\s*files;\s*Name:\s*"\{app\}\\resources\.pri"') {
+    throw 'Installer upgrade migration for the legacy resources.pri file is missing.'
+}
+
 if ($makeZip) {
     Write-Step "Compressing portable .zip"
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
@@ -212,8 +221,7 @@ if ($buildInstaller) {
     }
 
     New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
-    $issPath = Join-Path $repoRoot 'build\installer\WinBitTorrent.iss'
-    & $iscc $issPath "/DAppVersion=$effectiveVersion" "/DPayloadDir=$portableDir" "/DOutputDir=$installerDir"
+    & $iscc $installerScriptPath "/DAppVersion=$effectiveVersion" "/DPayloadDir=$portableDir" "/DOutputDir=$installerDir"
     if ($LASTEXITCODE -ne 0) { throw "ISCC.exe failed with exit code $LASTEXITCODE." }
     Write-Ok "Installer built at dist\WinBitTorrent-$effectiveVersion-installer"
 }

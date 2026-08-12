@@ -13,6 +13,33 @@
         DragLeave="Root_DragLeave"
         DragOver="Root_DragOver"
         Drop="Root_Drop">
+        <Grid.Resources>
+            <Thickness x:Key="ExpanderContentPadding">0</Thickness>
+            <Thickness x:Key="ExpanderHeaderPadding">14,0,8,0</Thickness>
+            <Style x:Key="AddTorrentSectionCardStyle" TargetType="Border">
+                <Setter Property="Padding" Value="14,12" />
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="7" />
+            </Style>
+            <Style x:Key="AddTorrentExpanderStyle" TargetType="Expander">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="7" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+            <Style x:Key="AddTorrentOptionExpanderStyle" TargetType="Expander">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -23,203 +50,171 @@
 
         <Grid Grid.Row="1" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="480" MinWidth="360" />
-                <ColumnDefinition Width="*" MinWidth="420" />
+                <ColumnDefinition Width="2*" MinWidth="350" MaxWidth="430" />
+                <ColumnDefinition Width="3*" MinWidth="420" />
             </Grid.ColumnDefinitions>
 
             <Border
                 Background="{ThemeResource LayerFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                CornerRadius="4">
+                CornerRadius="7">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Padding="10" Spacing="12">
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="180" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                x:Uid="AddTorrentManagementMode"
-                                VerticalAlignment="Center"
-                                FontWeight="SemiBold"
-                                Text="Torrent management mode:" />
-                            <ComboBox
-                                x:Name="AutoTmmModeBox"
-                                Grid.Column="1"
-                                SelectedIndex="0"
-                                SelectionChanged="AutoTmmModeBox_SelectionChanged">
-                                <ComboBoxItem x:Uid="AddTorrentManagementManual" Content="Manual" />
-                                <ComboBoxItem x:Uid="AddTorrentManagementAutomatic" Content="Automatic" />
-                            </ComboBox>
-                        </Grid>
-
-                        <StackPanel Spacing="6">
-                            <TextBlock x:Uid="AddTorrentSavePathLabel" FontWeight="SemiBold" Text="Save path" />
-                            <Grid ColumnSpacing="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="SavePathBox" />
-                                <Button
-                                    x:Name="SavePathBrowseButton"
-                                    x:Uid="CommonBrowse"
-                                    Grid.Column="1"
-                                    MinWidth="36"
-                                    Content="Browse…"
-                                    Click="SavePathBrowse_Click" />
+                    <StackPanel Padding="10" Spacing="10">
+                        <StackPanel Margin="4,2,4,4" Spacing="10">
+                            <StackPanel Spacing="5">
+                                <TextBlock x:Uid="AddTorrentSavePathLabel" Text="Save path" />
+                                <Grid ColumnSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBox x:Name="SavePathBox" />
+                                    <Button x:Name="SavePathBrowseButton" x:Uid="AddTorrentChangePath" Grid.Column="1" Content="Change" Click="SavePathBrowse_Click" />
+                                </Grid>
+                            </StackPanel>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <TextBox x:Uid="AddTorrentCategory" x:Name="CategoryBox" Header="Category" TextChanged="CategoryBox_TextChanged" />
+                                <TextBox x:Uid="AddTorrentTags" x:Name="TagsBox" Grid.Column="1" Header="Tags" PlaceholderText="tag1, tag2" />
                             </Grid>
-                            <CheckBox
-                                x:Uid="AddTorrentUseTempPath"
-                                x:Name="UseTempPathBox"
-                                Content="Use another path for incomplete torrent"
-                                Checked="UseTempPath_Checked"
-                                Unchecked="UseTempPath_Checked" />
-                            <Grid ColumnSpacing="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox
-                                    x:Name="TempPathBox"
-                                    IsEnabled="False"
-                                    PlaceholderText="Incomplete torrent path" />
-                                <Button
-                                    x:Name="TempPathBrowseButton"
-                                    x:Uid="CommonBrowse"
-                                    Grid.Column="1"
-                                    MinWidth="36"
-                                    Content="Browse…"
-                                    IsEnabled="False"
-                                    Click="TempPathBrowse_Click" />
-                            </Grid>
+                            <CheckBox x:Uid="AddTorrentStart" x:Name="StartBox" Content="Start after adding" IsChecked="True" />
                         </StackPanel>
 
-                        <StackPanel Spacing="8">
-                            <TextBlock x:Uid="AddTorrentSettingsTitle" FontWeight="SemiBold" Text="Torrent settings" />
-                            <Grid ColumnSpacing="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Uid="AddTorrentCategoryLabel" VerticalAlignment="Center" Text="Category:" />
-                                <TextBox x:Name="CategoryBox" Grid.Column="1" TextChanged="CategoryBox_TextChanged" />
-                            </Grid>
-                            <Grid ColumnSpacing="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Uid="AddTorrentTagsLabel" VerticalAlignment="Center" Text="Tags:" />
-                                <TextBox
-                                    x:Name="TagsBox"
-                                    Grid.Column="1"
-                                    PlaceholderText="tag1, tag2" />
-                            </Grid>
-                            <Grid ColumnSpacing="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <CheckBox x:Uid="AddTorrentStart" x:Name="StartBox" Content="Start torrent" IsChecked="True" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                    <TextBlock x:Uid="AddTorrentStopConditionLabel" VerticalAlignment="Center" Text="Stop condition:" />
-                                    <ComboBox x:Name="StopConditionBox" MinWidth="130" SelectedIndex="0">
-                                        <ComboBoxItem x:Uid="AddTorrentStopConditionNone" Content="None" />
-                                    </ComboBox>
-                                </StackPanel>
-                            </Grid>
-                            <Grid RowSpacing="4">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <CheckBox x:Uid="AddTorrentSkipCheck" x:Name="SkipCheckingBox" Content="Skip hash check" />
-                                <CheckBox x:Uid="AddTorrentSequential" x:Name="SequentialBox" Grid.Row="1" Content="Download in sequential order" />
-                                <CheckBox x:Uid="AddTorrentFirstLast" x:Name="FirstLastBox" Grid.Row="2" Content="Download first and last pieces first" />
-                            </Grid>
-                            <Grid ColumnSpacing="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <NumberBox
-                                    x:Uid="AddTorrentDownLimit"
-                                    x:Name="DownloadLimitBox"
-                                    Header="Download limit (KiB/s)"
-                                    Minimum="0"
-                                    SpinButtonPlacementMode="Compact" />
-                                <NumberBox
-                                    x:Uid="AddTorrentUpLimit"
-                                    x:Name="UploadLimitBox"
-                                    Grid.Column="1"
-                                    Header="Upload limit (KiB/s)"
-                                    Minimum="0"
-                                    SpinButtonPlacementMode="Compact" />
-                            </Grid>
-                            <Grid ColumnSpacing="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="160" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Uid="AddTorrentContentLayoutLabel" VerticalAlignment="Center" Text="Content layout:" />
-                                <ComboBox x:Name="ContentLayoutBox" Grid.Column="1" SelectedIndex="0">
-                                    <ComboBoxItem x:Uid="AddTorrentContentLayoutOriginal" Content="Original" />
-                                </ComboBox>
-                            </Grid>
-                        </StackPanel>
+                        <Border Padding="0" Style="{StaticResource AddTorrentSectionCardStyle}">
+                            <StackPanel Spacing="0">
+                                <Expander Style="{StaticResource AddTorrentOptionExpanderStyle}" IsExpanded="False">
+                                    <Expander.Header>
+                                        <Grid Margin="0,9,0,9" ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="24" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <FontIcon FontSize="16" Glyph="&#xE8B7;" />
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock x:Uid="AddTorrentManagementGroupTitle" FontWeight="SemiBold" Text="Management and location" />
+                                                <TextBlock x:Uid="AddTorrentManagementGroupDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Management mode and path for incomplete data" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel Padding="14,2,14,14" Spacing="10">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="170" /></Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="AddTorrentManagementMode" VerticalAlignment="Center" Text="Torrent management mode" />
+                                            <ComboBox x:Name="AutoTmmModeBox" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="0" SelectionChanged="AutoTmmModeBox_SelectionChanged">
+                                                <ComboBoxItem x:Uid="AddTorrentManagementManual" Content="Manual" />
+                                                <ComboBoxItem x:Uid="AddTorrentManagementAutomatic" Content="Automatic" />
+                                            </ComboBox>
+                                        </Grid>
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="AddTorrentUseTempPathLabel" VerticalAlignment="Center" Text="Separate path for incomplete data" TextWrapping="Wrap" />
+                                            <ToggleSwitch x:Name="UseTempPathBox" Grid.Column="1" Toggled="UseTempPath_Checked" />
+                                        </Grid>
+                                        <Grid ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TempPathBox" IsEnabled="False" PlaceholderText="Incomplete torrent path" />
+                                            <Button x:Name="TempPathBrowseButton" x:Uid="CommonBrowse" Grid.Column="1" Content="Browse…" IsEnabled="False" Click="TempPathBrowse_Click" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Expander>
+                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                                <Expander Style="{StaticResource AddTorrentOptionExpanderStyle}" IsExpanded="False">
+                                    <Expander.Header>
+                                        <Grid Margin="0,9,0,9" ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="24" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <FontIcon FontSize="16" Glyph="&#xE9D9;" />
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock x:Uid="AddTorrentDownloadGroupTitle" FontWeight="SemiBold" Text="Checking and download" />
+                                                <TextBlock x:Uid="AddTorrentDownloadGroupDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Hash checking, sequential download, and piece priority" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <StackPanel Padding="14,2,14,14" Spacing="10">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="AddTorrentSequentialLabel" VerticalAlignment="Center" Text="Download in sequential order" TextWrapping="Wrap" />
+                                            <ToggleSwitch x:Name="SequentialBox" Grid.Column="1" />
+                                        </Grid>
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="AddTorrentFirstLastLabel" VerticalAlignment="Center" Text="Download first and last pieces first" TextWrapping="Wrap" />
+                                            <ToggleSwitch x:Name="FirstLastBox" Grid.Column="1" />
+                                        </Grid>
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="AddTorrentSkipCheckLabel" VerticalAlignment="Center" Text="Skip hash check" TextWrapping="Wrap" />
+                                            <ToggleSwitch x:Name="SkipCheckingBox" Grid.Column="1" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Expander>
+                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                                <Expander Style="{StaticResource AddTorrentOptionExpanderStyle}" IsExpanded="False">
+                                    <Expander.Header>
+                                        <Grid Margin="0,9,0,9" ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="24" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <FontIcon FontSize="16" Glyph="&#xE9CA;" />
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock x:Uid="AddTorrentLimitsGroupTitle" FontWeight="SemiBold" Text="Speed limits" />
+                                                <TextBlock x:Uid="AddTorrentLimitsGroupDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Download and upload limits" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <Grid Padding="14,2,14,14" ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <NumberBox x:Uid="AddTorrentDownLimit" x:Name="DownloadLimitBox" Header="Download limit (KiB/s)" Minimum="0" SpinButtonPlacementMode="Compact" />
+                                        <NumberBox x:Uid="AddTorrentUpLimit" x:Name="UploadLimitBox" Grid.Column="1" Header="Upload limit (KiB/s)" Minimum="0" SpinButtonPlacementMode="Compact" />
+                                    </Grid>
+                                </Expander>
+                                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                                <Expander Style="{StaticResource AddTorrentOptionExpanderStyle}" IsExpanded="False">
+                                    <Expander.Header>
+                                        <Grid Margin="0,9,0,9" ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="24" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <FontIcon FontSize="16" Glyph="&#xE713;" />
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock x:Uid="AddTorrentOtherGroupTitle" FontWeight="SemiBold" Text="Other" />
+                                                <TextBlock x:Uid="AddTorrentOtherGroupDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Original links and additional torrent files" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <Grid Padding="14,2,14,14" RowSpacing="8">
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                        <TextBox x:Uid="AddTorrentSources" x:Name="SourcesBox" AcceptsReturn="True" Height="82" PlaceholderText="One source per line" TextWrapping="Wrap" />
+                                        <StackPanel Grid.Row="1" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                                            <Button x:Uid="AddTorrentBrowseFile" Content="Add .torrent…" Click="Browse_Click" />
+                                            <Button x:Uid="AddTorrentPreview" x:Name="PreviewButton" Content="Preview metadata" Click="Preview_Click" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
 
-                        <StackPanel Spacing="8">
-                            <TextBlock x:Uid="AddTorrentInfoTitle" FontWeight="SemiBold" Text="Torrent information" />
-                            <Grid ColumnSpacing="10" RowSpacing="6">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <TextBlock x:Uid="AddTorrentInfoName" Text="Name:" />
-                                <TextBlock x:Name="TorrentNameText" Grid.Column="1" TextTrimming="CharacterEllipsis" />
-                                <TextBlock x:Uid="AddTorrentInfoSize" Grid.Row="1" Text="Size:" />
-                                <TextBlock x:Name="TorrentSizeText" Grid.Row="1" Grid.Column="1" />
-                                <TextBlock x:Uid="AddTorrentInfoDate" Grid.Row="2" Text="Date:" />
-                                <TextBlock x:Name="TorrentDateText" Grid.Row="2" Grid.Column="1" />
-                                <TextBlock x:Uid="AddTorrentInfoHashV1" Grid.Row="3" Text="Info-hash v1:" />
-                                <TextBlock x:Name="TorrentHashV1Text" Grid.Row="3" Grid.Column="1" TextTrimming="CharacterEllipsis" />
-                                <TextBlock x:Uid="AddTorrentInfoHashV2" Grid.Row="4" Text="Info-hash v2:" />
-                                <TextBlock x:Name="TorrentHashV2Text" Grid.Row="4" Grid.Column="1" TextTrimming="CharacterEllipsis" />
-                                <TextBlock x:Uid="AddTorrentInfoComment" Grid.Row="5" Text="Comment:" />
-                                <TextBlock x:Name="TorrentCommentText" Grid.Row="5" Grid.Column="1" TextWrapping="Wrap" />
-                            </Grid>
-                        </StackPanel>
-
-                        <Expander x:Uid="AddTorrentSourcesPanel" Header="Torrent sources">
-                            <Grid RowSpacing="8">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <TextBox
-                                    x:Uid="AddTorrentSources"
-                                    x:Name="SourcesBox"
-                                    AcceptsReturn="True"
-                                    Height="82"
-                                    PlaceholderText="One source per line"
-                                    TextWrapping="Wrap" />
-                                <StackPanel Grid.Row="1" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
-                                    <Button x:Uid="AddTorrentBrowseFile" Content="Add .torrent…" Click="Browse_Click" />
-                                    <Button x:Uid="AddTorrentPreview" x:Name="PreviewButton" Content="Preview metadata" Click="Preview_Click" />
-                                </StackPanel>
-                            </Grid>
-                        </Expander>
+                        <Border Style="{StaticResource AddTorrentSectionCardStyle}">
+                            <StackPanel Spacing="8">
+                                <TextBlock x:Uid="AddTorrentInfoTitle" FontSize="15" FontWeight="SemiBold" Text="Torrent details" />
+                                <Expander Style="{StaticResource AddTorrentOptionExpanderStyle}" IsExpanded="False">
+                                    <Expander.Header>
+                                        <Grid Margin="0,5,0,5" ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <Border Width="34" Height="40" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4">
+                                                <FontIcon FontSize="19" Glyph="&#xE8A5;" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                <TextBlock x:Name="TorrentNameText" FontWeight="SemiBold" Text="—" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock x:Name="TorrentSummaryText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Metadata not loaded" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Expander.Header>
+                                    <Grid Padding="0,4,0,2" ColumnSpacing="10" RowSpacing="7">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                        <TextBlock x:Uid="AddTorrentInfoDate" Text="Date:" />
+                                        <TextBlock x:Name="TorrentDateText" Grid.Column="1" />
+                                        <TextBlock x:Uid="AddTorrentInfoHashV1" Grid.Row="1" Text="Info-hash v1:" />
+                                        <TextBlock x:Name="TorrentHashV1Text" Grid.Row="1" Grid.Column="1" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock x:Uid="AddTorrentInfoHashV2" Grid.Row="2" Text="Info-hash v2:" />
+                                        <TextBlock x:Name="TorrentHashV2Text" Grid.Row="2" Grid.Column="1" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock x:Uid="AddTorrentInfoComment" Grid.Row="3" Text="Comment:" />
+                                        <TextBlock x:Name="TorrentCommentText" Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Border>

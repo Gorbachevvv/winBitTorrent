@@ -113,6 +113,15 @@ Name: "associatemagnet"; Description: "{cm:TaskAssociateMagnet}"; GroupDescripti
 [Files]
 Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
+[InstallDelete]
+; Versions through 1.1.9 were published without an explicit unpackaged app type and installed
+; a generated resources.pri. Starting with 1.2.0 the unpackaged payload intentionally has no
+; PRI file. Inno Setup upgrades files in place, so without this migration the obsolete PRI is
+; left beside the new executable; WinUI then opens the incompatible resource index and crashes
+; during startup with 0x80004002/0xC000027B. Delete only this known legacy artifact before the
+; new payload is copied. Application data lives under LocalAppData and is unaffected.
+Type: files; Name: "{app}\resources.pri"
+
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: startmenuicon
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"; Tasks: startmenuicon

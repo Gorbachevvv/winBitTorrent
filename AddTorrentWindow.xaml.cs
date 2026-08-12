@@ -23,6 +23,9 @@ public sealed partial class AddTorrentWindow : Window
     private string? _metadataSource;
     private string? _metadataName;
     private JsonObject? _metadata;
+    // XAML raises control events while InitializeComponent is still constructing the visual tree.
+    // Handlers that coordinate several named controls must stay dormant until every control exists.
+    private bool _viewReady;
     private bool _initialized;
     private bool _updatingPathControls;
     private string _defaultSavePath;
@@ -45,6 +48,7 @@ public sealed partial class AddTorrentWindow : Window
         _manualSavePath = _defaultSavePath;
         SavePathBox.Text = _defaultSavePath;
         SourcesBox.Text = string.Join(Environment.NewLine, torrentFiles.Concat(urls));
+        _viewReady = true;
         Activated += AddTorrentWindow_Activated;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         Closed += (_, _) =>
@@ -114,14 +118,14 @@ public sealed partial class AddTorrentWindow : Window
 
     private void AutoTmmModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_updatingPathControls || SavePathBox is null)
+        if (!_viewReady || _updatingPathControls)
             return;
 
         if (AutoTmmModeBox.SelectedIndex == 1)
         {
             _manualSavePath = SavePathBox.Text;
             _manualDownloadPath = TempPathBox.Text;
-            _manualUseDownloadPath = UseTempPathBox.IsChecked == true;
+            _manualUseDownloadPath = UseTempPathBox.IsOn;
             ApplyPathMode(restoreManualValues: false);
         }
         else
@@ -132,7 +136,7 @@ public sealed partial class AddTorrentWindow : Window
 
     private void CategoryBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (!_updatingPathControls && AutoTmmModeBox.SelectedIndex == 1)
+        if (_viewReady && !_updatingPathControls && AutoTmmModeBox.SelectedIndex == 1)
             ShowAutomaticPaths();
     }
 
@@ -151,7 +155,7 @@ public sealed partial class AddTorrentWindow : Window
         {
             SavePathBox.Text = string.IsNullOrWhiteSpace(_manualSavePath) ? _defaultSavePath : _manualSavePath;
             TempPathBox.Text = _manualDownloadPath;
-            UseTempPathBox.IsChecked = _manualUseDownloadPath;
+            UseTempPathBox.IsOn = _manualUseDownloadPath;
             UpdateDownloadPathEditors();
         }
         _updatingPathControls = false;
@@ -171,7 +175,7 @@ public sealed partial class AddTorrentWindow : Window
             categoryDownloadPath = categoryOptions.DownloadPath;
         }
         TempPathBox.Text = categoryDownloadPath;
-        UseTempPathBox.IsChecked = hasCategoryDownloadPath
+        UseTempPathBox.IsOn = hasCategoryDownloadPath
             || (_defaultUseDownloadPath && !string.IsNullOrWhiteSpace(categoryDownloadPath));
         UpdateDownloadPathEditors();
     }
@@ -244,11 +248,14 @@ public sealed partial class AddTorrentWindow : Window
     }
 
     private void UseTempPath_Checked(object sender, RoutedEventArgs e)
-        => UpdateDownloadPathEditors();
+    {
+        if (_viewReady && !_updatingPathControls)
+            UpdateDownloadPathEditors();
+    }
 
     private void UpdateDownloadPathEditors()
     {
-        var enabled = AutoTmmModeBox.SelectedIndex != 1 && UseTempPathBox.IsChecked == true;
+        var enabled = AutoTmmModeBox.SelectedIndex != 1 && UseTempPathBox.IsOn;
         TempPathBox.IsEnabled = enabled;
         TempPathBrowseButton.IsEnabled = enabled;
     }
@@ -331,7 +338,7 @@ public sealed partial class AddTorrentWindow : Window
             ShowError(new InvalidOperationException(Localizer.Get("AddTorrent_SavePathRequired", "Select a save path.")));
             return;
         }
-        if (!automatic && UseTempPathBox.IsChecked == true && string.IsNullOrWhiteSpace(TempPathBox.Text))
+        if (!automatic && UseTempPathBox.IsOn && string.IsNullOrWhiteSpace(TempPathBox.Text))
         {
             ShowError(new InvalidOperationException(Localizer.Get("AddTorrent_DownloadPathRequired", "Select a path for incomplete torrent data.")));
             return;
@@ -425,7 +432,7 @@ public sealed partial class AddTorrentWindow : Window
         int? downloadLimit)
     {
         var automatic = AutoTmmModeBox.SelectedIndex == 1;
-        var useDownloadPath = !automatic && UseTempPathBox.IsChecked == true;
+        var useDownloadPath = !automatic && UseTempPathBox.IsOn;
         return new(
             urls,
             files,
@@ -435,10 +442,10 @@ public sealed partial class AddTorrentWindow : Window
             Category: NullIfWhiteSpace(CategoryBox.Text),
             Tags: NullIfWhiteSpace(TagsBox.Text),
             StartTorrent: StartBox.IsChecked == true,
-            SequentialDownload: SequentialBox.IsChecked == true,
-            FirstLastPiecePriority: FirstLastBox.IsChecked == true,
+            SequentialDownload: SequentialBox.IsOn,
+            FirstLastPiecePriority: FirstLastBox.IsOn,
             AutomaticTorrentManagement: automatic,
-            SkipChecking: SkipCheckingBox.IsChecked == true,
+            SkipChecking: SkipCheckingBox.IsOn,
             UploadLimit: uploadLimit,
             DownloadLimit: downloadLimit);
     }
@@ -586,15 +593,14 @@ public sealed partial class AddTorrentWindow : Window
             _metadataFiles.Add(new MetadataFileSelection(name, totalLength));
         RefreshVisibleMetadataFiles();
         TorrentNameText.Text = name;
-        TorrentSizeText.Text = totalLength > 0 ? ValueFormatter.Size(totalLength) : NotAvailable();
+        TorrentSummaryText.Text = $"{ValueFormatter.Size(totalLength)} · {_metadataFiles.Count} {(_metadataFiles.Count == 1 ? Localizer.Get("AddTorrent_File", "file") : Localizer.Get("AddTorrent_Files", "files"))}";
         TorrentDateText.Text = MetadataDate(metadata["creation date"] ?? metadata["creation_date"] ?? info["creation date"] ?? info["creation_date"]);
         TorrentHashV1Text.Text = MetadataNodeText(metadata["infohash_v1"] ?? metadata["hash"] ?? metadata["info_hash"] ?? info["infohash_v1"]);
         TorrentHashV2Text.Text = MetadataNodeText(metadata["infohash_v2"] ?? info["infohash_v2"]);
         TorrentCommentText.Text = MetadataNodeText(metadata["comment"] ?? info["comment"]);
-        var fileLabel = _metadataFiles.Count == 1
-            ? Localizer.Get("AddTorrent_File", "file")
-            : Localizer.Get("AddTorrent_Files", "files");
-        MetadataSummary.Text = $"{name} · {_metadataFiles.Count} {fileLabel} · {ValueFormatter.Size(totalLength)}";
+        MetadataSummary.Text = Localizer.Get(
+            "AddTorrent_MetadataReady",
+            "Metadata loaded. Select the files to download.");
     }
 
     private bool IsMetadataSource(IReadOnlyList<string> files, IReadOnlyList<string> urls)
@@ -683,8 +689,8 @@ public sealed partial class AddTorrentWindow : Window
 
     private void ClearTorrentInfo()
     {
-        TorrentNameText.Text = string.Empty;
-        TorrentSizeText.Text = string.Empty;
+        TorrentNameText.Text = "—";
+        TorrentSummaryText.Text = Localizer.Get("AddTorrent_MetadataNotLoaded", "Metadata not loaded");
         TorrentDateText.Text = string.Empty;
         TorrentHashV1Text.Text = string.Empty;
         TorrentHashV2Text.Text = string.Empty;

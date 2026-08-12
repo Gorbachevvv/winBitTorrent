@@ -343,7 +343,7 @@
   <data name="AddTorrentCategory.Header" xml:space="preserve"><value>Category</value></data>
   <data name="AddTorrentTags.Header" xml:space="preserve"><value>Tags</value></data>
   <data name="AddTorrentTags.PlaceholderText" xml:space="preserve"><value>tag1, tag2</value></data>
-  <data name="AddTorrentStart.Content" xml:space="preserve"><value>Start torrent</value></data>
+  <data name="AddTorrentStart.Content" xml:space="preserve"><value>Start after adding</value></data>
   <data name="AddTorrentAutoTmm.Content" xml:space="preserve"><value>Automatic torrent management</value></data>
   <data name="AddTorrentSequential.Content" xml:space="preserve"><value>Download in sequential order</value></data>
   <data name="AddTorrentFirstLast.Content" xml:space="preserve"><value>Download first and last pieces first</value></data>
@@ -354,7 +354,7 @@
   <data name="CommonSelectAll.Content" xml:space="preserve"><value>Select all</value></data>
   <data name="CommonSelectNone.Content" xml:space="preserve"><value>Select none</value></data>
   <data name="AddTorrentRawMetadata.Header" xml:space="preserve"><value>Raw metadata</value></data>
-  <data name="AddTorrentManagementMode.Text" xml:space="preserve"><value>Torrent management mode:</value></data>
+  <data name="AddTorrentManagementMode.Text" xml:space="preserve"><value>Torrent management mode</value></data>
   <data name="AddTorrentManagementManual.Content" xml:space="preserve"><value>Manual</value></data>
   <data name="AddTorrentManagementAutomatic.Content" xml:space="preserve"><value>Automatic</value></data>
   <data name="AddTorrentSavePathLabel.Text" xml:space="preserve"><value>Save path</value></data>
@@ -376,6 +376,32 @@
   <data name="AddTorrentInfoHashV2.Text" xml:space="preserve"><value>Info-hash v2:</value></data>
   <data name="AddTorrentInfoComment.Text" xml:space="preserve"><value>Comment:</value></data>
   <data name="AddTorrentSourcesPanel.Header" xml:space="preserve"><value>Torrent sources</value></data>
+  <data name="AddTorrentDestinationTitle.Text" xml:space="preserve"><value>Saving</value></data>
+  <data name="AddTorrentDestinationDescription.Text" xml:space="preserve"><value>Choose how and where the torrent will be saved.</value></data>
+  <data name="AddTorrentOrganizationTitle.Text" xml:space="preserve"><value>Organization</value></data>
+  <data name="AddTorrentStartLabel.Text" xml:space="preserve"><value>Start after adding</value></data>
+  <data name="AddTorrentStartDescription.Text" xml:space="preserve"><value>Begin downloading the selected files immediately.</value></data>
+  <data name="AddTorrentAdvancedTitle.Text" xml:space="preserve"><value>Advanced options</value></data>
+  <data name="AddTorrentAdvancedDescription.Text" xml:space="preserve"><value>Temporary path, transfer order, checking, and speed limits.</value></data>
+  <data name="AddTorrentUseTempPathLabel.Text" xml:space="preserve"><value>Separate path for incomplete data</value></data>
+  <data name="AddTorrentSequentialLabel.Text" xml:space="preserve"><value>Download in sequential order</value></data>
+  <data name="AddTorrentFirstLastLabel.Text" xml:space="preserve"><value>Download first and last pieces first</value></data>
+  <data name="AddTorrentSkipCheckLabel.Text" xml:space="preserve"><value>Skip hash check</value></data>
+  <data name="AddTorrentInfoDescription.Text" xml:space="preserve"><value>Creation date, hashes, and comment.</value></data>
+  <data name="AddTorrentSourcesDescription.Text" xml:space="preserve"><value>Edit the original link or add another .torrent file.</value></data>
+  <data name="AddTorrentSourcesTitle.Text" xml:space="preserve"><value>Torrent sources</value></data>
+  <data name="AddTorrentChangePath.Content" xml:space="preserve"><value>Change</value></data>
+  <data name="AddTorrentManagementGroupTitle.Text" xml:space="preserve"><value>Management and location</value></data>
+  <data name="AddTorrentManagementGroupDescription.Text" xml:space="preserve"><value>Management mode and path for incomplete data</value></data>
+  <data name="AddTorrentDownloadGroupTitle.Text" xml:space="preserve"><value>Checking and download</value></data>
+  <data name="AddTorrentDownloadGroupDescription.Text" xml:space="preserve"><value>Hash checking, sequential download, and piece priority</value></data>
+  <data name="AddTorrentLimitsGroupTitle.Text" xml:space="preserve"><value>Speed limits</value></data>
+  <data name="AddTorrentLimitsGroupDescription.Text" xml:space="preserve"><value>Download and upload limits</value></data>
+  <data name="AddTorrentOtherGroupTitle.Text" xml:space="preserve"><value>Other</value></data>
+  <data name="AddTorrentOtherGroupDescription.Text" xml:space="preserve"><value>Original links and additional torrent files</value></data>
+  <data name="AddTorrent_MetadataNotLoaded" xml:space="preserve"><value>Metadata not loaded</value></data>
+  <data name="AddTorrentFilesTitle.Text" xml:space="preserve"><value>Files</value></data>
+  <data name="AddTorrent_MetadataReady" xml:space="preserve"><value>Metadata loaded. Select the files to download.</value></data>
   <data name="AddTorrentBrowseFile.Content" xml:space="preserve"><value>Add .torrent…</value></data>
   <data name="AddTorrentFilesFilter.PlaceholderText" xml:space="preserve"><value>Filter files…</value></data>
   <data name="AddTorrentFileNameHeader.Text" xml:space="preserve"><value>Name</value></data>
