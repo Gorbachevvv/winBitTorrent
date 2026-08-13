@@ -3,150 +3,173 @@
     x:Class="WinBitTorrent.Controls.SpeedGraphControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    MinHeight="190">
+    MinHeight="220">
 
-    <Grid x:Name="LayoutRoot" Padding="14,12,14,10" RowSpacing="12">
+    <Grid x:Name="LayoutRoot" Padding="16,12,16,14" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid x:Name="SummaryGrid" ColumnSpacing="10" RowSpacing="10">
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                x:Uid="SpeedGraphTitle"
+                VerticalAlignment="Center"
+                FontSize="18"
+                FontWeight="SemiBold"
+                Text="Transfer speed" />
+            <ComboBox
+                x:Name="HistoryRangeCombo"
+                Grid.Column="1"
+                MinWidth="162"
+                HorizontalAlignment="Right"
+                SelectedIndex="2"
+                SelectionChanged="HistoryRangeCombo_SelectionChanged">
+                <ComboBoxItem x:Uid="SpeedGraphRangeOneMinute" Content="Last minute" Tag="60" />
+                <ComboBoxItem x:Uid="SpeedGraphRangeThreeMinutes" Content="Last 3 minutes" Tag="180" />
+                <ComboBoxItem x:Uid="SpeedGraphRangeFiveMinutes" Content="Last 5 minutes" Tag="300" />
+                <ComboBoxItem x:Uid="SpeedGraphRangeFifteenMinutes" Content="Last 15 minutes" Tag="900" />
+            </ComboBox>
+        </Grid>
+
+        <Grid x:Name="ContentGrid" Grid.Row="1" ColumnSpacing="12" RowSpacing="12">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="SummaryColumn0" Width="*" />
-                <ColumnDefinition x:Name="SummaryColumn1" Width="*" />
-                <ColumnDefinition x:Name="SummaryColumn2" Width="0" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="StatisticsColumn" Width="0" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel
-                x:Name="HeaderCopy"
+            <Border
+                x:Name="GraphCard"
                 Grid.Row="0"
                 Grid.Column="0"
-                Grid.ColumnSpan="2"
-                VerticalAlignment="Center"
-                Spacing="2">
-                <TextBlock
-                    x:Uid="SpeedGraphTitle"
-                    FontSize="18"
-                    FontWeight="SemiBold"
-                    Text="Transfer speed" />
-                <TextBlock
-                    x:Uid="SpeedGraphWindow"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="History for the last 3 minutes"
-                    TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+                MinHeight="150"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Canvas x:Name="GraphCanvas" SizeChanged="GraphCanvas_SizeChanged" />
+                    <StackPanel
+                        Grid.Row="1"
+                        Margin="14,3,14,10"
+                        Orientation="Horizontal"
+                        Spacing="18">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <Ellipse Width="9" Height="9" VerticalAlignment="Center" Fill="#3B82F6" />
+                            <TextBlock x:Uid="SpeedGraphDownload" Text="Download" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <Ellipse Width="9" Height="9" VerticalAlignment="Center" Fill="#F59E0B" />
+                            <TextBlock x:Uid="SpeedGraphUpload" Text="Upload" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-            <Border
-                x:Name="DownloadCard"
+            <Grid
+                x:Name="StatisticsGrid"
                 Grid.Row="1"
                 Grid.Column="0"
-                Padding="12,9"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-                <Grid ColumnSpacing="12" RowSpacing="3">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" Spacing="7">
-                        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="#3B82F6" />
-                        <TextBlock
-                            x:Uid="SpeedGraphDownload"
-                            VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Text="Download" />
-                    </StackPanel>
-                    <TextBlock
-                        x:Name="DownloadCurrentValue"
-                        Grid.Column="1"
-                        VerticalAlignment="Center"
-                        FontSize="17"
-                        FontWeight="SemiBold"
-                        Text="0 B/s" />
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                            <Run x:Uid="SpeedGraphPeak" Text="Peak" />
-                            <Run Text=":" />
-                            <Run x:Name="DownloadPeakValue" Text=" 0 B/s" />
-                        </TextBlock>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                            <Run x:Uid="SpeedGraphAverage" Text="Average" />
-                            <Run Text=":" />
-                            <Run x:Name="DownloadAverageValue" Text=" 0 B/s" />
-                        </TextBlock>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                ColumnSpacing="10"
+                RowSpacing="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition x:Name="StatisticsRow0" Height="Auto" />
+                    <RowDefinition x:Name="StatisticsRow1" Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="StatisticsColumn0" Width="*" />
+                    <ColumnDefinition x:Name="StatisticsColumn1" Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <Border
-                x:Name="UploadCard"
-                Grid.Row="1"
-                Grid.Column="1"
-                Padding="12,9"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-                <Grid ColumnSpacing="12" RowSpacing="3">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" Spacing="7">
-                        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="#F59E0B" />
+                <Border
+                    x:Name="DownloadCard"
+                    Grid.Column="0"
+                    Padding="14,11"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <Grid ColumnSpacing="12" RowSpacing="7">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Grid.RowSpan="4" Width="3" Margin="-14,-11,0,-11" HorizontalAlignment="Left" Background="#3B82F6" CornerRadius="8,0,0,8" />
+                        <StackPanel Margin="8,0,0,0" Orientation="Horizontal" Spacing="7">
+                            <Ellipse Width="9" Height="9" VerticalAlignment="Center" Fill="#3B82F6" />
+                            <TextBlock x:Uid="SpeedGraphDownload" VerticalAlignment="Center" Text="Download" />
+                        </StackPanel>
                         <TextBlock
-                            x:Uid="SpeedGraphUpload"
-                            VerticalAlignment="Center"
+                            x:Name="DownloadCurrentValue"
+                            Grid.Row="1"
+                            Margin="8,2,0,3"
+                            FontSize="22"
                             FontWeight="SemiBold"
-                            Text="Upload" />
-                    </StackPanel>
-                    <TextBlock
-                        x:Name="UploadCurrentValue"
-                        Grid.Column="1"
-                        VerticalAlignment="Center"
-                        FontSize="17"
-                        FontWeight="SemiBold"
-                        Text="0 B/s" />
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                            <Run x:Uid="SpeedGraphPeak" Text="Peak" />
-                            <Run Text=":" />
-                            <Run x:Name="UploadPeakValue" Text=" 0 B/s" />
-                        </TextBlock>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                            <Run x:Uid="SpeedGraphAverage" Text="Average" />
-                            <Run Text=":" />
-                            <Run x:Name="UploadAverageValue" Text=" 0 B/s" />
-                        </TextBlock>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                            Text="0 B/s" />
+                        <Grid Grid.Row="2" Margin="8,0,0,0">
+                            <TextBlock x:Uid="SpeedGraphPeak" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Peak" />
+                            <TextBlock x:Name="DownloadPeakValue" HorizontalAlignment="Right" Text="0 B/s" />
+                        </Grid>
+                        <Grid Grid.Row="3" Margin="8,0,0,0">
+                            <TextBlock x:Uid="SpeedGraphAverage" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Average" />
+                            <TextBlock x:Name="DownloadAverageValue" HorizontalAlignment="Right" Text="0 B/s" />
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border
+                    x:Name="UploadCard"
+                    Grid.Column="1"
+                    Padding="14,11"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <Grid ColumnSpacing="12" RowSpacing="7">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Grid.RowSpan="4" Width="3" Margin="-14,-11,0,-11" HorizontalAlignment="Left" Background="#F59E0B" CornerRadius="8,0,0,8" />
+                        <StackPanel Margin="8,0,0,0" Orientation="Horizontal" Spacing="7">
+                            <Ellipse Width="9" Height="9" VerticalAlignment="Center" Fill="#F59E0B" />
+                            <TextBlock x:Uid="SpeedGraphUpload" VerticalAlignment="Center" Text="Upload" />
+                        </StackPanel>
+                        <TextBlock
+                            x:Name="UploadCurrentValue"
+                            Grid.Row="1"
+                            Margin="8,2,0,3"
+                            FontSize="22"
+                            FontWeight="SemiBold"
+                            Text="0 B/s" />
+                        <Grid Grid.Row="2" Margin="8,0,0,0">
+                            <TextBlock x:Uid="SpeedGraphPeak" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Peak" />
+                            <TextBlock x:Name="UploadPeakValue" HorizontalAlignment="Right" Text="0 B/s" />
+                        </Grid>
+                        <Grid Grid.Row="3" Margin="8,0,0,0">
+                            <TextBlock x:Uid="SpeedGraphAverage" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Average" />
+                            <TextBlock x:Name="UploadAverageValue" HorizontalAlignment="Right" Text="0 B/s" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
-
-        <Border
-            Grid.Row="1"
-            MinHeight="125"
-            Background="{ThemeResource LayerFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="8">
-            <Canvas x:Name="GraphCanvas" SizeChanged="GraphCanvas_SizeChanged" />
-        </Border>
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
@@ -157,17 +180,18 @@
                 </VisualState>
                 <VisualState x:Name="Wide">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="900" />
+                        <AdaptiveTrigger MinWindowWidth="980" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="SummaryColumn0.Width" Value="240" />
-                        <Setter Target="SummaryColumn1.Width" Value="*" />
-                        <Setter Target="SummaryColumn2.Width" Value="*" />
-                        <Setter Target="HeaderCopy.(Grid.ColumnSpan)" Value="1" />
-                        <Setter Target="DownloadCard.(Grid.Row)" Value="0" />
-                        <Setter Target="DownloadCard.(Grid.Column)" Value="1" />
-                        <Setter Target="UploadCard.(Grid.Row)" Value="0" />
-                        <Setter Target="UploadCard.(Grid.Column)" Value="2" />
+                        <Setter Target="StatisticsColumn.Width" Value="235" />
+                        <Setter Target="StatisticsGrid.(Grid.Row)" Value="0" />
+                        <Setter Target="StatisticsGrid.(Grid.Column)" Value="1" />
+                        <Setter Target="StatisticsColumn0.Width" Value="*" />
+                        <Setter Target="StatisticsColumn1.Width" Value="0" />
+                        <Setter Target="StatisticsRow0.Height" Value="*" />
+                        <Setter Target="StatisticsRow1.Height" Value="*" />
+                        <Setter Target="UploadCard.(Grid.Row)" Value="1" />
+                        <Setter Target="UploadCard.(Grid.Column)" Value="0" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>

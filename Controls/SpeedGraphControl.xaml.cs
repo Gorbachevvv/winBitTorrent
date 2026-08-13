@@ -12,7 +12,7 @@ namespace WinBitTorrent.Controls;
 
 public sealed partial class SpeedGraphControl : UserControl
 {
-    private const double HistorySeconds = 180;
+    private const double MaximumHistorySeconds = 900;
     private const double LeftInset = 78;
     private const double RightInset = 14;
     private const double TopInset = 14;
@@ -25,6 +25,7 @@ public sealed partial class SpeedGraphControl : UserControl
 
     private readonly Queue<SpeedSample> _samples = new();
     private readonly DispatcherTimer _sampleTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private double _historySeconds = 300;
     private double _axisMaximum = 1024;
     private int _axisShrinkTicks;
 
@@ -94,6 +95,17 @@ public sealed partial class SpeedGraphControl : UserControl
     private void GraphCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
         => DrawGraph();
 
+    private void HistoryRangeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (HistoryRangeCombo.SelectedItem is ComboBoxItem { Tag: string seconds }
+            && double.TryParse(seconds, out var parsed))
+            _historySeconds = Math.Clamp(parsed, 60, MaximumHistorySeconds);
+
+        UpdateAxisMaximum(force: true);
+        UpdateSummary();
+        DrawGraph();
+    }
+
     private void RecordSample()
     {
         var now = DateTimeOffset.UtcNow;
@@ -106,19 +118,26 @@ public sealed partial class SpeedGraphControl : UserControl
 
     private void TrimExpiredSamples(DateTimeOffset now)
     {
-        var oldest = now.AddSeconds(-HistorySeconds);
+        var oldest = now.AddSeconds(-MaximumHistorySeconds);
         while (_samples.TryPeek(out var sample) && sample.Timestamp < oldest)
             _samples.Dequeue();
     }
 
-    private void UpdateAxisMaximum()
+    private void UpdateAxisMaximum(bool force = false)
     {
+        var oldest = DateTimeOffset.UtcNow.AddSeconds(-_historySeconds);
+        var visibleSamples = _samples.Where(sample => sample.Timestamp >= oldest).ToArray();
         var largest = Math.Max(
             Math.Max(DownloadSpeed, UploadSpeed),
-            _samples.Count == 0 ? 0 : _samples.Max(static sample => Math.Max(sample.Download, sample.Upload)));
+            visibleSamples.Length == 0 ? 0 : visibleSamples.Max(static sample => Math.Max(sample.Download, sample.Upload)));
         var target = NiceCeiling(Math.Max(1024, largest * 1.08));
 
-        if (target > _axisMaximum)
+        if (force)
+        {
+            _axisMaximum = target;
+            _axisShrinkTicks = 0;
+        }
+        else if (target > _axisMaximum)
         {
             _axisMaximum = target;
             _axisShrinkTicks = 0;
@@ -144,17 +163,19 @@ public sealed partial class SpeedGraphControl : UserControl
 
         var currentDownload = Math.Max(0, DownloadSpeed);
         var currentUpload = Math.Max(0, UploadSpeed);
-        var peakDownload = _samples.Count == 0 ? currentDownload : Math.Max(currentDownload, _samples.Max(static sample => sample.Download));
-        var peakUpload = _samples.Count == 0 ? currentUpload : Math.Max(currentUpload, _samples.Max(static sample => sample.Upload));
-        var averageDownload = _samples.Count == 0 ? currentDownload : (long)_samples.Average(static sample => sample.Download);
-        var averageUpload = _samples.Count == 0 ? currentUpload : (long)_samples.Average(static sample => sample.Upload);
+        var oldest = DateTimeOffset.UtcNow.AddSeconds(-_historySeconds);
+        var visibleSamples = _samples.Where(sample => sample.Timestamp >= oldest).ToArray();
+        var peakDownload = visibleSamples.Length == 0 ? currentDownload : Math.Max(currentDownload, visibleSamples.Max(static sample => sample.Download));
+        var peakUpload = visibleSamples.Length == 0 ? currentUpload : Math.Max(currentUpload, visibleSamples.Max(static sample => sample.Upload));
+        var averageDownload = visibleSamples.Length == 0 ? currentDownload : (long)visibleSamples.Average(static sample => sample.Download);
+        var averageUpload = visibleSamples.Length == 0 ? currentUpload : (long)visibleSamples.Average(static sample => sample.Upload);
 
         DownloadCurrentValue.Text = ValueFormatter.Speed(currentDownload);
         UploadCurrentValue.Text = ValueFormatter.Speed(currentUpload);
-        DownloadPeakValue.Text = $" {ValueFormatter.Speed(peakDownload)}";
-        UploadPeakValue.Text = $" {ValueFormatter.Speed(peakUpload)}";
-        DownloadAverageValue.Text = $" {ValueFormatter.Speed(averageDownload)}";
-        UploadAverageValue.Text = $" {ValueFormatter.Speed(averageUpload)}";
+        DownloadPeakValue.Text = ValueFormatter.Speed(peakDownload);
+        UploadPeakValue.Text = ValueFormatter.Speed(peakUpload);
+        DownloadAverageValue.Text = ValueFormatter.Speed(averageDownload);
+        UploadAverageValue.Text = ValueFormatter.Speed(averageUpload);
     }
 
     private void DrawGraph(DateTimeOffset? timestamp = null)
@@ -175,7 +196,7 @@ public sealed partial class SpeedGraphControl : UserControl
         var now = timestamp ?? DateTimeOffset.UtcNow;
         TrimExpiredSamples(now);
         var visibleSamples = _samples
-            .Where(sample => (now - sample.Timestamp).TotalSeconds <= HistorySeconds)
+            .Where(sample => (now - sample.Timestamp).TotalSeconds <= _historySeconds)
             .ToArray();
         if (visibleSamples.Length == 0)
             return;
@@ -213,16 +234,13 @@ public sealed partial class SpeedGraphControl : UserControl
             GraphCanvas.Children.Add(label);
         }
 
-        var timeLabels = new[]
-        {
-            Localizer.Get("SpeedGraph_ThreeMinutesAgo", "−3 min"),
-            Localizer.Get("SpeedGraph_TwoMinutesAgo", "−2 min"),
-            Localizer.Get("SpeedGraph_OneMinuteAgo", "−1 min"),
-            Localizer.Get("SpeedGraph_Now", "Now")
-        };
+        const int timeDivisions = 5;
+        var timeLabels = Enumerable.Range(0, timeDivisions + 1)
+            .Select(index => TimeAxisLabel(_historySeconds * (timeDivisions - index) / timeDivisions))
+            .ToArray();
         for (var index = 0; index < timeLabels.Length; index++)
         {
-            var x = LeftInset + plotWidth * index / (timeLabels.Length - 1);
+            var x = LeftInset + plotWidth * index / timeDivisions;
             GraphCanvas.Children.Add(new Line
             {
                 X1 = x,
@@ -249,8 +267,8 @@ public sealed partial class SpeedGraphControl : UserControl
         Func<SpeedSample, long> selector)
         => samples.Select(sample =>
         {
-            var age = Math.Clamp((now - sample.Timestamp).TotalSeconds, 0, HistorySeconds);
-            var x = LeftInset + plotWidth * (1 - age / HistorySeconds);
+            var age = Math.Clamp((now - sample.Timestamp).TotalSeconds, 0, _historySeconds);
+            var x = LeftInset + plotWidth * (1 - age / _historySeconds);
             var ratio = Math.Clamp(selector(sample) / _axisMaximum, 0, 1);
             var y = TopInset + plotHeight * (1 - ratio);
             return new Point(x, y);
@@ -323,6 +341,15 @@ public sealed partial class SpeedGraphControl : UserControl
             TextAlignment = alignment,
             TextTrimming = TextTrimming.CharacterEllipsis
         };
+
+    private static string TimeAxisLabel(double seconds)
+    {
+        if (seconds < 1)
+            return Localizer.Get("SpeedGraph_Now", "Now");
+        if (seconds < 60)
+            return string.Format(Localizer.Get("SpeedGraph_SecondsAgoFormat", "{0} sec"), Math.Round(seconds));
+        return string.Format(Localizer.Get("SpeedGraph_MinutesAgoFormat", "{0} min"), Math.Round(seconds / 60));
+    }
 
     private static double NiceCeiling(double value)
     {

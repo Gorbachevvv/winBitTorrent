@@ -292,6 +292,12 @@
   <data name="SpeedGraph_TwoMinutesAgo" xml:space="preserve"><value>−2 min</value></data>
   <data name="SpeedGraph_OneMinuteAgo" xml:space="preserve"><value>−1 min</value></data>
   <data name="SpeedGraph_Now" xml:space="preserve"><value>Now</value></data>
+  <data name="SpeedGraphRangeOneMinute.Content" xml:space="preserve"><value>Last minute</value></data>
+  <data name="SpeedGraphRangeThreeMinutes.Content" xml:space="preserve"><value>Last 3 minutes</value></data>
+  <data name="SpeedGraphRangeFiveMinutes.Content" xml:space="preserve"><value>Last 5 minutes</value></data>
+  <data name="SpeedGraphRangeFifteenMinutes.Content" xml:space="preserve"><value>Last 15 minutes</value></data>
+  <data name="SpeedGraph_SecondsAgoFormat" xml:space="preserve"><value>{0} sec</value></data>
+  <data name="SpeedGraph_MinutesAgoFormat" xml:space="preserve"><value>{0} min</value></data>
   <data name="DetailsProgress.Text" xml:space="preserve"><value>Progress</value></data>
   <data name="DetailsAvailability.Text" xml:space="preserve"><value>Availability</value></data>
   <data name="DetailsMapComplete.Text" xml:space="preserve"><value>Complete</value></data>
