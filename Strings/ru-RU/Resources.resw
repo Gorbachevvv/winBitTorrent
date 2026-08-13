@@ -276,6 +276,12 @@
   <data name="DetailsHttpSources.Header" xml:space="preserve"><value>HTTP-источники</value></data>
   <data name="DetailsContent.Header" xml:space="preserve"><value>Файлы</value></data>
   <data name="DetailsSpeed.Header" xml:space="preserve"><value>Скорость</value></data>
+  <data name="DetailsGeneralSelector.Text" xml:space="preserve"><value>Общие</value></data>
+  <data name="DetailsTrackersSelector.Text" xml:space="preserve"><value>Трекеры</value></data>
+  <data name="DetailsPeersSelector.Text" xml:space="preserve"><value>Пиры</value></data>
+  <data name="DetailsHttpSourcesSelector.Text" xml:space="preserve"><value>HTTP-источники</value></data>
+  <data name="DetailsFilesSelector.Text" xml:space="preserve"><value>Файлы</value></data>
+  <data name="DetailsSpeedSelector.Text" xml:space="preserve"><value>Скорость</value></data>
   <data name="SpeedGraphTitle.Text" xml:space="preserve"><value>Скорость передачи</value></data>
   <data name="SpeedGraphWindow.Text" xml:space="preserve"><value>История за последние 3 минуты</value></data>
   <data name="SpeedGraphDownload.Text" xml:space="preserve"><value>Загрузка</value></data>
@@ -288,6 +294,14 @@
   <data name="SpeedGraph_Now" xml:space="preserve"><value>Сейчас</value></data>
   <data name="DetailsProgress.Text" xml:space="preserve"><value>Прогресс</value></data>
   <data name="DetailsAvailability.Text" xml:space="preserve"><value>Доступность</value></data>
+  <data name="DetailsMapComplete.Text" xml:space="preserve"><value>Загружено</value></data>
+  <data name="DetailsMapDownloading.Text" xml:space="preserve"><value>Загружается</value></data>
+  <data name="DetailsMapMissing.Text" xml:space="preserve"><value>Нет на диске</value></data>
+  <data name="DetailsMapUnavailable.Text" xml:space="preserve"><value>Недоступно</value></data>
+  <data name="DetailsMapPartial.Text" xml:space="preserve"><value>Меньше одной копии</value></data>
+  <data name="DetailsMapAvailable.Text" xml:space="preserve"><value>Одна или более копий</value></data>
+  <data name="DetailsEmptyTitle.Text" xml:space="preserve"><value>Выберите торрент</value></data>
+  <data name="DetailsEmptyDescription.Text" xml:space="preserve"><value>Выберите торрент в списке, чтобы посмотреть его сведения</value></data>
   <data name="DetailsTimeActive.Text" xml:space="preserve"><value>Время активности</value></data>
   <data name="DetailsEta.Text" xml:space="preserve"><value>Осталось</value></data>
   <data name="DetailsDownloaded.Text" xml:space="preserve"><value>Загружено</value></data>

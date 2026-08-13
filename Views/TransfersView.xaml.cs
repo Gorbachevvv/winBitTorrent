@@ -10,12 +10,14 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Core.Services;
 using WinBitTorrent.Services;
@@ -41,6 +43,8 @@ public sealed partial class TransfersView : UserControl
     private bool _isRefreshingFiles;
     private bool _sidebarCollapsed;
     private double _expandedSidebarWidth = SidebarDefaultWidth;
+    private int _detailsSelectedIndex;
+    private Storyboard? _detailsTransition;
 
     // Torrent context menu layout: every command keyed by the Tag it carries in XAML, plus a pool
     // of separator instances, so the flyout can be re-ordered from the saved layout on each open.
@@ -59,6 +63,7 @@ public sealed partial class TransfersView : UserControl
     public TransfersView()
     {
         InitializeComponent();
+        UpdateDetailsSelectorBackgrounds(DetailsSelector);
         ConfigureSidebarAccessibility();
         RestoreLayout();
         DataContext = App.Services.GetRequiredService<MainViewModel>();
@@ -75,6 +80,71 @@ public sealed partial class TransfersView : UserControl
     }
 
     private MainViewModel ViewModel => (MainViewModel)DataContext;
+
+    private void DetailsSelector_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
+    {
+        UpdateDetailsSelectorBackgrounds(sender);
+
+        if (DetailsTabs is null)
+            return;
+
+        var index = sender.Items.IndexOf(sender.SelectedItem);
+        if (index < 0 || index >= DetailsTabs.TabItems.Count || index == DetailsTabs.SelectedIndex)
+            return;
+
+        var direction = index > _detailsSelectedIndex ? 1 : -1;
+        _detailsSelectedIndex = index;
+        DetailsTabs.SelectedIndex = index;
+        AnimateDetailsTransition(direction);
+    }
+
+    private static void UpdateDetailsSelectorBackgrounds(SelectorBar selector)
+    {
+        if (selector.Resources["SelectorBarItemBackground"] is not Brush normalBrush
+            || selector.Resources["SelectorBarItemBackgroundSelected"] is not Brush selectedBrush)
+            return;
+
+        foreach (var item in selector.Items)
+            item.Background = ReferenceEquals(item, selector.SelectedItem) ? selectedBrush : normalBrush;
+    }
+
+    private void AnimateDetailsTransition(int direction)
+    {
+        _detailsTransition?.Stop();
+        DetailsContentTransform.TranslateX = 0;
+        DetailsTabs.Opacity = 1;
+
+        if (!new UISettings().AnimationsEnabled)
+            return;
+
+        var duration = new Duration(TimeSpan.FromMilliseconds(150));
+        _detailsTransition = new Storyboard();
+        _detailsTransition.Children.Add(CreateDetailsAnimation(
+            DetailsContentTransform, "TranslateX", direction * 7, 0, duration));
+        _detailsTransition.Children.Add(CreateDetailsAnimation(
+            DetailsTabs, "Opacity", 0.72, 1, duration));
+        _detailsTransition.Begin();
+    }
+
+    private static DoubleAnimation CreateDetailsAnimation(
+        DependencyObject target,
+        string property,
+        double from,
+        double to,
+        Duration duration)
+    {
+        var animation = new DoubleAnimation
+        {
+            From = from,
+            To = to,
+            Duration = duration,
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        Storyboard.SetTarget(animation, target);
+        Storyboard.SetTargetProperty(animation, property);
+        return animation;
+    }
 
     private void FilterList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

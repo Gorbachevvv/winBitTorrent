@@ -12,11 +12,13 @@
     </UserControl.KeyboardAccelerators>
 
     <UserControl.Resources>
-        <!-- Preserve TableView's native cell template (it owns column geometry),
-             but neutralize only its per-cell hover/selection/focus brushes. -->
-        <SolidColorBrush x:Key="TableViewCellBackgroundPointerOver" Color="Transparent" />
-        <SolidColorBrush x:Key="TableViewCellBackgroundSelected" Color="Transparent" />
-        <SolidColorBrush x:Key="TableViewCellSelectionBrush" Color="Transparent" />
+        <ResourceDictionary>
+            <!-- Preserve TableView's native cell template (it owns column geometry),
+                 but neutralize only its per-cell hover/selection/focus brushes. -->
+            <SolidColorBrush x:Key="TableViewCellBackgroundPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="TableViewCellBackgroundSelected" Color="Transparent" />
+            <SolidColorBrush x:Key="TableViewCellSelectionBrush" Color="Transparent" />
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid x:Name="LayoutRoot">
@@ -431,24 +433,161 @@
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="6">
-                <TabView x:Name="DetailsTabs" Background="Transparent" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent">
+                <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border
+                    Grid.Row="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1"
+                    Visibility="{Binding HasSelectedTorrent, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <SelectorBar
+                        x:Name="DetailsSelector"
+                        Padding="6,1"
+                        SelectionChanged="DetailsSelector_SelectionChanged">
+                        <SelectorBar.Resources>
+                            <SolidColorBrush x:Key="SelectorBarItemBackground" Color="Transparent" />
+                            <StaticResource x:Key="SelectorBarItemBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                            <StaticResource x:Key="SelectorBarItemBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                            <StaticResource x:Key="SelectorBarItemBackgroundSelected" ResourceKey="ControlFillColorDefaultBrush" />
+                            <Thickness x:Key="SelectorBarItemSelectionVisualMargin">8,0</Thickness>
+                            <Style TargetType="SelectorBarItem">
+                                <!-- An explicit transparent brush makes the complete rounded
+                                     surface hit-testable, including the padding around content. -->
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="CornerRadius" Value="6" />
+                                <Setter Property="FontSize" Value="13" />
+                                <Setter Property="Margin" Value="1,3" />
+                                <!-- Set directly because WinUI's default style resolves its
+                                     12,10,12,7 resource statically before local overrides. -->
+                                <Setter Property="Padding" Value="12,6,12,4" />
+                            </Style>
+                        </SelectorBar.Resources>
+                        <SelectorBarItem x:Name="GeneralSelectorItem" x:Uid="DetailsGeneralSelector" IsSelected="True" Text="General">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE946;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem x:Uid="DetailsTrackersSelector" Text="Trackers">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE774;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem x:Uid="DetailsPeersSelector" Text="Peers">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE716;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem x:Uid="DetailsHttpSourcesSelector" Text="HTTP sources">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE71B;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem x:Uid="DetailsFilesSelector" Text="Files">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE8B7;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                        <SelectorBarItem x:Uid="DetailsSpeedSelector" Text="Speed">
+                            <SelectorBarItem.Icon><FontIcon Glyph="&#xE945;" /></SelectorBarItem.Icon>
+                        </SelectorBarItem>
+                    </SelectorBar>
+                </Border>
+                <TabView
+                    x:Name="DetailsTabs"
+                    Grid.Row="1"
+                    Background="Transparent"
+                    IsAddTabButtonVisible="False"
+                    TabWidthMode="SizeToContent"
+                    Visibility="{Binding HasSelectedTorrent, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TabView.RenderTransform>
+                    <CompositeTransform x:Name="DetailsContentTransform" />
+                </TabView.RenderTransform>
+                <TabView.Resources>
+                    <!-- SelectorBar owns navigation; retain TabView only as a content host. -->
+                    <SolidColorBrush x:Key="TabViewItemSeparator" Color="Transparent" />
+                    <SolidColorBrush x:Key="TabViewBorderBrush" Color="Transparent" />
+                    <Style TargetType="TabViewItem">
+                        <Setter Property="Width" Value="0" />
+                        <Setter Property="MinWidth" Value="0" />
+                        <Setter Property="Height" Value="0" />
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Padding" Value="0" />
+                    </Style>
+                </TabView.Resources>
                 <TabViewItem x:Uid="DetailsGeneral" Header="General" IsClosable="False" IconSource="{StaticResource DetailsGeneralIcon}">
                     <ScrollViewer Padding="12,8">
                         <StackPanel Spacing="12">
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock x:Uid="DetailsProgress" FontWeight="SemiBold" Text="Progress" />
-                                <ProgressBar Grid.Row="1" Grid.ColumnSpan="3" Height="18" Margin="0,6,0,0" Maximum="100" Value="{Binding SelectedTorrent.ProgressValue}" />
-                                <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="{Binding SelectedTorrent.Progress}" />
-                            </Grid>
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock x:Uid="DetailsAvailability" FontWeight="SemiBold" Text="Availability" />
-                                <ProgressBar Grid.Row="1" Grid.ColumnSpan="3" Height="10" Margin="0,6,0,0" Maximum="100" Value="{Binding SelectedTorrent.AvailabilityValue}" />
-                                <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="{Binding SelectedTorrent.Availability}" />
-                            </Grid>
+                            <Border
+                                Padding="12,9"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                                <Grid RowSpacing="7">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid>
+                                        <TextBlock x:Uid="DetailsProgress" FontWeight="SemiBold" Text="Progress" />
+                                        <TextBlock HorizontalAlignment="Right" FontWeight="SemiBold" Text="{Binding SelectedTorrent.Progress}" />
+                                    </Grid>
+                                    <controls:TorrentMapBar
+                                        Grid.Row="1"
+                                        Height="22"
+                                        PieceStates="{Binding SelectedPieceStates}"
+                                        Progress="{Binding SelectedTorrent.ProgressValue}" />
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="14">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Ellipse Width="8" Height="8" Fill="#4C8DF6" />
+                                            <TextBlock x:Uid="DetailsMapComplete" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Complete" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Ellipse Width="8" Height="8" Fill="#FFB020" />
+                                            <TextBlock x:Uid="DetailsMapDownloading" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Downloading" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Ellipse Width="8" Height="8" Fill="#59616C" />
+                                            <TextBlock x:Uid="DetailsMapMissing" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Missing" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Border
+                                Padding="12,9"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Visibility="{Binding SelectedTorrent.ShowAvailabilityMap, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid RowSpacing="7">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid>
+                                        <TextBlock x:Uid="DetailsAvailability" FontWeight="SemiBold" Text="Availability" />
+                                        <TextBlock HorizontalAlignment="Right" FontWeight="SemiBold" Text="{Binding SelectedTorrent.Availability}" />
+                                    </Grid>
+                                    <controls:TorrentMapBar
+                                        Grid.Row="1"
+                                        Height="16"
+                                        Availability="{Binding SelectedTorrent.AvailabilityCopies}"
+                                        AvailabilitySegments="{Binding SelectedAvailabilitySegments}"
+                                        Mode="Availability" />
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="14">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Ellipse Width="8" Height="8" Fill="#D95C5C" />
+                                            <TextBlock x:Uid="DetailsMapUnavailable" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Unavailable" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Ellipse Width="8" Height="8" Fill="#F2A72C" />
+                                            <TextBlock x:Uid="DetailsMapPartial" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Less than one copy" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Ellipse Width="8" Height="8" Fill="#2AB385" />
+                                            <TextBlock x:Uid="DetailsMapAvailable" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="One or more copies" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                             <Grid ColumnSpacing="24" RowSpacing="6">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
@@ -709,6 +848,35 @@
                         UploadSpeed="{Binding SelectedTorrent.Model.UploadSpeed}" />
                 </TabViewItem>
                 </TabView>
+                <Grid
+                    Grid.Row="1"
+                    Visibility="{Binding HasSelectedTorrent, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <StackPanel
+                        MaxWidth="420"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+                        <FontIcon
+                            HorizontalAlignment="Center"
+                            FontSize="28"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE8A5;" />
+                        <TextBlock
+                            x:Uid="DetailsEmptyTitle"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Text="Select a torrent" />
+                        <TextBlock
+                            x:Uid="DetailsEmptyDescription"
+                            HorizontalAlignment="Center"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Select a torrent in the list to view its details"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

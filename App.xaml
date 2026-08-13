@@ -33,7 +33,7 @@
             <FontIconSource x:Key="DetailsPeersIcon" Glyph="&#xE716;" />
             <FontIconSource x:Key="DetailsHttpSourcesIcon" Glyph="&#xE71B;" />
             <FontIconSource x:Key="DetailsFilesIcon" Glyph="&#xE8B7;" />
-            <FontIconSource x:Key="DetailsSpeedIcon" Glyph="&#xE9E9;" />
+            <FontIconSource x:Key="DetailsSpeedIcon" Glyph="&#xE945;" />
 
             <Style x:Key="CompactToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
                 <Setter Property="MinWidth" Value="36" />

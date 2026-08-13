@@ -1,3 +1,4 @@
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
@@ -55,8 +56,10 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string RatioLimit => _model.RatioLimit < 0 ? "∞" : ValueFormatter.Ratio(_model.RatioLimit);
     public string SeenComplete => FormatDate(_model.SeenComplete);
     public string LastActivity => FormatDate(_model.LastActivity);
-    public double AvailabilityValue => Math.Clamp(_model.Availability * 100, 0, 100);
-    public string Availability => ValueFormatter.Percentage(_model.Availability);
+    public double AvailabilityCopies => _model.Availability;
+    public string Availability => _model.Availability < 0
+        ? "—"
+        : _model.Availability.ToString("0.000", CultureInfo.CurrentCulture);
     public string DownloadPath => _model.DownloadPath;
     public string InfoHashV1 => _model.InfoHashV1;
     public string InfoHashV2 => _model.InfoHashV2;
@@ -65,6 +68,7 @@ public sealed class TorrentRowViewModel : ObservableObject
     public bool IsActive => _model.DownloadSpeed > 0 || _model.UploadSpeed > 0 || _model.State.Contains("downloading", StringComparison.OrdinalIgnoreCase);
     public bool IsStopped => _model.State.Contains("paused", StringComparison.OrdinalIgnoreCase)
         || _model.State.Contains("stopped", StringComparison.OrdinalIgnoreCase);
+    public bool ShowAvailabilityMap => !IsStopped && EffectiveProgress < 1d;
 
     public void Update(TorrentInfo model)
     {

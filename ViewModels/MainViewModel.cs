@@ -39,6 +39,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private IQBittorrentApi? _api;
     private string? _peerHash;
     private int _peerResponseId;
+    private int _visualizationRefreshTick;
 
     public MainViewModel(
         IConnectionCoordinator connection,
@@ -111,6 +112,12 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private TorrentProperties? _selectedProperties;
 
     [ObservableProperty]
+    private IReadOnlyList<int> _selectedPieceStates = [];
+
+    [ObservableProperty]
+    private IReadOnlyList<TorrentAvailabilitySegment> _selectedAvailabilitySegments = [];
+
+    [ObservableProperty]
     private ServerProfile? _selectedProfile;
 
     [ObservableProperty]
@@ -136,6 +143,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public IQBittorrentApi? Api => _api;
     public string SelectedHashes => GetSelectedHashes();
     public bool CanUseLocalFiles => SelectedProfile?.Kind == ProfileKind.LocalManaged;
+    public bool HasSelectedTorrent => SelectedTorrent is not null;
 
     public async Task InitializeAsync()
     {
@@ -358,11 +366,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     partial void OnSelectedTorrentChanged(TorrentRowViewModel? value)
     {
+        OnPropertyChanged(nameof(HasSelectedTorrent));
         _detailsLifetime?.Cancel();
         _detailsLifetime?.Dispose();
         _detailsLifetime = CancellationTokenSource.CreateLinkedTokenSource(_lifetime?.Token ?? default);
         _peerHash = null;
         _peerResponseId = 0;
+        _visualizationRefreshTick = 0;
         _peers.Clear();
         SelectedPeers.Clear();
         _ = LoadSelectedDetailsAsync(value, _detailsLifetime.Token);
@@ -399,6 +409,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 await RefreshNowAsync();
                 await RefreshSelectedPeersAsync(cancellationToken);
+                if (++_visualizationRefreshTick >= 3)
+                {
+                    _visualizationRefreshTick = 0;
+                    await RefreshSelectedVisualizationAsync(cancellationToken);
+                }
                 reconnectIndex = 0;
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
@@ -595,6 +610,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         SelectedTrackers.Clear();
         SelectedWebSeeds.Clear();
         SelectedFiles.Clear();
+        SelectedPieceStates = [];
+        SelectedAvailabilitySegments = [];
         if (selected is null || _api is null)
             return;
 
@@ -604,15 +621,22 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var trackersTask = _api.Torrents.GetTrackersAsync(selected.Hash, cancellationToken);
             var webSeedsTask = _api.Torrents.GetWebSeedsAsync(selected.Hash, cancellationToken);
             var filesTask = _api.Torrents.GetFilesAsync(selected.Hash, cancellationToken);
-            await Task.WhenAll(propertiesTask, trackersTask, webSeedsTask, filesTask);
+            var pieceStatesTask = GetPieceStatesOrEmptyAsync(_api, selected.Hash, cancellationToken);
+            await Task.WhenAll(propertiesTask, trackersTask, webSeedsTask, filesTask, pieceStatesTask);
+
+            if (!string.Equals(SelectedTorrent?.Hash, selected.Hash, StringComparison.OrdinalIgnoreCase))
+                return;
 
             SelectedProperties = await propertiesTask;
             foreach (var item in await trackersTask)
                 SelectedTrackers.Add(item);
             foreach (var item in await webSeedsTask)
                 SelectedWebSeeds.Add(item);
-            foreach (var item in await filesTask)
+            var files = await filesTask;
+            foreach (var item in files)
                 SelectedFiles.Add(item);
+            SelectedPieceStates = (await pieceStatesTask).ToArray();
+            SelectedAvailabilitySegments = BuildAvailabilitySegments(files);
         }
         catch (OperationCanceledException)
         {
@@ -634,6 +658,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         if (!string.Equals(SelectedTorrent?.Hash, selected.Hash, StringComparison.OrdinalIgnoreCase))
             return;
 
+        SelectedAvailabilitySegments = BuildAvailabilitySegments(files);
+
         var currentByIndex = SelectedFiles.ToDictionary(static file => file.Index);
         if (files.Count == SelectedFiles.Count
             && files.All(file => currentByIndex.TryGetValue(file.Index, out var current)
@@ -654,6 +680,63 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         SelectedFiles.Clear();
         foreach (var file in files)
             SelectedFiles.Add(file);
+    }
+
+    private async Task RefreshSelectedVisualizationAsync(CancellationToken cancellationToken)
+    {
+        var selected = SelectedTorrent;
+        var api = _api;
+        if (selected is null || api is null)
+            return;
+
+        try
+        {
+            var pieceStatesTask = GetPieceStatesOrEmptyAsync(api, selected.Hash, cancellationToken);
+            var filesTask = api.Torrents.GetFilesAsync(selected.Hash, cancellationToken);
+            await Task.WhenAll(pieceStatesTask, filesTask);
+
+            if (!string.Equals(SelectedTorrent?.Hash, selected.Hash, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            SelectedPieceStates = (await pieceStatesTask).ToArray();
+            SelectedAvailabilitySegments = BuildAvailabilitySegments(await filesTask);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception) when (exception is HttpRequestException or QbittorrentApiException)
+        {
+            // Piece/file maps are supplementary details. A transient failure must not make the
+            // otherwise healthy main synchronization loop reconnect the whole client.
+            _logger.LogDebug(exception, "Unable to refresh torrent visualization for {Hash}.", selected.Hash);
+        }
+    }
+
+    private static IReadOnlyList<TorrentAvailabilitySegment> BuildAvailabilitySegments(
+        IEnumerable<TorrentFile> files)
+        => files
+            .OrderBy(static file => file.Index)
+            .Select(static file => new TorrentAvailabilitySegment(file.Size, file.Availability))
+            .ToArray();
+
+    private async Task<IReadOnlyList<int>> GetPieceStatesOrEmptyAsync(
+        IQBittorrentApi api,
+        string hash,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await api.Torrents.GetPieceStatesAsync(hash, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or QbittorrentApiException)
+        {
+            _logger.LogDebug(exception, "Piece states are unavailable for torrent {Hash}.", hash);
+            return [];
+        }
     }
 
     private async Task RefreshSelectedPeersAsync(CancellationToken cancellationToken)
