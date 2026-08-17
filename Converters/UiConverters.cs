@@ -1,7 +1,5 @@
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Media;
 
 namespace WinBitTorrent.Converters;
 
@@ -9,18 +7,6 @@ public sealed class NonEmptyStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is string text && !string.IsNullOrWhiteSpace(text);
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-        => throw new NotSupportedException();
-}
-
-public sealed class ConnectionBrushConverter : IValueConverter
-{
-    private static readonly SolidColorBrush Connected = new(Colors.LimeGreen);
-    private static readonly SolidColorBrush Disconnected = new(Colors.DarkGray);
-
-    public object Convert(object value, Type targetType, object parameter, string language)
-        => value is true ? Connected : Disconnected;
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
         => throw new NotSupportedException();

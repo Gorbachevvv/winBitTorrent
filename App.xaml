@@ -12,7 +12,6 @@
             </ResourceDictionary.MergedDictionaries>
 
             <converters:NonEmptyStringConverter x:Key="NonEmptyStringConverter" />
-            <converters:ConnectionBrushConverter x:Key="ConnectionBrushConverter" />
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />

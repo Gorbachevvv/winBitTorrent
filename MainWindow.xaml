@@ -37,10 +37,6 @@
                 Margin="12,0,10,0"
                 Source="ms-appx:///Assets/Square44x44Logo.targetsize-24_altform-unplated.png" />
             <TextBlock Grid.Column="1" VerticalAlignment="Center" FontWeight="SemiBold" Text="WinBitTorrent" />
-            <StackPanel Grid.Column="2" Margin="0,0,138,0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <Ellipse Width="8" Height="8" Fill="{Binding IsConnected, Converter={StaticResource ConnectionBrushConverter}}" />
-                <TextBlock VerticalAlignment="Center" Text="{Binding ConnectionStatus}" />
-            </StackPanel>
         </Grid>
 
         <MenuBar Grid.Row="1" Padding="6,0" VerticalAlignment="Stretch">
