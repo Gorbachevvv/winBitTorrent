@@ -40,13 +40,13 @@
   <data name="LogMenu.Text" xml:space="preserve"><value>Журнал выполнения</value></data>
   <data name="CookiesMenu.Text" xml:space="preserve"><value>Cookie-файлы…</value></data>
   <data name="StatisticsMenu.Text" xml:space="preserve"><value>Статистика…</value></data>
-  <data name="DocumentationMenu.Text" xml:space="preserve"><value>Документация qBittorrent</value></data>
+  <data name="DocumentationMenu.Text" xml:space="preserve"><value>Документация WinBitTorrent</value></data>
   <data name="AboutMenu.Text" xml:space="preserve"><value>О WinBitTorrent</value></data>
-  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Нативный клиент WinUI 3 для qBittorrent 5.2.3 / Web API 2.15.1</value></data>
+  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Нативный BitTorrent-клиент WinUI 3 на движке libtorrent 2.0.13</value></data>
   <data name="Dialog_AboutConnectedBackend" xml:space="preserve"><value>Подключённый бэкенд: {0}</value></data>
   <data name="Dialog_AboutRepository" xml:space="preserve"><value>Репозиторий на GitHub</value></data>
   <data name="Dialog_AboutHomepage" xml:space="preserve"><value>Домашняя страница</value></data>
-  <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent распространяется по лицензии GPL-2.0-or-later. Уведомления о стороннем ПО и предложение о предоставлении исходного кода включены в приложение.</value></data>
+  <data name="Dialog_AboutLicense" xml:space="preserve"><value>WinBitTorrent распространяется по лицензии GPL-3.0-or-later. Уведомления о стороннем ПО и сведения об исходном коде нативных компонентов включены в приложение.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Закрыть</value></data>
   <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Проверить обновления…</value></data>
   <data name="Update_DialogTitle" xml:space="preserve"><value>Доступно обновление</value></data>
@@ -473,7 +473,7 @@
   <data name="Dialog_LocalFilesUnavailableTitle" xml:space="preserve"><value>Локальные файлы недоступны</value></data>
   <data name="Dialog_LocalFilesUnavailableMessage" xml:space="preserve"><value>Этот торрент принадлежит удалённому профилю. WinBitTorrent может открывать папки только для управляемой локальной серверной части.</value></data>
   <data name="Dialog_DestinationUnavailableTitle" xml:space="preserve"><value>Папка назначения недоступна</value></data>
-  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Путь сохранения, полученный от qBittorrent</value></data>
+  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Путь сохранения, полученный от движка</value></data>
   <data name="Dialog_DownloadPath" xml:space="preserve"><value>Путь загрузки</value></data>
   <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>Возможно, путь ещё не существует или метаданные торрента ещё не синхронизированы.</value></data>
   <data name="Category_Uncategorized" xml:space="preserve"><value>Без категории</value></data>
@@ -500,7 +500,7 @@
   <data name="Dialog_RenameTorrent" xml:space="preserve"><value>Переименовать торрент</value></data>
   <data name="Dialog_NewName" xml:space="preserve"><value>Новое имя</value></data>
   <data name="Dialog_SetTorrentLocation" xml:space="preserve"><value>Изменить расположение торрента</value></data>
-  <data name="Dialog_ServerPath" xml:space="preserve"><value>Путь на сервере qBittorrent</value></data>
+  <data name="Dialog_ServerPath" xml:space="preserve"><value>Путь на сервере торрент-движка</value></data>
   <data name="Dialog_AddTrackers" xml:space="preserve"><value>Добавить трекеры</value></data>
   <data name="Dialog_TrackerPerLine" xml:space="preserve"><value>Один URL трекера на строку</value></data>
   <data name="Dialog_AddHttpSources" xml:space="preserve"><value>Добавить HTTP-источники</value></data>
@@ -566,7 +566,7 @@
   <data name="CreateTorrentReady.Text" xml:space="preserve"><value>Готово</value></data>
   <data name="CommonCreate.Content" xml:space="preserve"><value>Создать</value></data>
   <data name="CookiesWindow.Title" xml:space="preserve"><value>Файлы cookie</value></data>
-  <data name="CookiesTitle.Text" xml:space="preserve"><value>Файлы cookie qBittorrent</value></data>
+  <data name="CookiesTitle.Text" xml:space="preserve"><value>Файлы cookie торрент-движка</value></data>
   <data name="CookiesJson.Header" xml:space="preserve"><value>JSON-массив файлов cookie</value></data>
   <data name="CookiesSave.Content" xml:space="preserve"><value>Сохранить cookie</value></data>
   <data name="SearchPluginsWindow.Title" xml:space="preserve"><value>Поисковые плагины</value></data>
@@ -660,9 +660,9 @@
   <data name="Tracker_SearchingNamed" xml:space="preserve"><value>Поиск в {0}…</value></data>
   <data name="Tracker_SeasonQuerySuffix" xml:space="preserve"><value>сезон {0}</value></data>
   <data name="Tracker_ResultCount" xml:space="preserve"><value>Результатов: {0}</value></data>
-  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Перед скачиванием подключитесь к qBittorrent.</value></data>
+  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Перед скачиванием подключитесь к торрент-движку.</value></data>
   <data name="Tracker_Downloading" xml:space="preserve"><value>Загрузка torrent-файла…</value></data>
-  <data name="Tracker_Added" xml:space="preserve"><value>Торрент добавлен в qBittorrent.</value></data>
+  <data name="Tracker_Added" xml:space="preserve"><value>Торрент добавлен.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent-файл загружен. Проверьте параметры добавления.</value></data>
   <data name="Tracker_MagnetReady" xml:space="preserve"><value>Magnet-ссылка готова. Проверьте параметры добавления.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Вы вышли из аккаунта. Войдите под другой учётной записью.</value></data>
@@ -710,17 +710,17 @@
   <data name="DuplicateTorrent_Title" xml:space="preserve"><value>Торрент уже добавлен</value></data>
   <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Торрент «{0}» уже есть в списке передач. Объединить трекеры из нового источника?</value></data>
   <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Торрент «{0}» является приватным. Его трекеры нельзя объединить.</value></data>
-  <data name="Connection_NotConnected" xml:space="preserve"><value>Нет подключения к qBittorrent.</value></data>
-  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>Нет подключения к qBittorrent</value></data>
-  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Подключитесь к профилю qBittorrent, чтобы просматривать и изменять эти настройки.</value></data>
-  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Настройки применены и проверены через qBittorrent.</value></data>
-  <data name="Settings_VerificationFailed" xml:space="preserve"><value>qBittorrent не применил следующие настройки: {0}</value></data>
+  <data name="Connection_NotConnected" xml:space="preserve"><value>Нет подключения к торрент-движку.</value></data>
+  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>Нет подключения к торрент-движку</value></data>
+  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Подключитесь к торрент-движку, чтобы просматривать и изменять эти настройки.</value></data>
+  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Настройки применены и проверены движком.</value></data>
+  <data name="Settings_VerificationFailed" xml:space="preserve"><value>Движок не применил следующие настройки: {0}</value></data>
   <data name="SettingsConnection_ProtocolTitle" xml:space="preserve"><value>Протокол и порт прослушивания</value></data>
   <data name="SettingsConnection_ProtocolDescription" xml:space="preserve"><value>Определяет, как пиры подключаются к клиенту. Значение порта 0 позволяет системе выбрать свободный порт.</value></data>
   <data name="SettingsConnection_LimitsTitle" xml:space="preserve"><value>Ограничения соединений</value></data>
   <data name="SettingsConnection_LimitsDescription" xml:space="preserve"><value>Значение -1 отключает ограничение. Умеренные лимиты снижают нагрузку на роутер и память.</value></data>
   <data name="SettingsConnection_ProxyTitle" xml:space="preserve"><value>Прокси-сервер</value></data>
-  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Выберите, какой трафик qBittorrent должен направлять через прокси.</value></data>
+  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Выберите, какой торрент-трафик нужно направлять через прокси.</value></data>
   <data name="SettingsConnection_I2pTitle" xml:space="preserve"><value>I2P (экспериментально)</value></data>
   <data name="SettingsConnection_I2pDescription" xml:space="preserve"><value>Требуется запущенный I2P-роутер с включённым SAM-мостом.</value></data>
   <data name="SettingsConnection_FilterTitle" xml:space="preserve"><value>Фильтрация IP</value></data>
@@ -748,10 +748,10 @@
   <data name="Setting_ip_filter_trackers" xml:space="preserve"><value>Применять IP-фильтр к трекерам</value></data>
   <data name="Setting_banned_IPs" xml:space="preserve"><value>Заблокированные вручную IP-адреса (по одному в строке)</value></data>
   <data name="Setting_random_port_Description" xml:space="preserve"><value>При запуске встроенного backend фиксированный порт заменяется автоматически выбранным.</value></data>
-  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>qBittorrent хранит этот пароль в незашифрованном виде.</value></data>
+  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>Движок хранит этот пароль в незашифрованном виде.</value></data>
   <data name="Setting_proxy_peer_connections_Description" xml:space="preserve"><value>Включите, чтобы исключить прямые соединения с пирами при активном BitTorrent-прокси.</value></data>
   <data name="Setting_i2p_mixed_mode_Description" xml:space="preserve"><value>Смешанный режим допускает обычные IP-соединения и поэтому не обеспечивает анонимность I2P.</value></data>
-  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Укажите путь, доступный на удалённом сервере qBittorrent.</value></data>
+  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Укажите путь, доступный на удалённом торрент-сервере.</value></data>
   <data name="Choice_ProtocolBoth" xml:space="preserve"><value>TCP и µTP</value></data>
   <data name="Choice_ProtocolTcp" xml:space="preserve"><value>Только TCP</value></data>
   <data name="Choice_ProtocolUtp" xml:space="preserve"><value>Только µTP</value></data>
@@ -769,8 +769,8 @@
   <data name="Files_LocalItemUnavailable" xml:space="preserve"><value>Выбранный файл или папка пока недоступны локально.</value></data>
   <data name="Files_SelectionUpdated" xml:space="preserve"><value>Выбор загрузки обновлён для файлов: {0}.</value></data>
   <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>Торрент добавлен, но список его файлов пока недоступен.</value></data>
-  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торрент добавлен, но qBittorrent не вернул совместимый список файлов для применения приоритетов.</value></data>
-  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торрент добавлен, но qBittorrent не применил все выбранные приоритеты файлов.</value></data>
+  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торрент добавлен, но движок не вернул совместимый список файлов для применения приоритетов.</value></data>
+  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торрент добавлен, но движок не применил все выбранные приоритеты файлов.</value></data>
   <data name="Settings_EditContextMenu" xml:space="preserve"><value>Редактировать контекстное меню…</value></data>
   <data name="Settings_EditContextMenuDescription" xml:space="preserve"><value>Выберите, какие команды показывать при щелчке правой кнопкой по торренту и в каком порядке.</value></data>
   <data name="MenuEditor_Title" xml:space="preserve"><value>Редактор контекстного меню</value></data>

@@ -36,7 +36,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly Dictionary<string, PeerRowViewModel> _peers = new(StringComparer.OrdinalIgnoreCase);
     private CancellationTokenSource? _lifetime;
     private CancellationTokenSource? _detailsLifetime;
-    private IQBittorrentApi? _api;
+    private ITorrentBackendClient? _api;
     private string? _peerHash;
     private int _peerResponseId;
     private int _visualizationRefreshTick;
@@ -140,9 +140,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     public IReadOnlyList<TorrentRowViewModel> SelectedTorrents { get; set; } = [];
     public bool HasActiveTorrents => _rows.Values.Any(static torrent => torrent.IsActive);
-    public IQBittorrentApi? Api => _api;
+    public ITorrentBackendClient? Api => _api;
     public string SelectedHashes => GetSelectedHashes();
-    public bool CanUseLocalFiles => SelectedProfile?.Kind == ProfileKind.LocalManaged;
+    public bool CanUseLocalFiles => _api?.Capabilities.HasFlag(BackendCapabilities.LocalFileSystem) == true;
     public bool HasSelectedTorrent => SelectedTorrent is not null;
 
     public async Task InitializeAsync()
@@ -184,6 +184,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             OnPropertyChanged(nameof(Api));
             await _profileStore.SelectAsync(SelectedProfile.Id, _lifetime.Token);
             IsConnected = true;
+            await ShowPendingMigrationReportAsync(_api, _lifetime.Token);
             _ = RunSyncLoopAsync(_lifetime.Token);
         }
         catch (Exception exception)
@@ -191,7 +192,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             ErrorMessage = exception.Message;
             ConnectionStatus = Localizer.Get("Connection_Failed", "Connection failed");
             IsConnected = false;
-            _logger.LogError(exception, "Unable to initialize qBittorrent connection.");
+            _logger.LogError(exception, "Unable to initialize torrent backend connection.");
         }
         finally
         {
@@ -258,14 +259,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         await RefreshNowAsync();
     }
 
-    public async Task PostSelectedAsync(string action, IReadOnlyDictionary<string, string?> parameters)
+    private async Task ExecuteSelectedMutationAsync(Func<ITorrentsApi, string, CancellationToken, Task> mutation)
     {
         EnsureApi();
         var hashes = GetSelectedHashes();
         if (string.IsNullOrEmpty(hashes))
             return;
-        var values = new Dictionary<string, string?>(parameters) { ["hashes"] = hashes };
-        await _api!.Torrents.PostAsync(action, values, _lifetime?.Token ?? default);
+        await mutation(_api!.Torrents, hashes, _lifetime?.Token ?? default);
         await RefreshNowAsync();
     }
 
@@ -291,7 +291,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public async Task SetForceStartSelectedAsync(bool enabled)
     {
         var targets = CaptureFlagTargets(_ => enabled);
-        await PostSelectedAsync("setForceStart", new Dictionary<string, string?> { ["value"] = enabled.ToString().ToLowerInvariant() });
+        await ExecuteSelectedMutationAsync((api, hashes, token) => api.SetForceStartAsync(hashes, enabled, token));
         foreach (var (row, value) in targets)
             row.ApplyForceStart(value);
     }
@@ -310,29 +310,38 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public async Task SetSuperSeedingSelectedAsync(bool enabled)
     {
         var targets = CaptureFlagTargets(_ => enabled);
-        await PostSelectedAsync("setSuperSeeding", new Dictionary<string, string?> { ["value"] = enabled.ToString().ToLowerInvariant() });
+        await ExecuteSelectedMutationAsync((api, hashes, token) => api.SetSuperSeedingAsync(hashes, enabled, token));
         foreach (var (row, value) in targets)
             row.ApplySuperSeeding(value);
     }
 
     public Task SetCategorySelectedAsync(string category)
-        => PostSelectedAsync("setCategory", new Dictionary<string, string?> { ["category"] = category });
+        => ExecuteSelectedMutationAsync((api, hashes, token) => api.SetCategoryAsync(hashes, category, token));
 
     public Task AddTagsSelectedAsync(string tags)
-        => PostSelectedAsync("addTags", new Dictionary<string, string?> { ["tags"] = tags });
+        => ExecuteSelectedMutationAsync((api, hashes, token) => api.AddTagsAsync(hashes, tags, token));
 
     public Task RemoveTagsSelectedAsync(string tags)
-        => PostSelectedAsync("removeTags", new Dictionary<string, string?> { ["tags"] = tags });
+        => ExecuteSelectedMutationAsync((api, hashes, token) => api.RemoveTagsAsync(hashes, tags, token));
 
     public Task SetLocationSelectedAsync(string location)
-        => PostSelectedAsync("setLocation", new Dictionary<string, string?> { ["location"] = location });
+        => ExecuteSelectedMutationAsync((api, hashes, token) => api.SetLocationAsync(hashes, location, token));
+
+    public Task SetDownloadLimitSelectedAsync(long limit)
+        => ExecuteSelectedMutationAsync((api, hashes, token) => api.SetDownloadLimitAsync(hashes, limit, token));
+
+    public Task SetUploadLimitSelectedAsync(long limit)
+        => ExecuteSelectedMutationAsync((api, hashes, token) => api.SetUploadLimitAsync(hashes, limit, token));
+
+    public Task SetShareLimitsSelectedAsync(double ratioLimit, int seedingTimeLimit, int inactiveSeedingTimeLimit)
+        => ExecuteSelectedMutationAsync((api, hashes, token) => api.SetShareLimitsAsync(hashes, ratioLimit, seedingTimeLimit, inactiveSeedingTimeLimit, token));
 
     public async Task RenameSelectedAsync(string name)
     {
         EnsureApi();
         if (SelectedTorrent is null)
             return;
-        await _api!.Torrents.PostAsync("rename", new Dictionary<string, string?> { ["hash"] = SelectedTorrent.Hash, ["name"] = name }, _lifetime?.Token ?? default);
+        await _api!.Torrents.RenameAsync(SelectedTorrent.Hash, name, _lifetime?.Token ?? default);
         await RefreshNowAsync();
     }
 
@@ -450,16 +459,28 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         if (changeSet.FullUpdate)
         {
-            _rows.Clear();
-            Torrents.Clear();
+            // A full snapshot is not a request to rebuild the UI collection. The local engine
+            // currently sends one every second; clearing here destroyed TableView selection,
+            // scroll position and row identity and replayed its insertion animation on every
+            // poll. Reconcile by infohash so rows that still exist keep the same view-model
+            // instance. Connection/profile changes already clear the collection explicitly.
+            KeyedSnapshotReconciler.Reconcile(
+                _rows,
+                changeSet.ChangedTorrents,
+                static torrent => torrent.Hash,
+                static torrent => new TorrentRowViewModel(torrent),
+                static (row, torrent) => row.Update(torrent),
+                StringComparer.OrdinalIgnoreCase);
         }
-
-        foreach (var torrent in changeSet.ChangedTorrents)
+        else
         {
-            if (_rows.TryGetValue(torrent.Hash, out var row))
-                row.Update(torrent);
-            else
-                _rows[torrent.Hash] = new TorrentRowViewModel(torrent);
+            foreach (var torrent in changeSet.ChangedTorrents)
+            {
+                if (_rows.TryGetValue(torrent.Hash, out var row))
+                    row.Update(torrent);
+                else
+                    _rows[torrent.Hash] = new TorrentRowViewModel(torrent);
+            }
         }
 
         foreach (var hash in changeSet.RemovedHashes)
@@ -682,6 +703,29 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             SelectedFiles.Add(file);
     }
 
+    private async Task ShowPendingMigrationReportAsync(ITorrentBackendClient api, CancellationToken cancellationToken)
+    {
+        if (!api.Capabilities.HasFlag(BackendCapabilities.LocalFileSystem))
+            return;
+        try
+        {
+            var report = await api.ClientData.LoadAsync("migration.report", cancellationToken);
+            if (report["pending"]?.GetValue<bool>() != true)
+                return;
+            var needsHashCheck = report["needsHashCheck"] as JsonArray;
+            _notifications.ShowMigrationReport(
+                report["torrentCount"]?.GetValue<int>() ?? 0,
+                needsHashCheck?.Count ?? 0,
+                report["backupPath"]?.GetValue<string>() ?? string.Empty);
+            report["pending"] = false;
+            await api.ClientData.StoreAsync("migration.report", report, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(exception, "Unable to display the local migration report.");
+        }
+    }
+
     private async Task RefreshSelectedVisualizationAsync(CancellationToken cancellationToken)
     {
         var selected = SelectedTorrent;
@@ -720,7 +764,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             .ToArray();
 
     private async Task<IReadOnlyList<int>> GetPieceStatesOrEmptyAsync(
-        IQBittorrentApi api,
+        ITorrentBackendClient api,
         string hash,
         CancellationToken cancellationToken)
     {
@@ -836,7 +880,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void EnsureApi()
     {
         if (_api is null)
-            throw new InvalidOperationException("WinBitTorrent is not connected to qBittorrent.");
+            throw new InvalidOperationException("WinBitTorrent is not connected to a torrent backend.");
     }
 
     public async Task ShutdownAsync()

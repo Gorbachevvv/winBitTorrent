@@ -13,6 +13,7 @@ public sealed partial class CreateTorrentWindow : Window
     private readonly MainViewModel _main;
     private StorageFile? _outputFile;
     private CancellationTokenSource? _lifetime;
+    private string? _taskId;
 
     public CreateTorrentWindow()
     {
@@ -67,6 +68,7 @@ public sealed partial class CreateTorrentWindow : Window
             };
             var created = await _main.Api.TorrentCreator.AddTaskAsync(request, _lifetime.Token);
             var taskId = created["taskID"]?.GetValue<string>() ?? created["taskId"]?.GetValue<string>() ?? created["id"]?.GetValue<string>() ?? throw new InvalidOperationException("The backend did not return a torrent creator task id.");
+            _taskId = taskId;
             while (!_lifetime.IsCancellationRequested)
             {
                 var status = await _main.Api.TorrentCreator.GetStatusAsync(taskId, _lifetime.Token);
@@ -87,6 +89,7 @@ public sealed partial class CreateTorrentWindow : Window
             var bytes = await _main.Api.TorrentCreator.GetTorrentFileAsync(taskId, _lifetime.Token);
             await FileIO.WriteBytesAsync(_outputFile, bytes);
             await _main.Api.TorrentCreator.DeleteTaskAsync(taskId);
+            _taskId = null;
             Progress.Value = 100;
             Show("Torrent created successfully.", InfoBarSeverity.Success);
         }
@@ -97,5 +100,14 @@ public sealed partial class CreateTorrentWindow : Window
 
     private void Initialize(object picker) => WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(this));
     private void Show(string text, InfoBarSeverity severity) { MessageBar.Message = text; MessageBar.Severity = severity; MessageBar.IsOpen = true; }
-    private void Cancel_Click(object sender, RoutedEventArgs e) { _lifetime?.Cancel(); Close(); }
+    private async void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        _lifetime?.Cancel();
+        if (_taskId is not null && _main.Api is not null)
+        {
+            try { await _main.Api.TorrentCreator.DeleteTaskAsync(_taskId); } catch { }
+            _taskId = null;
+        }
+        Close();
+    }
 }

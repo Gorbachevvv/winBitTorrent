@@ -466,7 +466,7 @@ public sealed partial class AddTorrentWindow : Window
         bool startAfterApplying)
     {
         var api = _viewModel.Api
-            ?? throw new InvalidOperationException(Localizer.Get("Connection_NotConnected", "Not connected to qBittorrent."));
+            ?? throw new InvalidOperationException(Localizer.Get("Connection_NotConnected", "Not connected to a torrent backend."));
         var hashes = ResolveAddedTorrentHashes(files, urls);
         TorrentRowViewModel? torrent = null;
         for (var attempt = 0; attempt < 24 && torrent is null; attempt++)
@@ -487,7 +487,7 @@ public sealed partial class AddTorrentWindow : Window
             await Task.Delay(250);
         }
         if (torrentFiles.Count == 0 || torrentFiles.Any(file => file.Index < 0 || file.Index >= priorities.Count))
-            throw new InvalidOperationException(Localizer.Get("AddTorrent_PriorityFilesUnavailable", "The torrent was added, but qBittorrent did not return a compatible file list for applying priorities."));
+            throw new InvalidOperationException(Localizer.Get("AddTorrent_PriorityFilesUnavailable", "The torrent was added, but the backend did not return a compatible file list for applying priorities."));
 
         var requested = torrentFiles
             .Select(file => (File: file, Priority: priorities[file.Index]))
@@ -495,12 +495,8 @@ public sealed partial class AddTorrentWindow : Window
             .ToList();
         foreach (var group in requested.GroupBy(static item => item.Priority))
         {
-            await api.Torrents.PostAsync("filePrio", new Dictionary<string, string?>
-            {
-                ["hash"] = torrent.Hash,
-                ["id"] = string.Join('|', group.Select(static item => item.File.Index)),
-                ["priority"] = group.Key.ToString(System.Globalization.CultureInfo.InvariantCulture)
-            });
+            await api.Torrents.SetFilePriorityAsync(
+                torrent.Hash, group.Select(static item => item.File.Index), group.Key);
         }
 
         for (var attempt = 0; attempt < 12; attempt++)
@@ -515,7 +511,7 @@ public sealed partial class AddTorrentWindow : Window
             await Task.Delay(200);
         }
 
-        throw new InvalidOperationException(Localizer.Get("AddTorrent_PriorityVerificationFailed", "The torrent was added, but qBittorrent did not apply all selected file priorities."));
+        throw new InvalidOperationException(Localizer.Get("AddTorrent_PriorityVerificationFailed", "The torrent was added, but the backend did not apply all selected file priorities."));
     }
 
     private IReadOnlySet<string> ResolveAddedTorrentHashes(IReadOnlyList<string> files, IReadOnlyList<string> urls)

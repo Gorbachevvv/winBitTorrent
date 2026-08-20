@@ -121,6 +121,15 @@ Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubd
 ; during startup with 0x80004002/0xC000027B. Delete only this known legacy artifact before the
 ; new payload is copied. Application data lives under LocalAppData and is unaffected.
 Type: files; Name: "{app}\resources.pri"
+; The libtorrent-native release no longer ships the qBittorrent/Qt local backend. Remove only
+; the exact binaries installed by earlier WinBitTorrent versions; never touch LocalAppData.
+Type: files; Name: "{app}\Backend\qbittorrent-nox.exe"
+Type: files; Name: "{app}\Backend\Qt6Core.dll"
+Type: files; Name: "{app}\Backend\Qt6Network.dll"
+Type: files; Name: "{app}\Backend\Qt6Sql.dll"
+Type: files; Name: "{app}\Backend\Qt6Xml.dll"
+Type: files; Name: "{app}\Backend\sqldrivers\qsqlite.dll"
+Type: dirifempty; Name: "{app}\Backend\sqldrivers"
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: startmenuicon

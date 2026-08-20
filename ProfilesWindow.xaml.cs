@@ -50,7 +50,7 @@ public sealed partial class ProfilesWindow : Window
         AddressBox.Text = _selected.BaseAddress.ToString();
         AuthenticationBox.SelectedIndex = _selected.Authentication == AuthenticationMode.ApiKey ? 1 : 0;
         UserNameBox.Text = _selected.UserName ?? string.Empty;
-        SecretBox.Password = _selected.Kind == ProfileKind.Remote ? await _credentials.GetSecretAsync(_selected.Id) ?? string.Empty : string.Empty;
+        SecretBox.Password = _selected.Kind == ProfileKind.RemoteQbittorrent ? await _credentials.GetSecretAsync(_selected.Id) ?? string.Empty : string.Empty;
         FingerprintBox.Text = _selected.TrustedCertificateSha256 ?? string.Empty;
         FingerprintConfirmedBox.IsChecked = !string.IsNullOrWhiteSpace(_selected.TrustedCertificateSha256);
         var editable = !_selected.IsBuiltIn;
@@ -110,7 +110,7 @@ public sealed partial class ProfilesWindow : Window
             var profile = new ServerProfile(
                 _selected?.Id ?? Guid.NewGuid(),
                 NameBox.Text.Trim(),
-                ProfileKind.Remote,
+                ProfileKind.RemoteQbittorrent,
                 address,
                 authentication,
                 authentication == AuthenticationMode.UserNamePassword ? EmptyToNull(UserNameBox.Text) : null,

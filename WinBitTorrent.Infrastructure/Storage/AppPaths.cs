@@ -2,7 +2,7 @@ namespace WinBitTorrent.Infrastructure.Storage;
 
 public static class AppPaths
 {
-    public static string Root { get; } = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT") is { Length: > 0 } overridden
+    public static string Root => Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT") is { Length: > 0 } overridden
         ? Path.GetFullPath(overridden)
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinBitTorrent");
 
@@ -13,6 +13,7 @@ public static class AppPaths
     public static string BackendConfig => Path.Combine(BackendProfileBase, "config", "qBittorrent.ini");
     public static string BackendData => Path.Combine(BackendProfileBase, "data");
     public static string BackendState => Path.Combine(BackendRoot, "host.json");
+    public static string EngineRoot => Path.Combine(Root, "Engine");
     public static string Logs => Path.Combine(Root, "Logs");
 
     public static void EnsureCreated()
@@ -21,6 +22,7 @@ public static class AppPaths
         Directory.CreateDirectory(BackendRoot);
         Directory.CreateDirectory(BackendProfile);
         Directory.CreateDirectory(BackendProfileBase);
+        Directory.CreateDirectory(EngineRoot);
         Directory.CreateDirectory(Logs);
     }
 }

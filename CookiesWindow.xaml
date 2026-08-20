@@ -6,7 +6,7 @@
     Title="Cookies">
     <Grid Padding="18" RowSpacing="12">
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-        <TextBlock x:Uid="CookiesTitle" Style="{StaticResource TitleTextBlockStyle}" Text="qBittorrent cookies" />
+        <TextBlock x:Uid="CookiesTitle" Style="{StaticResource TitleTextBlockStyle}" Text="Backend cookies" />
         <InfoBar x:Name="MessageBar" Grid.Row="1" IsClosable="True" IsOpen="False" />
         <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <TextBox x:Uid="CookiesJson" x:Name="CookiesEditor" AcceptsReturn="True" TextWrapping="NoWrap" FontFamily="Consolas" Header="JSON cookie array" />

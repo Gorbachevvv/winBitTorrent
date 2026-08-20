@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Storage.Pickers;
 using Windows.System;
@@ -99,6 +100,9 @@ public sealed partial class SettingsWindow : Window
         new("WebUI", "web_ui_username", "Username", SettingKind.Text),
         new("WebUI", "web_ui_upnp", "Use UPnP / NAT-PMP", SettingKind.Boolean),
         new("WebUI", "web_ui_csrf_protection_enabled", "Enable CSRF protection", SettingKind.Boolean),
+        new("WebUI", "web_ui_external_enabled", "Allow external connections", SettingKind.Boolean),
+        new("WebUI", "web_ui_https_enabled", "Use HTTPS", SettingKind.Boolean),
+        new("WebUI", "web_ui_https_certificate_path", "HTTPS certificate (.pfx)", SettingKind.Text),
         new("Advanced", NotificationPreferences.EnabledKey, "Display native Windows notifications", SettingKind.Boolean, true, true),
         new("Advanced", NotificationPreferences.TorrentAddedKey, "Display notifications for added torrents", SettingKind.Boolean, true, false),
         new("Advanced", "resume_data_storage_type", "Resume data storage type", SettingKind.ResumeStorage),
@@ -193,7 +197,7 @@ public sealed partial class SettingsWindow : Window
         SettingsPanel.Children.Add(SectionTitle);
         SettingsPanel.Children.Add(MessageBar);
 
-        var localManaged = _main.SelectedProfile?.Kind == ProfileKind.LocalManaged;
+        var localManaged = _main.SelectedProfile?.Kind == ProfileKind.LocalLibtorrent;
         var connected = _main.Api is not null;
         var sectionSpecs = Specs.Where(spec => spec.Section == _section).ToArray();
 
@@ -203,8 +207,8 @@ public sealed partial class SettingsWindow : Window
                 IsOpen = true,
                 IsClosable = false,
                 Severity = InfoBarSeverity.Warning,
-                Title = Localizer.Get("Settings_NotConnectedTitle", "qBittorrent is not connected"),
-                Message = Localizer.Get("Settings_NotConnectedMessage", "Connect to a qBittorrent profile to view and change these settings.")
+                Title = Localizer.Get("Settings_NotConnectedTitle", "Torrent backend is not connected"),
+                Message = Localizer.Get("Settings_NotConnectedMessage", "Connect to a torrent backend to view and change these settings.")
             });
 
         if (_section == "Connection")
@@ -234,15 +238,122 @@ public sealed partial class SettingsWindow : Window
         if (_section == "Behavior")
             SettingsPanel.Children.Add(CreateMenuEditorLauncher());
 
+        if (localManaged && connected && _section == "WebUI")
+            SettingsPanel.Children.Add(CreateRemoteApiSecurityCard());
+        if (localManaged && connected && _section == "Advanced")
+            SettingsPanel.Children.Add(CreateMigrationBackupCard());
+
         if (localManaged && _section == "WebUI")
             SettingsPanel.Children.Insert(1, new InfoBar
             {
                 IsOpen = true,
                 IsClosable = false,
                 Severity = InfoBarSeverity.Informational,
-                Title = Localizer.Get("Settings_ManagedTitle", "Managed local profile"),
-                Message = Localizer.Get("Settings_ManagedMessage", "Web UI address, port, and authentication are controlled by WinBitTorrent.")
+                Title = Localizer.Get("Settings_ManagedTitle", "WinBitTorrent Remote API"),
+                Message = Localizer.Get("Settings_ManagedMessage", "The desktop app never uses this API. Port 0 disables it; external binding requires explicit permission and HTTPS.")
             });
+    }
+
+    private FrameworkElement CreateRemoteApiSecurityCard()
+    {
+        var rotate = new Button { Content = "Generate new API key" };
+        rotate.Click += RotateRemoteApiKey_Click;
+        var delete = new Button { Content = "Delete API key", Margin = new Thickness(8, 0, 0, 0) };
+        delete.Click += DeleteRemoteApiKey_Click;
+        var panel = new StackPanel { Spacing = 8, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+        buttons.Children.Add(rotate);
+        buttons.Children.Add(delete);
+        panel.Children.Add(buttons);
+        var password = new PasswordBox { PlaceholderText = "New password (at least 12 characters)", MinWidth = 300 };
+        var changePassword = new Button { Content = "Change password", Margin = new Thickness(8, 0, 0, 0) };
+        changePassword.Click += async (_, _) =>
+        {
+            if (_main.Api is null || password.Password.Length < 12)
+            {
+                ShowMessage("Remote API password must contain at least 12 characters.", InfoBarSeverity.Warning);
+                return;
+            }
+            try
+            {
+                await _main.Api.Application.ChangeRemoteApiPasswordAsync(password.Password);
+                ShowMessage("Remote API password changed.", InfoBarSeverity.Success);
+                password.Password = string.Empty;
+            }
+            catch (Exception exception) { ShowMessage(exception.Message, InfoBarSeverity.Error); }
+        };
+        var passwordRow = new StackPanel { Orientation = Orientation.Horizontal };
+        passwordRow.Children.Add(password);
+        passwordRow.Children.Add(changePassword);
+        panel.Children.Add(passwordRow);
+        return CreateSettingsCard("Remote API credentials", "Bearer keys are shown only once. Passwords are stored as PBKDF2 hashes in the Engine database.", panel, true);
+    }
+
+    private FrameworkElement CreateMigrationBackupCard()
+    {
+        var button = new Button { Content = "Delete old migration backup…" };
+        button.Click += async (_, _) =>
+        {
+            if (_main.Api is null) return;
+            var dialog = new ContentDialog
+            {
+                XamlRoot = ((FrameworkElement)Content).XamlRoot,
+                Title = "Delete migration backup?",
+                Content = "Only the immutable copy of the old qBittorrent profile will be removed. Downloaded data and the active WinBitTorrent profile are never touched.",
+                PrimaryButtonText = "Delete backup",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close
+            };
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+            try
+            {
+                var deleted = await _main.Api.Application.DeleteMigrationBackupAsync();
+                ShowMessage(deleted ? "Migration backup deleted." : "No migration backup is present.", deleted ? InfoBarSeverity.Success : InfoBarSeverity.Informational);
+                button.IsEnabled = !deleted;
+            }
+            catch (Exception exception) { ShowMessage(exception.Message, InfoBarSeverity.Error); }
+        };
+        return CreateSettingsCard(
+            "Old qBittorrent profile backup",
+            "The migration backup is kept indefinitely. Removing it is optional and always requires confirmation.",
+            button,
+            fullWidthEditor: false);
+    }
+
+    private async void RotateRemoteApiKey_Click(object sender, RoutedEventArgs e)
+    {
+        if (_main.Api is null) return;
+        try
+        {
+            var key = await _main.Api.Application.RotateApiKeyAsync();
+            var value = new TextBox { Text = key, IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MinWidth = 520 };
+            var dialog = new ContentDialog
+            {
+                XamlRoot = ((FrameworkElement)Content).XamlRoot,
+                Title = "New Remote API key",
+                Content = value,
+                PrimaryButtonText = "Copy",
+                CloseButtonText = "Close"
+            };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+                var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+                package.SetText(key);
+                Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+            }
+        }
+        catch (Exception exception) { ShowMessage(exception.Message, InfoBarSeverity.Error); }
+    }
+
+    private async void DeleteRemoteApiKey_Click(object sender, RoutedEventArgs e)
+    {
+        if (_main.Api is null) return;
+        try
+        {
+            await _main.Api.Application.DeleteApiKeyAsync();
+            ShowMessage("Remote API key deleted.", InfoBarSeverity.Success);
+        }
+        catch (Exception exception) { ShowMessage(exception.Message, InfoBarSeverity.Error); }
     }
 
     /// <summary>
@@ -259,7 +370,9 @@ public sealed partial class SettingsWindow : Window
             Padding = new Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Right
         };
-        ToolTipService.SetToolTip(button, Localizer.Get("Settings_EditContextMenu", "Edit the context menu…"));
+        var accessibleName = Localizer.Get("Settings_EditContextMenu", "Edit the context menu…");
+        ToolTipService.SetToolTip(button, accessibleName);
+        AutomationProperties.SetName(button, accessibleName);
         button.Click += OpenMenuEditor_Click;
 
         return CreateSettingsCard(
@@ -289,12 +402,9 @@ public sealed partial class SettingsWindow : Window
     private void AddEditor(Panel parent, SettingSpec spec, bool localManaged, bool connected)
     {
         var view = CreateEditorView(spec, ReadValue(spec), localManaged, out var editor);
-        if ((!connected && !spec.Local)
-            || (localManaged && spec.Section == "WebUI" && spec.Key is "web_ui_address" or "web_ui_port" or "web_ui_username"))
+        if (!connected && !spec.Local)
         {
             editor.IsEnabled = false;
-            if (localManaged && spec.Section == "WebUI")
-                ToolTipService.SetToolTip(editor, Localizer.Get("Settings_ManagedTooltip", "Managed locally by WinBitTorrent and restricted to loopback."));
         }
 
         _editors[spec.Key] = editor;
@@ -339,7 +449,7 @@ public sealed partial class SettingsWindow : Window
                 Localizer.Get("SettingsConnection_LimitsDescription", "Use -1 for no limit. Conservative limits can reduce router and memory load.")),
             "Proxy" => (
                 Localizer.Get("SettingsConnection_ProxyTitle", "Proxy server"),
-                Localizer.Get("SettingsConnection_ProxyDescription", "Choose which qBittorrent traffic is routed through the proxy.")),
+                Localizer.Get("SettingsConnection_ProxyDescription", "Choose which torrent traffic is routed through the proxy.")),
             "I2P" => (
                 Localizer.Get("SettingsConnection_I2pTitle", "I2P (experimental)"),
                 Localizer.Get("SettingsConnection_I2pDescription", "Requires a running I2P router with a SAM bridge.")),
@@ -423,10 +533,10 @@ public sealed partial class SettingsWindow : Window
         var description = spec.Key switch
         {
             "random_port" => Localizer.Get("Setting_random_port_Description", "Overrides the fixed port with automatic selection at every backend start."),
-            "proxy_password" => Localizer.Get("Setting_proxy_password_Description", "qBittorrent stores this password without encryption."),
+            "proxy_password" => Localizer.Get("Setting_proxy_password_Description", "The backend stores this password without encryption."),
             "proxy_peer_connections" => Localizer.Get("Setting_proxy_peer_connections_Description", "Enable this to prevent direct peer connections when BitTorrent proxying is active."),
             "i2p_mixed_mode" => Localizer.Get("Setting_i2p_mixed_mode_Description", "Mixed mode can connect to regular IP peers and therefore does not provide I2P anonymity."),
-            "ip_filter_path" when !localManaged => Localizer.Get("Setting_ip_filter_path_RemoteDescription", "Enter a path that is accessible on the remote qBittorrent server."),
+            "ip_filter_path" when !localManaged => Localizer.Get("Setting_ip_filter_path_RemoteDescription", "Enter a path that is accessible on the remote torrent server."),
             "catalog.tmdb.apiKey" => Localizer.Get("Setting_catalog_tmdb_apiKey_Description", "Free API key from themoviedb.org, used to load the movie/TV catalog. You need to register on themoviedb.org yourself and generate the key — WinBitTorrent cannot do this for you."),
             NotificationPreferences.EnabledKey => Localizer.Get("Setting_notifications_enabled_Description", "Show download completion, torrent error, and add failure messages in the Windows notification center."),
             NotificationPreferences.TorrentAddedKey => Localizer.Get("Setting_notifications_torrentAdded_Description", "Also notify when a torrent is added. This can be noisy when torrents are added automatically."),
@@ -807,7 +917,7 @@ public sealed partial class SettingsWindow : Window
         {
             if (_preferencesUnavailable)
             {
-                ShowMessage(Localizer.Get("Settings_NotConnectedMessage", "Connect to a qBittorrent profile to view and change these settings."), InfoBarSeverity.Error);
+                ShowMessage(Localizer.Get("Settings_NotConnectedMessage", "Connect to a torrent backend to view and change these settings."), InfoBarSeverity.Error);
                 return;
             }
 
@@ -817,7 +927,7 @@ public sealed partial class SettingsWindow : Window
             {
                 if (_main.Api is null)
                 {
-                    ShowMessage(Localizer.Get("Settings_NotConnectedMessage", "Connect to a qBittorrent profile to view and change these settings."), InfoBarSeverity.Error);
+                    ShowMessage(Localizer.Get("Settings_NotConnectedMessage", "Connect to a torrent backend to view and change these settings."), InfoBarSeverity.Error);
                     return;
                 }
 
@@ -850,13 +960,13 @@ public sealed partial class SettingsWindow : Window
             {
                 var labels = string.Join(", ", mismatched.Select(SettingDisplayName));
                 ShowMessage(string.Format(
-                    Localizer.Get("Settings_VerificationFailed", "qBittorrent did not apply these settings: {0}"),
+                    Localizer.Get("Settings_VerificationFailed", "The backend did not apply these settings: {0}"),
                     labels), InfoBarSeverity.Warning);
             }
             else
             {
                 ShowMessage(hadRemoteChanges
-                    ? Localizer.Get("Settings_AppliedVerified", "Settings were applied and verified by qBittorrent.")
+                    ? Localizer.Get("Settings_AppliedVerified", "Settings were applied and verified by the backend.")
                     : Localizer.Get("Settings_Applied", "Settings applied. Restart the app to apply language, theme, or density changes."),
                     InfoBarSeverity.Success);
             }

@@ -36,7 +36,7 @@ public sealed class ContractTests
     [Fact]
     public void ProfileJsonNeverContainsASecretProperty()
     {
-        var profile = new ServerProfile(Guid.NewGuid(), "Remote", ProfileKind.Remote, new Uri("https://example.test/"), AuthenticationMode.ApiKey);
+        var profile = new ServerProfile(Guid.NewGuid(), "Remote", ProfileKind.RemoteQbittorrent, new Uri("https://example.test/"), AuthenticationMode.ApiKey);
         var json = JsonSerializer.Serialize(profile);
         Assert.DoesNotContain("password", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("secret", json, StringComparison.OrdinalIgnoreCase);

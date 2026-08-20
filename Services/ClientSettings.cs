@@ -1,15 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using WinBitTorrent.Infrastructure.Storage;
 
 namespace WinBitTorrent.Services;
 
 public static class ClientSettings
 {
     private static readonly object Gate = new();
-    private static readonly string FilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "WinBitTorrent",
-        "client-settings.json");
+    private static string FilePath => Path.Combine(AppPaths.Root, "client-settings.json");
     private static JsonObject? _values;
 
     public static object? GetValue(string key)

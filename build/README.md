@@ -54,13 +54,20 @@ added through the IDE (not the registry):
 
 ### Prerequisites
 
-- The native backend must be present at `Backend\qbittorrent-nox.exe`
-  (build it with `build-backend.ps1` or extract the CI artifact).
+- Build the pinned runtime with `build-runtime.ps1`, then the native libtorrent
+  bridge with `build-engine.ps1`. The resulting `Engine\WinBitTorrent.Native.dll`
+  and `Backend\Python\python.exe` are required by the release builder.
 - [Inno Setup 6.6 or newer](https://jrsoftware.org/isinfo.php) for the installer
   (`winget install JRSoftware.InnoSetup`). Not needed for portable-only builds.
   Version 6.6+ is required for the installer's automatic light/dark Windows theme.
 
 ## Other scripts
 
-- `build-backend.ps1` — reproducible build of the bundled qBittorrent engine.
+- `build-runtime.ps1` — builds/restores pinned libtorrent, Boost, OpenSSL,
+  CPython and the Nova-compatible search runtime. It does not stage qBittorrent
+  or Qt binaries.
+- `build-engine.ps1` — builds `WinBitTorrent.Native.dll` and copies its runtime
+  dependencies into `Engine\`.
+- `build-backend.ps1` — development-only legacy qBittorrent oracle used for
+  compatibility testing; its output is forbidden in public packages.
 - `installer/WinBitTorrent.iss` — Inno Setup script (driven by `release.ps1`).

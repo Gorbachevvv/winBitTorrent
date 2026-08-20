@@ -85,8 +85,8 @@ public sealed partial class RssRulesWindow : Window
             if (_originalName is not null && !name.Equals(_originalName, StringComparison.Ordinal) && _rules.ContainsKey(name))
                 throw new InvalidOperationException("A rule with that name already exists.");
             if (_originalName is not null && !name.Equals(_originalName, StringComparison.Ordinal))
-                await _main.Api.Rss.PostAsync("removeRule", new Dictionary<string, string?> { ["ruleName"] = _originalName });
-            await _main.Api.Rss.PostAsync("setRule", new Dictionary<string, string?> { ["ruleName"] = name, ["ruleDef"] = existing.ToJsonString() });
+                await _main.Api.Rss.RemoveRuleAsync(_originalName);
+            await _main.Api.Rss.SetRuleAsync(name, existing);
             _originalName = name;
             await RefreshAsync(name);
             Show("Rule saved.", InfoBarSeverity.Success);
@@ -97,7 +97,7 @@ public sealed partial class RssRulesWindow : Window
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
         if (_main.Api is null || _originalName is null) return;
-        await _main.Api.Rss.PostAsync("removeRule", new Dictionary<string, string?> { ["ruleName"] = _originalName });
+        await _main.Api.Rss.RemoveRuleAsync(_originalName);
         _originalName = null; await RefreshAsync();
     }
 

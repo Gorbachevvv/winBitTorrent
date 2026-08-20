@@ -4,6 +4,7 @@
   </Configurations>
   <Project Path="WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
   <Project Path="WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
+  <Project Path="WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj" />
   <Project Path="tests\WinBitTorrent.Core.Tests\WinBitTorrent.Core.Tests.csproj" />
   <Project Path="tests\WinBitTorrent.Infrastructure.Tests\WinBitTorrent.Infrastructure.Tests.csproj" />
   <Project Path="tests\WinBitTorrent.IntegrationTests\WinBitTorrent.IntegrationTests.csproj" />

@@ -40,13 +40,13 @@
   <data name="LogMenu.Text" xml:space="preserve"><value>Часопіс выканання</value></data>
   <data name="CookiesMenu.Text" xml:space="preserve"><value>Cookie-файлы…</value></data>
   <data name="StatisticsMenu.Text" xml:space="preserve"><value>Статыстыка…</value></data>
-  <data name="DocumentationMenu.Text" xml:space="preserve"><value>Дакументацыя qBittorrent</value></data>
+  <data name="DocumentationMenu.Text" xml:space="preserve"><value>Дакументацыя WinBitTorrent</value></data>
   <data name="AboutMenu.Text" xml:space="preserve"><value>Аб WinBitTorrent</value></data>
-  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Натыўны кліент WinUI 3 для qBittorrent 5.2.3 / Web API 2.15.1</value></data>
+  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Натыўны BitTorrent-кліент WinUI 3 на рухавіку libtorrent 2.0.13</value></data>
   <data name="Dialog_AboutConnectedBackend" xml:space="preserve"><value>Падлучаны бэкенд: {0}</value></data>
   <data name="Dialog_AboutRepository" xml:space="preserve"><value>Рэпазітар на GitHub</value></data>
   <data name="Dialog_AboutHomepage" xml:space="preserve"><value>Хатняя старонка</value></data>
-  <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent распаўсюджваецца па ліцэнзіі GPL-2.0-or-later. Апавяшчэння аб іншым ПА і прапанова аб прадастаўленні зыходнага кода ўключаны ў дадатак.</value></data>
+  <data name="Dialog_AboutLicense" xml:space="preserve"><value>WinBitTorrent распаўсюджваецца па ліцэнзіі GPL-3.0-or-later. Апавяшчэнні аб староннім ПЗ і звесткі пра зыходны код натыўных кампанентаў уключаны ў праграму.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Закрыць</value></data>
   <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Праверыць абнаўленні…</value></data>
   <data name="Update_DialogTitle" xml:space="preserve"><value>Даступна абнаўленне</value></data>
@@ -456,7 +456,7 @@
   <data name="Dialog_LocalFilesUnavailableTitle" xml:space="preserve"><value>Лакальныя файлы недаступныя</value></data>
   <data name="Dialog_LocalFilesUnavailableMessage" xml:space="preserve"><value>Гэты торэнт належыць выдаленаму профілю. WinBitTorrent можа адкрываць папкі толькі для кіраванай лакальнай сервернай часткі.</value></data>
   <data name="Dialog_DestinationUnavailableTitle" xml:space="preserve"><value>Папка прызначэння недаступная</value></data>
-  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Шлях захавання, атрыманы ад qBittorrent</value></data>
+  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Шлях захавання, атрыманы ад рухавіка</value></data>
   <data name="Dialog_DownloadPath" xml:space="preserve"><value>Шлях загрузкі</value></data>
   <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>Магчыма, шлях яшчэ не існуе ці метаданыя торэнта яшчэ не сінхранізаваныя.</value></data>
   <data name="Dialog_CategoryName" xml:space="preserve"><value>Назва катэгорыі</value></data>
@@ -480,7 +480,7 @@
   <data name="Dialog_RenameTorrent" xml:space="preserve"><value>Перайменаваць торэнт</value></data>
   <data name="Dialog_NewName" xml:space="preserve"><value>Новае імя</value></data>
   <data name="Dialog_SetTorrentLocation" xml:space="preserve"><value>Змяніць размяшчэнне торэнта</value></data>
-  <data name="Dialog_ServerPath" xml:space="preserve"><value>Шлях на серверы qBittorrent</value></data>
+  <data name="Dialog_ServerPath" xml:space="preserve"><value>Шлях на серверы торэнт-рухавіка</value></data>
   <data name="Dialog_AddTrackers" xml:space="preserve"><value>Дадаць трэкеры</value></data>
   <data name="Dialog_TrackerPerLine" xml:space="preserve"><value>Адзін URL трэкера на радок</value></data>
   <data name="Dialog_AddHttpSources" xml:space="preserve"><value>Дадаць HTTP-крыніцы</value></data>
@@ -546,7 +546,7 @@
   <data name="CreateTorrentReady.Text" xml:space="preserve"><value>Гатова</value></data>
   <data name="CommonCreate.Content" xml:space="preserve"><value>Стварыць</value></data>
   <data name="CookiesWindow.Title" xml:space="preserve"><value>Файлы cookie</value></data>
-  <data name="CookiesTitle.Text" xml:space="preserve"><value>Файлы cookie qBittorrent</value></data>
+  <data name="CookiesTitle.Text" xml:space="preserve"><value>Файлы cookie торэнт-рухавіка</value></data>
   <data name="CookiesJson.Header" xml:space="preserve"><value>JSON-масіў файлаў cookie</value></data>
   <data name="CookiesSave.Content" xml:space="preserve"><value>Захаваць cookie</value></data>
   <data name="SearchPluginsWindow.Title" xml:space="preserve"><value>Пошукавыя плагіны</value></data>
@@ -640,9 +640,9 @@
   <data name="Tracker_SearchingNamed" xml:space="preserve"><value>Пошук у {0}…</value></data>
   <data name="Tracker_SeasonQuerySuffix" xml:space="preserve"><value>сезон {0}</value></data>
   <data name="Tracker_ResultCount" xml:space="preserve"><value>Вынікаў: {0}</value></data>
-  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Перад спампоўваннем падключыцеся да qBittorrent.</value></data>
+  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Перад спампоўваннем падключыцеся да торэнт-рухавіка.</value></data>
   <data name="Tracker_Downloading" xml:space="preserve"><value>Загрузка torrent-файла…</value></data>
-  <data name="Tracker_Added" xml:space="preserve"><value>Торэнт дададзены ў qBittorrent.</value></data>
+  <data name="Tracker_Added" xml:space="preserve"><value>Торэнт дададзены.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent-файл загружаны. Праверце параметры дадання.</value></data>
   <data name="Tracker_MagnetReady" xml:space="preserve"><value>Magnet-спасылка гатовая. Праверце параметры дадання.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Вы выйшлі з акаўнта. Увайдзіце пад іншым уліковым запісам.</value></data>
@@ -690,17 +690,17 @@
   <data name="DuplicateTorrent_Title" xml:space="preserve"><value>Торэнт ужо дададзены</value></data>
   <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Торэнт «{0}» ужо ёсць у спісе перадач. Аб'яднаць трэкеры з новай крыніцы?</value></data>
   <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Торэнт «{0}» з'яўляецца прыватным. Яго трэкеры нельга аб'яднаць.</value></data>
-  <data name="Connection_NotConnected" xml:space="preserve"><value>Няма падключэння да qBittorrent.</value></data>
-  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>Няма падключэння да qBittorrent</value></data>
-  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Падключыцеся да профілю qBittorrent, каб праглядаць і змяняць гэтыя налады.</value></data>
-  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Налады ўжытыя і правераныя праз qBittorrent.</value></data>
-  <data name="Settings_VerificationFailed" xml:space="preserve"><value>qBittorrent не ўжыў наступныя налады: {0}</value></data>
+  <data name="Connection_NotConnected" xml:space="preserve"><value>Няма падключэння да торэнт-рухавіка.</value></data>
+  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>Няма падключэння да торэнт-рухавіка</value></data>
+  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Падключыцеся да торэнт-рухавіка, каб праглядаць і змяняць гэтыя налады.</value></data>
+  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Налады ўжытыя і правераныя рухавіком.</value></data>
+  <data name="Settings_VerificationFailed" xml:space="preserve"><value>Рухавік не ўжыў наступныя налады: {0}</value></data>
   <data name="SettingsConnection_ProtocolTitle" xml:space="preserve"><value>Пратакол і порт праслухоўвання</value></data>
   <data name="SettingsConnection_ProtocolDescription" xml:space="preserve"><value>Вызначае, як піры падключаюцца да кліента. Значэнне порта 0 дазваляе сістэме выбраць вольны порт.</value></data>
   <data name="SettingsConnection_LimitsTitle" xml:space="preserve"><value>Абмежаванні злучэнняў</value></data>
   <data name="SettingsConnection_LimitsDescription" xml:space="preserve"><value>Значэнне -1 адключае абмежаванне. Умераныя ліміты зніжаюць нагрузку на роўтар і памяць.</value></data>
   <data name="SettingsConnection_ProxyTitle" xml:space="preserve"><value>Проксі-сервер</value></data>
-  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Выберыце, які трафік qBittorrent павінен накіроўваць праз проксі.</value></data>
+  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Выберыце, які торэнт-трафік трэба накіроўваць праз проксі.</value></data>
   <data name="SettingsConnection_I2pTitle" xml:space="preserve"><value>I2P (эксперыментальна)</value></data>
   <data name="SettingsConnection_I2pDescription" xml:space="preserve"><value>Патрабуецца запушчаны I2P-роўтар з уключаным SAM-мостам.</value></data>
   <data name="SettingsConnection_FilterTitle" xml:space="preserve"><value>Фільтрацыя IP</value></data>
@@ -728,10 +728,10 @@
   <data name="Setting_ip_filter_trackers" xml:space="preserve"><value>Ужываць IP-фільтр да трэкераў</value></data>
   <data name="Setting_banned_IPs" xml:space="preserve"><value>Заблакаваныя ўручную IP-адрасы (па адным у радку)</value></data>
   <data name="Setting_random_port_Description" xml:space="preserve"><value>Пры запуску ўбудаванага backend фіксаваны порт замяняецца аўтаматычна выбраным.</value></data>
-  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>qBittorrent захоўвае гэты пароль у незашыфраваным выглядзе.</value></data>
+  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>Рухавік захоўвае гэты пароль у незашыфраваным выглядзе.</value></data>
   <data name="Setting_proxy_peer_connections_Description" xml:space="preserve"><value>Уключыце, каб выключыць прамыя злучэнні з пірамі пры актыўным BitTorrent-проксі.</value></data>
   <data name="Setting_i2p_mixed_mode_Description" xml:space="preserve"><value>Змешаны рэжым дапускае звычайныя IP-злучэнні і таму не забяспечвае ананімнасць I2P.</value></data>
-  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Пазначце шлях, даступны на выдаленым серверы qBittorrent.</value></data>
+  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Пазначце шлях, даступны на аддаленым торэнт-серверы.</value></data>
   <data name="Choice_ProtocolBoth" xml:space="preserve"><value>TCP і µTP</value></data>
   <data name="Choice_ProtocolTcp" xml:space="preserve"><value>Толькі TCP</value></data>
   <data name="Choice_ProtocolUtp" xml:space="preserve"><value>Толькі µTP</value></data>
@@ -749,8 +749,8 @@
   <data name="Files_LocalItemUnavailable" xml:space="preserve"><value>Выбраны файл ці папка пакуль недаступныя лакальна.</value></data>
   <data name="Files_SelectionUpdated" xml:space="preserve"><value>Выбар загрузкі абноўлены для файлаў: {0}.</value></data>
   <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>Торэнт дададзены, але спіс яго файлаў пакуль недаступны.</value></data>
-  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торэнт дададзены, але qBittorrent не вярнуў сумяшчальны спіс файлаў для ўжывання прыярытэтаў.</value></data>
-  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торэнт дададзены, але qBittorrent не ўжыў усе выбраныя прыярытэты файлаў.</value></data>
+  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>Торэнт дададзены, але рухавік не вярнуў сумяшчальны спіс файлаў для ўжывання прыярытэтаў.</value></data>
+  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>Торэнт дададзены, але рухавік не ўжыў усе выбраныя прыярытэты файлаў.</value></data>
   <data name="Settings_EditContextMenu" xml:space="preserve"><value>Рэдагаваць кантэкстнае меню…</value></data>
   <data name="Settings_EditContextMenuDescription" xml:space="preserve"><value>Выберыце, якія каманды паказваць пры націску правай кнопкай на торэнт і ў якім парадку.</value></data>
   <data name="MenuEditor_Title" xml:space="preserve"><value>Рэдактар кантэкстнага меню</value></data>

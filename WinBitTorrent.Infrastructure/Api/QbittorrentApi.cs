@@ -9,7 +9,7 @@ using WinBitTorrent.Core.Models;
 
 namespace WinBitTorrent.Infrastructure.Api;
 
-public sealed class QbittorrentApi : IQBittorrentApi
+public sealed class QbittorrentApi : ITorrentBackendClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -38,6 +38,7 @@ public sealed class QbittorrentApi : IQBittorrentApi
     }
 
     public ServerProfile Profile { get; }
+    public BackendCapabilities Capabilities => BackendCapabilities.All & ~BackendCapabilities.LocalFileSystem;
     public IAuthApi Auth { get; }
     public IApplicationApi Application { get; }
     public ISyncApi Sync { get; }
@@ -199,7 +200,7 @@ public sealed class QbittorrentApi : IQBittorrentApi
         public Task<string> GetVersionAsync(CancellationToken cancellationToken = default)
             => api.GetStringAsync("api/v2/app/version", cancellationToken: cancellationToken);
 
-        public Task<string> GetWebApiVersionAsync(CancellationToken cancellationToken = default)
+        public Task<string> GetProtocolVersionAsync(CancellationToken cancellationToken = default)
             => api.GetStringAsync("api/v2/app/webapiVersion", cancellationToken: cancellationToken);
 
         public Task<JsonObject> GetBuildInfoAsync(CancellationToken cancellationToken = default)
@@ -229,6 +230,12 @@ public sealed class QbittorrentApi : IQBittorrentApi
 
         public Task DeleteApiKeyAsync(CancellationToken cancellationToken = default)
             => api.PostAsync("api/v2/app/deleteAPIKey", cancellationToken: cancellationToken);
+
+        public Task ChangeRemoteApiPasswordAsync(string newPassword, CancellationToken cancellationToken = default)
+            => SetPreferencesAsync(new JsonObject { ["web_ui_password"] = newPassword }, cancellationToken);
+
+        public Task<bool> DeleteMigrationBackupAsync(CancellationToken cancellationToken = default)
+            => Task.FromException<bool>(new NotSupportedException("Migration backups exist only for the local WinBitTorrent engine."));
 
         public Task<JsonArray> GetDirectoryContentAsync(string path, CancellationToken cancellationToken = default)
             => api.GetArrayAsync("api/v2/app/getDirectoryContent", new Dictionary<string, string?> { ["dirPath"] = path }, cancellationToken);
@@ -382,7 +389,54 @@ public sealed class QbittorrentApi : IQBittorrentApi
             return api.PostAsync($"api/v2/torrents/{action}", new Dictionary<string, string?> { ["hashes"] = hashes }, cancellationToken);
         }
 
-        public Task PostAsync(string action, IReadOnlyDictionary<string, string?> parameters, CancellationToken cancellationToken = default)
+        public Task SetForceStartAsync(string hashes, bool enabled, CancellationToken cancellationToken = default)
+            => PostActionAsync("setForceStart", new() { ["hashes"] = hashes, ["value"] = enabled ? "true" : "false" }, cancellationToken);
+        public Task SetSuperSeedingAsync(string hashes, bool enabled, CancellationToken cancellationToken = default)
+            => PostActionAsync("setSuperSeeding", new() { ["hashes"] = hashes, ["value"] = enabled ? "true" : "false" }, cancellationToken);
+        public Task SetCategoryAsync(string hashes, string category, CancellationToken cancellationToken = default)
+            => PostActionAsync("setCategory", new() { ["hashes"] = hashes, ["category"] = category }, cancellationToken);
+        public Task AddTagsAsync(string hashes, string tags, CancellationToken cancellationToken = default)
+            => PostActionAsync("addTags", new() { ["hashes"] = hashes, ["tags"] = tags }, cancellationToken);
+        public Task RemoveTagsAsync(string hashes, string tags, CancellationToken cancellationToken = default)
+            => PostActionAsync("removeTags", new() { ["hashes"] = hashes, ["tags"] = tags }, cancellationToken);
+        public Task SetLocationAsync(string hashes, string location, CancellationToken cancellationToken = default)
+            => PostActionAsync("setLocation", new() { ["hashes"] = hashes, ["location"] = location }, cancellationToken);
+        public Task SetDownloadLimitAsync(string hashes, long limit, CancellationToken cancellationToken = default)
+            => PostActionAsync("setDownloadLimit", new() { ["hashes"] = hashes, ["limit"] = limit.ToString(CultureInfo.InvariantCulture) }, cancellationToken);
+        public Task SetUploadLimitAsync(string hashes, long limit, CancellationToken cancellationToken = default)
+            => PostActionAsync("setUploadLimit", new() { ["hashes"] = hashes, ["limit"] = limit.ToString(CultureInfo.InvariantCulture) }, cancellationToken);
+        public Task SetShareLimitsAsync(string hashes, double ratioLimit, int seedingTimeLimit, int inactiveSeedingTimeLimit, CancellationToken cancellationToken = default)
+            => PostActionAsync("setShareLimits", new()
+            {
+                ["hashes"] = hashes,
+                ["ratioLimit"] = ratioLimit.ToString(CultureInfo.InvariantCulture),
+                ["seedingTimeLimit"] = seedingTimeLimit.ToString(CultureInfo.InvariantCulture),
+                ["inactiveSeedingTimeLimit"] = inactiveSeedingTimeLimit.ToString(CultureInfo.InvariantCulture)
+            }, cancellationToken);
+        public Task RenameAsync(string hash, string name, CancellationToken cancellationToken = default)
+            => PostActionAsync("rename", new() { ["hash"] = hash, ["name"] = name }, cancellationToken);
+        public Task SetFilePriorityAsync(string hash, IEnumerable<int> fileIds, int priority, CancellationToken cancellationToken = default)
+            => PostActionAsync("filePrio", new() { ["hash"] = hash, ["id"] = string.Join('|', fileIds), ["priority"] = priority.ToString(CultureInfo.InvariantCulture) }, cancellationToken);
+        public Task AddTrackersAsync(string hash, IEnumerable<string> urls, CancellationToken cancellationToken = default)
+            => PostActionAsync("addTrackers", new() { ["hash"] = hash, ["urls"] = string.Join('\n', urls) }, cancellationToken);
+        public Task RemoveTrackersAsync(string hash, IEnumerable<string> urls, CancellationToken cancellationToken = default)
+            => PostActionAsync("removeTrackers", new() { ["hash"] = hash, ["urls"] = string.Join('|', urls) }, cancellationToken);
+        public Task AddWebSeedsAsync(string hash, IEnumerable<string> urls, CancellationToken cancellationToken = default)
+            => PostActionAsync("addWebSeeds", new() { ["hash"] = hash, ["urls"] = string.Join('\n', urls) }, cancellationToken);
+        public Task RemoveWebSeedsAsync(string hash, IEnumerable<string> urls, CancellationToken cancellationToken = default)
+            => PostActionAsync("removeWebSeeds", new() { ["hash"] = hash, ["urls"] = string.Join('|', urls) }, cancellationToken);
+        public Task CreateCategoryAsync(string category, string savePath, CancellationToken cancellationToken = default)
+            => PostActionAsync("createCategory", new() { ["category"] = category, ["savePath"] = savePath }, cancellationToken);
+        public Task EditCategoryAsync(string category, string savePath, CancellationToken cancellationToken = default)
+            => PostActionAsync("editCategory", new() { ["category"] = category, ["savePath"] = savePath }, cancellationToken);
+        public Task RemoveCategoriesAsync(IEnumerable<string> categories, CancellationToken cancellationToken = default)
+            => PostActionAsync("removeCategories", new() { ["categories"] = string.Join('\n', categories) }, cancellationToken);
+        public Task CreateTagsAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default)
+            => PostActionAsync("createTags", new() { ["tags"] = string.Join(',', tags) }, cancellationToken);
+        public Task DeleteTagsAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default)
+            => PostActionAsync("deleteTags", new() { ["tags"] = string.Join(',', tags) }, cancellationToken);
+
+        private Task PostActionAsync(string action, Dictionary<string, string?> parameters, CancellationToken cancellationToken)
             => api.PostAsync($"api/v2/torrents/{action}", parameters, cancellationToken);
 
         public Task<byte[]> ExportAsync(string hash, CancellationToken cancellationToken = default)
@@ -458,7 +512,19 @@ public sealed class QbittorrentApi : IQBittorrentApi
         public Task<JsonArray> GetMatchingArticlesAsync(string ruleName, CancellationToken cancellationToken = default)
             => api.GetArrayAsync("api/v2/rss/matchingArticles", new Dictionary<string, string?> { ["ruleName"] = ruleName }, cancellationToken);
 
-        public Task PostAsync(string action, IReadOnlyDictionary<string, string?> parameters, CancellationToken cancellationToken = default)
+        public Task AddFeedAsync(string url, string path, CancellationToken cancellationToken = default)
+            => PostAsync("addFeed", new Dictionary<string, string?> { ["url"] = url, ["path"] = path }, cancellationToken);
+        public Task AddFolderAsync(string path, CancellationToken cancellationToken = default)
+            => PostAsync("addFolder", new Dictionary<string, string?> { ["path"] = path }, cancellationToken);
+        public Task RefreshItemAsync(string itemPath, CancellationToken cancellationToken = default)
+            => PostAsync("refreshItem", new Dictionary<string, string?> { ["itemPath"] = itemPath }, cancellationToken);
+        public Task RemoveItemAsync(string path, CancellationToken cancellationToken = default)
+            => PostAsync("removeItem", new Dictionary<string, string?> { ["path"] = path }, cancellationToken);
+        public Task SetRuleAsync(string ruleName, JsonObject definition, CancellationToken cancellationToken = default)
+            => PostAsync("setRule", new Dictionary<string, string?> { ["ruleName"] = ruleName, ["ruleDef"] = definition.ToJsonString() }, cancellationToken);
+        public Task RemoveRuleAsync(string ruleName, CancellationToken cancellationToken = default)
+            => PostAsync("removeRule", new Dictionary<string, string?> { ["ruleName"] = ruleName }, cancellationToken);
+        private Task PostAsync(string action, IReadOnlyDictionary<string, string?> parameters, CancellationToken cancellationToken)
             => api.PostAsync($"api/v2/rss/{action}", parameters, cancellationToken);
     }
 
@@ -489,7 +555,17 @@ public sealed class QbittorrentApi : IQBittorrentApi
         public Task<JsonArray> GetPluginsAsync(CancellationToken cancellationToken = default)
             => api.GetArrayAsync("api/v2/search/plugins", cancellationToken: cancellationToken);
 
-        public Task PostAsync(string action, IReadOnlyDictionary<string, string?> parameters, CancellationToken cancellationToken = default)
+        public Task InstallPluginAsync(string source, CancellationToken cancellationToken = default)
+            => PostAsync("installPlugin", new Dictionary<string, string?> { ["sources"] = source }, cancellationToken);
+        public Task SetPluginsEnabledAsync(IEnumerable<string> names, bool enabled, CancellationToken cancellationToken = default)
+            => PostAsync("enablePlugin", new Dictionary<string, string?> { ["names"] = string.Join('|', names), ["enable"] = enabled ? "true" : "false" }, cancellationToken);
+        public Task UninstallPluginsAsync(IEnumerable<string> names, CancellationToken cancellationToken = default)
+            => PostAsync("uninstallPlugin", new Dictionary<string, string?> { ["names"] = string.Join('|', names) }, cancellationToken);
+        public Task UpdatePluginsAsync(CancellationToken cancellationToken = default)
+            => PostAsync("updatePlugins", new Dictionary<string, string?>(), cancellationToken);
+        public Task StopAsync(int id, CancellationToken cancellationToken = default)
+            => PostAsync("stop", new Dictionary<string, string?> { ["id"] = id.ToString(CultureInfo.InvariantCulture) }, cancellationToken);
+        private Task PostAsync(string action, IReadOnlyDictionary<string, string?> parameters, CancellationToken cancellationToken)
             => api.PostAsync($"api/v2/search/{action}", parameters, cancellationToken);
     }
 

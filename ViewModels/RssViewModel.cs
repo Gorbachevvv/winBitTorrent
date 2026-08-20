@@ -64,11 +64,7 @@ public sealed partial class RssViewModel : ObservableObject
     {
         if (_main.Api is null)
             return;
-        await _main.Api.Rss.PostAsync("addFeed", new Dictionary<string, string?>
-        {
-            ["url"] = url,
-            ["path"] = path ?? string.Empty
-        });
+        await _main.Api.Rss.AddFeedAsync(url, path ?? string.Empty);
         await RefreshAsync();
     }
 
@@ -76,7 +72,7 @@ public sealed partial class RssViewModel : ObservableObject
     {
         if (_main.Api is null)
             return;
-        await _main.Api.Rss.PostAsync("addFolder", new Dictionary<string, string?> { ["path"] = path });
+        await _main.Api.Rss.AddFolderAsync(path);
         await RefreshAsync();
     }
 
@@ -85,7 +81,7 @@ public sealed partial class RssViewModel : ObservableObject
     {
         if (_main.Api is null || SelectedFeed is null)
             return;
-        await _main.Api.Rss.PostAsync("refreshItem", new Dictionary<string, string?> { ["itemPath"] = SelectedFeed.Path });
+        await _main.Api.Rss.RefreshItemAsync(SelectedFeed.Path);
         await RefreshAsync();
     }
 
@@ -94,7 +90,7 @@ public sealed partial class RssViewModel : ObservableObject
     {
         if (_main.Api is null || SelectedFeed is null)
             return;
-        await _main.Api.Rss.PostAsync("removeItem", new Dictionary<string, string?> { ["path"] = SelectedFeed.Path });
+        await _main.Api.Rss.RemoveItemAsync(SelectedFeed.Path);
         SelectedFeed = null;
         await RefreshAsync();
     }

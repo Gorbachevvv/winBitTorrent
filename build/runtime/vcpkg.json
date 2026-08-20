@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "winbittorrent-engine-runtime",
+  "version-string": "1.0.0",
+  "builtin-baseline": "4b1c85d04c9ea3730408fefcabc6123312b714d2",
+  "dependencies": [
+    "boost-headers",
+    "boost-json",
+    "boost-system",
+    "openssl"
+  ],
+  "overrides": [
+    { "name": "boost-headers", "version": "1.91.0" },
+    { "name": "boost-json", "version": "1.91.0" },
+    { "name": "boost-system", "version": "1.91.0" },
+    { "name": "openssl", "version": "3.6.2" }
+  ]
+}

@@ -18,7 +18,7 @@ public sealed class QbittorrentApiTests
             "/api/v2/sync/maindata" => Json("""{"rid":2,"full_update":false,"torrents":{"abc":{"name":"Test","future":42}}}"""),
             _ => new HttpResponseMessage(HttpStatusCode.NotFound)
         });
-        var profile = new ServerProfile(Guid.NewGuid(), "Test", ProfileKind.Remote, new Uri("https://qbit.test/"), AuthenticationMode.ApiKey);
+        var profile = new ServerProfile(Guid.NewGuid(), "Test", ProfileKind.RemoteQbittorrent, new Uri("https://qbit.test/"), AuthenticationMode.ApiKey);
         await using var api = QbittorrentApi.Create(profile, "top-secret", handler);
 
         Assert.Equal("v5.2.3", await api.Application.GetVersionAsync());
@@ -76,12 +76,7 @@ public sealed class QbittorrentApiTests
         });
         await using var api = QbittorrentApi.Create(ServerProfile.CreateLocal(new Uri("http://127.0.0.1:1/")), handler: handler);
 
-        await api.Torrents.PostAsync("filePrio", new Dictionary<string, string?>
-        {
-            ["hash"] = "abc",
-            ["id"] = "1|3|8",
-            ["priority"] = "0"
-        });
+        await api.Torrents.SetFilePriorityAsync("abc", [1, 3, 8], 0);
 
         Assert.Equal("/api/v2/torrents/filePrio", requestPath);
         Assert.Contains("hash=abc", requestBody, StringComparison.Ordinal);

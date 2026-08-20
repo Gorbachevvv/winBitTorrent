@@ -3,6 +3,7 @@ using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Infrastructure.Backend;
 using WinBitTorrent.Infrastructure.Catalog;
 using WinBitTorrent.Infrastructure.Connection;
+using WinBitTorrent.Infrastructure.Engine;
 using WinBitTorrent.Infrastructure.Storage;
 using WinBitTorrent.Infrastructure.Trackers;
 using WinBitTorrent.Infrastructure.Updates;
@@ -19,7 +20,7 @@ public static class DependencyInjection
         services.AddSingleton<ITrackerSearchProvider, PirateBayProvider>();
         services.AddSingleton<ICatalogProvider, TmdbCatalogProvider>();
         services.AddSingleton<IServerProfileStore, JsonServerProfileStore>();
-        services.AddSingleton<IManagedBackendHost, ManagedBackendHost>();
+        services.AddSingleton<IManagedBackendHost, EngineHostProcess>();
         services.AddSingleton<IConnectionCoordinator, ConnectionCoordinator>();
         services.AddSingleton<IUpdateService, GitHubUpdateService>();
         return services;

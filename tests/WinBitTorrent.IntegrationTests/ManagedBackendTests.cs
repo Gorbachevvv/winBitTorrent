@@ -29,8 +29,8 @@ public sealed class ManagedBackendTests
         try
         {
             var session = await host.StartAsync();
-            Assert.Equal("v5.2.3", session.QbittorrentVersion);
-            Assert.Equal("2.15.1", session.WebApiVersion);
+            Assert.Equal("v5.2.3", session.BackendVersion);
+            Assert.Equal("2.15.1", session.ProtocolVersion);
             Assert.True(IPAddress.IsLoopback(session.BaseAddress.HostNameType == UriHostNameType.IPv4
                 ? IPAddress.Parse(session.BaseAddress.Host)
                 : IPAddress.Loopback));

@@ -109,7 +109,7 @@ public static class TorrentDuplicateChecker
     public static async Task MergeDuplicateAsync(MainViewModel viewModel, bool isFile, string source)
     {
         var api = viewModel.Api
-            ?? throw new InvalidOperationException(Localizer.Get("Connection_NotConnected", "Not connected to qBittorrent."));
+            ?? throw new InvalidOperationException(Localizer.Get("Connection_NotConnected", "Not connected to a torrent backend."));
         var preferences = await api.Application.GetPreferencesAsync();
         var mergeWasEnabled = preferences["merge_trackers"]?.GetValue<bool>() == true;
         if (!mergeWasEnabled)

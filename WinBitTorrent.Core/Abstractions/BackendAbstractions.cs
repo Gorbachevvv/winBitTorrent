@@ -5,6 +5,7 @@ namespace WinBitTorrent.Core.Abstractions;
 public interface IManagedBackendHost : IAsyncDisposable
 {
     BackendSession? Session { get; }
+    ITorrentBackendClient? Client { get; }
     bool IsRunning { get; }
     event EventHandler<string>? OutputReceived;
     event EventHandler<Exception>? Failed;
@@ -32,9 +33,9 @@ public interface ICredentialStore
 public interface IConnectionCoordinator : IAsyncDisposable
 {
     ConnectionSnapshot Snapshot { get; }
-    IQBittorrentApi? Api { get; }
+    ITorrentBackendClient? Api { get; }
     event EventHandler<ConnectionSnapshot>? StateChanged;
 
-    Task<IQBittorrentApi> ConnectAsync(ServerProfile profile, CancellationToken cancellationToken = default);
+    Task<ITorrentBackendClient> ConnectAsync(ServerProfile profile, CancellationToken cancellationToken = default);
     Task DisconnectAsync(CancellationToken cancellationToken = default);
 }

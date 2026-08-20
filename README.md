@@ -4,14 +4,14 @@
 
 # [WinBitTorrent](https://winbittorrent.github.io/)
 
-**A native WinUI 3 desktop client for qBittorrent on Windows.**
+**A native WinUI 3 BitTorrent client for Windows.**
 
-WinBitTorrent wraps the real `qbittorrent-nox` engine in a modern, fluent Windows 11 interface — Mica backdrop, light/dark themes, tabbed details, drag-and-drop, tray integration and full localization — while keeping the proven qBittorrent/libtorrent core running under the hood.
+WinBitTorrent combines a modern Windows 11 interface with its own local engine powered directly by libtorrent 2.0.13. The local path uses a protected named pipe—there is no local Web UI process, qBittorrent or Qt dependency. Remote qBittorrent profiles remain supported through Web API 2.15.1.
 
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![.NET](https://img.shields.io/badge/.NET%208-WinUI%203-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-2.2-0078D6)](https://learn.microsoft.com/windows/apps/windows-app-sdk/)
-[![Backend](https://img.shields.io/badge/qBittorrent-5.2.3-2F67BA?logo=qbittorrent&logoColor=white)](https://www.qbittorrent.org/)
+[![Engine](https://img.shields.io/badge/libtorrent-2.0.13-2F67BA)](https://www.libtorrent.org/)
 [![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
 </div>
@@ -54,11 +54,9 @@ WinBitTorrent wraps the real `qbittorrent-nox` engine in a modern, fluent Window
 
 ## What is WinBitTorrent?
 
-qBittorrent is a fantastic, cross-platform BitTorrent client, but its desktop UI is built on Qt Widgets and doesn't feel at home on modern Windows. **WinBitTorrent is a from-scratch Windows front-end** that speaks to qBittorrent's Web API and renders everything with **WinUI 3 / the Windows App SDK**.
+WinBitTorrent is a complete desktop BitTorrent application built with **WinUI 3 / the Windows App SDK**. Its managed `WinBitTorrent.EngineHost.exe` worker owns local application state, RSS, search, logs and remote access; a narrow native C ABI connects the worker to libtorrent.
 
-Out of the box it ships and **manages its own bundled `qbittorrent-nox` engine** as a private, loopback-only background process — so it works as a standalone torrent client with no manual server setup. It can *also* connect to any **remote qBittorrent instance** (a NAS, a seedbox, a home server) using username/password or an API key.
-
-You get the reliability of the qBittorrent + libtorrent core with a UI that matches Windows 11.
+The application can also connect to **remote qBittorrent instances** on a NAS, seedbox or home server. Typed backend contracts keep the same UI and user behavior while capability flags hide operations a particular backend cannot perform.
 
 ---
 
@@ -73,13 +71,13 @@ You get the reliability of the qBittorrent + libtorrent core with a UI that matc
 
 ### Discovery
 - **RSS reader** with auto-download rules.
-- **Search engine** powered by qBittorrent's bundled Python (`nova3`) search plugins.
+- **Search engine** powered by bundled Python and qBittorrent-compatible Nova search plugins.
 - **Tracker search** with a built-in **RuTracker** provider, including optional proxy support and secure credential storage.
 
 ### Tools & UX
 - **Create torrent** wizard, **cookies manager**, and **statistics** view.
-- **Server profiles** — the managed local engine plus any number of remote qBittorrent servers.
-- **Options** across eight categories (Behavior, Downloads, Connection, Speed, BitTorrent, WebUI, RSS, Advanced) that read/write real qBittorrent preferences and verify they were applied.
+- **Server profiles** — the native local engine plus any number of remote qBittorrent servers.
+- **Options** across eight categories (Behavior, Downloads, Connection, Speed, BitTorrent, Remote API, RSS, Advanced), mapped to the active backend and verified after application.
 - **Windows-native niceties**: Mica backdrop, custom title bar, **light/dark/system theme**, **system tray** icon with quick actions, **drag-and-drop** of `.torrent` files, `.torrent` **file association** and **`magnet:` protocol** handling, single-instance activation, and persistent window/tab/column layout.
 - **Localization**: English (`en-US`), Russian (`ru-RU`) and Belarusian (`be-BY`).
 
@@ -87,30 +85,28 @@ You get the reliability of the qBittorrent + libtorrent core with a UI that matc
 
 ## How it works (under the hood)
 
-WinBitTorrent does **not** re-implement the BitTorrent protocol. Instead it drives the genuine qBittorrent engine over its documented Web API:
+WinBitTorrent delegates the BitTorrent wire protocol to libtorrent and owns the surrounding application behavior:
 
 ```
 ┌──────────────────────────────────────────────┐
 │  WinBitTorrent (WinUI 3 desktop app, .NET 8) │
-│  Views / ViewModels (MVVM)                   │
-│            │  HTTP + API key (localhost)     │
-│            ▼                                 │
-│  QbittorrentApi client  ── Web API 2.15.1 ──┐│
+│  Views / ViewModels / typed backend contract │
 └──────────────────────────────────────────────┘
              │                                 │
-             ▼ (managed local profile)         ▼ (remote profile)
+             ▼ (local profile)                 ▼ (remote profile)
    ┌───────────────────────────┐     ┌───────────────────────────┐
-   │  Bundled qbittorrent-nox  │     │  Any remote qBittorrent   │
-   │  5.2.3 + libtorrent 2.0.x │     │  server (NAS / seedbox)   │
-   │  child process, 127.0.0.1 │     └───────────────────────────┘
+   │ WinBitTorrent.EngineHost  │     │  RemoteQbittorrentClient  │
+   │ .NET 8 + SQLite (WAL)     │     │  Web API 2.15.1 over HTTP │
+   │ named pipe + native C ABI │     └───────────────────────────┘
+   │ libtorrent 2.0.13         │
    └───────────────────────────┘
 ```
 
-**Managed local backend.** On first launch of the local profile, the app spawns the bundled `qbittorrent-nox.exe` with a private profile directory, binds its Web UI to `127.0.0.1` on a random free port, and boots it headless. It reads the one-time temporary admin password from the engine's output, immediately **rotates it into a persistent API key**, and stores that key in the **Windows Credential vault** (`PasswordVault`) — the password never touches disk and is redacted from logs. The engine version and Web API version are verified against the expected contract (`5.2.3` / `2.15.1`) on startup.
+**Local backend.** The desktop starts `WinBitTorrent.EngineHost.exe` and authenticates a current-user-only named pipe using a random one-time secret delivered through redirected standard input. Commands use a versioned, length-prefixed JSON protocol with correlation IDs. The worker persists state under `%LOCALAPPDATA%\WinBitTorrent\Engine` in SQLite WAL mode and stores resume data in SQLite or `.fastresume` files.
 
-**Lifecycle safety.** The child process is attached to a Windows **Job object**, so the engine can never be orphaned — if the app crashes or is killed, the backend goes down with it. On unexpected exit, WinBitTorrent attempts a bounded automatic restart.
+**Lifecycle safety.** The worker is attached to a Windows **Job object**, so it cannot be orphaned if the desktop exits or crashes. The bundled Python helper exists only for the duration of a search job and inherits the same process containment.
 
-**Remote mode.** Point a profile at any reachable qBittorrent Web UI and authenticate with username/password or an API key. The same UI drives local and remote servers; features that require local disk access (e.g. *Open destination folder*) are automatically limited to the managed local engine.
+**Remote mode.** Point a profile at any reachable qBittorrent Web UI and authenticate with username/password or an API key. Local-only operations such as opening a destination in Explorer are selected through backend capabilities rather than profile-name checks.
 
 ---
 
@@ -122,14 +118,18 @@ WinBitTorrent does **not** re-implement the BitTorrent protocol. Instead it driv
 | Runtime | **.NET 8** (`net8.0-windows10.0.19041.0`), x64 |
 | App architecture | **MVVM** (CommunityToolkit.Mvvm) + `Microsoft.Extensions.DependencyInjection` |
 | Data grid | WinUI.TableView |
-| Torrent engine | **qBittorrent 5.2.3** (`qbittorrent-nox`) / **libtorrent 2.0.13** / Qt 6.11 / Boost 1.91 / OpenSSL 3.6 / CPython 3.13 |
+| Torrent engine | **libtorrent 2.0.13**, Boost 1.91, OpenSSL 3.6, CPython 3.13 |
+| Local IPC and state | Current-user named pipe, versioned JSON RPC, SQLite WAL |
+| Remote compatibility | qBittorrent Web API 2.15.1 adapter |
 | Tests | xUnit, FlaUI (UI automation) |
 
-The solution is split into three projects for a clean separation of concerns:
+The solution is split into five layers:
 
 - **`WinBitTorrent`** — the WinUI 3 app: windows, views, view models, converters, services (settings, localization, tray).
 - **`WinBitTorrent.Core`** — pure .NET domain layer: models, abstractions, and framework-free services (filters, formatters, preference verification, main-data accumulation). No UI or platform dependencies.
-- **`WinBitTorrent.Infrastructure`** — the plumbing: the managed backend host, the Web API client, credential/profile storage, and tracker providers.
+- **`WinBitTorrent.Infrastructure`** — EngineHost lifecycle/IPC, remote qBittorrent adapter, credential/profile storage and tracker providers.
+- **`WinBitTorrent.EngineHost`** — local application logic, SQLite state, RSS/search/creator/logs and optional `/api/v1` remote access.
+- **`WinBitTorrent.Native.dll`** — versioned C ABI that encapsulates libtorrent without leaking C++ objects across the boundary.
 
 ---
 
@@ -141,7 +141,7 @@ The solution is split into three projects for a clean separation of concerns:
 2. Download the latest build for `win-x64`.
 3. Run the installer (or unzip the portable build) and launch **WinBitTorrent**.
 
-The bundled qBittorrent engine is included in the release, so there is nothing else to install — the app is ready to download torrents immediately.
+EngineHost, libtorrent and the search runtime are bundled, so there is nothing else to install.
 
 ---
 
@@ -157,17 +157,16 @@ git clone https://github.com/Gorbachevvv/winBitTorrent.git
 cd winBitTorrent
 ```
 
-### 2. Provide the native backend
-The `Backend/` folder (containing `qbittorrent-nox.exe` and all of its native/Python dependencies) is **not committed** to the repository. You have two options:
+### 2. Build the pinned runtime and native engine
 
-- **Download the CI artifact** — the *Windows backend* GitHub Actions workflow builds and publishes `qbittorrent-nox-5.2.3-win-x64` as an artifact. Extract it into `Backend/` at the repo root.
-- **Build it yourself** — run the reproducible build script (takes a while; it compiles qBittorrent, libtorrent, Qt, Boost, OpenSSL and Python via a pinned vcpkg baseline):
-  ```powershell
-  .\build\build-backend.ps1
-  ```
-  Exact source URLs, versions, SHA-256 hashes and the vcpkg baseline live in [`build/build-backend.ps1`](build/build-backend.ps1) and [`build/vcpkg.json`](build/vcpkg.json).
+Generated native and Python assets are not committed. Build the pinned libtorrent/OpenSSL/Boost runtime, bundled Python/Nova search runtime and native C ABI:
 
-> You can also point the app at an externally built engine with the `WINBITTORRENT_BACKEND_PATH` environment variable.
+```powershell
+.\build\build-runtime.ps1
+.\build\build-engine.ps1
+```
+
+The source URLs, hashes and versions are pinned in [`build/build-runtime.ps1`](build/build-runtime.ps1) and [`build/runtime/vcpkg.json`](build/runtime/vcpkg.json). The old `build-backend.ps1` remains a development-only qBittorrent oracle for parity testing and is never included in release payloads.
 
 ### 3. Build & run
 ```bash
@@ -191,20 +190,21 @@ All runtime data lives under `%LOCALAPPDATA%\WinBitTorrent` (overridable with th
 |------|----------|
 | `client-settings.json` | UI preferences: theme, language, layout, tab state, confirmations |
 | `profiles.json` | Server profiles (local + remote) |
-| `Backend\Profile\` | The managed qBittorrent engine's private profile, config and data |
-| `Backend\host.json` | Persisted loopback port for the managed engine |
+| `Engine\engine.db` | Versioned local engine state, settings and optional SQLite resume data |
+| `Engine\torrents\`, `Engine\resume\` | Metadata and file-mode `.fastresume` state |
+| `Engine\Backups\` | Immutable legacy-profile backups with manifests and hashes |
 | `Logs\` | Application logs |
 
-Secrets (the local API key and tracker credentials) are stored in the **Windows Credential vault**, not in these files.
+Remote profile and tracker credentials are stored in the **Windows Credential vault**. Local Remote API passwords are salted PBKDF2 hashes; bearer API keys are stored only as hashes and shown once when generated.
 
 ---
 
 ## Security notes
 
-- The managed engine's Web UI is bound to **`127.0.0.1` only**, with **host-header validation** enabled and server domains restricted to `localhost`.
-- The port is chosen randomly per machine and is never exposed externally.
-- Authentication uses a **rotated API key** kept in the Windows Credential vault; the qBittorrent one-time temporary password is consumed at startup, **redacted from logs**, and never persisted.
-- The native engine runs inside a **Windows Job object** so it cannot outlive the app.
+- The desktop's local path never uses HTTP. Its named pipe is restricted to the current Windows user and requires a one-time 256-bit handshake secret that is not placed in process arguments.
+- The worker runs inside a **Windows Job object** so it cannot outlive the app.
+- The optional WinBitTorrent Remote API is disabled by default (`port = 0`) and defaults to loopback. External bind requires explicit enablement and HTTPS.
+- Remote API mutations require bearer authentication or authenticated cookies with CSRF protection. Passwords and API keys are never logged in plaintext.
 
 ---
 
@@ -230,19 +230,17 @@ Issues and pull requests are welcome!
 
 WinBitTorrent's own source code is licensed under the **GNU General Public License v3.0 or later (GPL-3.0-or-later)** — see [`LICENSE`](LICENSE).
 
-This project **bundles and distributes** the qBittorrent engine, which is itself licensed under GPL-2.0-or-later (source) / GPL-3.0-or-later (binary, with the project's OpenSSL exception). Distributing the combined work under GPL-3.0-or-later keeps everything license-compatible.
+Release packages bundle libtorrent, Boost, OpenSSL and CPython. They do **not** contain qBittorrent or Qt. Remote qBittorrent support is implemented as an HTTP client adapter.
 
 ---
 
 ## Third-party notices & source offer
 
-WinBitTorrent stands on the shoulders of excellent open-source projects. Full notices are in [`Licenses/THIRD-PARTY-NOTICES.txt`](Licenses/THIRD-PARTY-NOTICES.txt), and the complete corresponding-source offer for the bundled GPL backend is in [`build/SOURCE-OFFER.txt`](build/SOURCE-OFFER.txt).
+WinBitTorrent stands on the shoulders of excellent open-source projects. Full notices are in [`Licenses/THIRD-PARTY-NOTICES.txt`](Licenses/THIRD-PARTY-NOTICES.txt), and reproducible source information for the bundled native runtime is in [`build/SOURCE-OFFER.txt`](build/SOURCE-OFFER.txt).
 
 | Component | Version | License |
 |-----------|---------|---------|
-| [qBittorrent](https://github.com/qbittorrent/qBittorrent) | 5.2.3 | GPL-2.0-or-later / GPL-3.0-or-later (binary) |
 | [libtorrent](https://github.com/arvidn/libtorrent) | 2.0.13 | BSD 3-Clause |
-| [Qt](https://www.qt.io/) | 6.11.1 | LGPL-3.0 / GPL |
 | [Boost](https://www.boost.org/) | 1.91.0 | Boost Software License 1.0 |
 | [OpenSSL](https://www.openssl.org/) | 3.6.2 | Apache-2.0 |
 | [CPython](https://www.python.org/) | 3.13.14 | PSF License |
@@ -251,7 +249,7 @@ WinBitTorrent stands on the shoulders of excellent open-source projects. Full no
 | [DB-IP IP-to-Country Lite](https://db-ip.com/) | 2026-07 | CC BY 4.0 |
 | [flagcdn country flags](https://flagcdn.com/) | — | Public domain |
 
-The bundled `qbittorrent-nox.exe` is built **without source modifications** from the official qBittorrent `release-5.2.3` tag. The build recipe in `build/` serves as the durable written offer for the corresponding source.
+The build recipe pins and records the corresponding native sources used by `WinBitTorrent.Native.dll`. qBittorrent's Nova Python sources are used only for the compatible search helper; no qBittorrent executable or Qt library is distributed.
 
 Peer-country resolution uses the free **IP-to-Country Lite** database by [**DB-IP**](https://db-ip.com/) (`Backend/GeoDB/dbip-country-lite.mmdb`), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Country flag icons in the Peers tab are public-domain images from [flagcdn](https://flagcdn.com/).
 
@@ -259,7 +257,7 @@ Peer-country resolution uses the free **IP-to-Country Lite** database by [**DB-I
 
 ## Acknowledgements
 
-- The [**qBittorrent**](https://www.qbittorrent.org/) team and contributors for the engine that powers this client.
+- The [**qBittorrent**](https://www.qbittorrent.org/) team and contributors for the Web API and Nova search ecosystem used by remote/compatibility adapters.
 - [**Arvid Norberg**](https://github.com/arvidn/libtorrent) and the libtorrent project.
 - Microsoft's [**Windows App SDK / WinUI**](https://learn.microsoft.com/windows/apps/windows-app-sdk/) and [**.NET**](https://dotnet.microsoft.com/) teams.
 - [**@saivan4ick**](https://github.com/saivan4ick) for the **Belarusian** translation.
@@ -267,6 +265,6 @@ Peer-country resolution uses the free **IP-to-Country Lite** database by [**DB-I
 
 <div align="center">
 
-**WinBitTorrent** is an independent project and is not affiliated with or endorsed by the qBittorrent project.
+**WinBitTorrent** is an independent project and is not affiliated with or endorsed by the qBittorrent or libtorrent projects.
 
 </div>

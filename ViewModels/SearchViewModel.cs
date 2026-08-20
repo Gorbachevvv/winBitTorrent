@@ -11,6 +11,7 @@ public sealed partial class SearchViewModel : ObservableObject
 {
     private readonly MainViewModel _main;
     private CancellationTokenSource? _searchLifetime;
+    private int? _activeSearchId;
 
     public SearchViewModel(MainViewModel main) => _main = main;
 
@@ -70,6 +71,7 @@ public sealed partial class SearchViewModel : ObservableObject
         try
         {
             var id = await _main.Api.Search.StartAsync(Query.Trim(), Category, SelectedPlugin, token);
+            _activeSearchId = id;
             while (!token.IsCancellationRequested)
             {
                 var response = await _main.Api.Search.GetResultsAsync(id, 2000, 0, token);
@@ -92,14 +94,21 @@ public sealed partial class SearchViewModel : ObservableObject
         }
         finally
         {
+            _activeSearchId = null;
             IsSearching = false;
         }
     }
 
     [RelayCommand]
-    public void Stop()
+    public async Task StopAsync()
     {
+        var id = _activeSearchId;
         _searchLifetime?.Cancel();
+        if (id is not null && _main.Api is not null)
+        {
+            try { await _main.Api.Search.StopAsync(id.Value); }
+            catch (Exception) { }
+        }
         IsSearching = false;
     }
 

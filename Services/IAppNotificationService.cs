@@ -11,4 +11,5 @@ public interface IAppNotificationService
     void SetFallbackPresenter(Func<string, string, bool>? presenter);
     void Publish(IReadOnlyList<TorrentLifecycleEvent> events);
     void ShowTorrentAddFailed(string reason);
+    void ShowMigrationReport(int torrentCount, int needsHashCheck, string backupPath);
 }

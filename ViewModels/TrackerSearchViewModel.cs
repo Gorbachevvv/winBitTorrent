@@ -394,7 +394,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
 
         if (_main.Api is null)
         {
-            ErrorMessage = Localizer.Get("Tracker_QBittorrentRequired", "Connect to qBittorrent before downloading.");
+            ErrorMessage = Localizer.Get("Tracker_QBittorrentRequired", "Connect to a torrent backend before downloading.");
             return null;
         }
 

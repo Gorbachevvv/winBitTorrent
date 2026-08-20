@@ -64,10 +64,13 @@ _pkginfo.txt
 *.msixbundle
 *.msixupload
 
-# Generated qBittorrent backend and its native/Python dependencies.
-# Recreate it with build/build-backend.ps1; CI publishes it as an artifact.
+# Generated native engine and bundled Python/search runtime.
+# Recreate them with build/build-runtime.ps1 and build/build-engine.ps1.
 /Backend/
+/Engine/
 /build/.work/
+/build/.engine-work/
+/build/.runtime-work/
 
 # WebView2 browser profiles, caches and cookies
 *.exe.WebView2/

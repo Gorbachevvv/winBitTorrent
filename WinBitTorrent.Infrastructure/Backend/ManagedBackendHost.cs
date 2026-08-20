@@ -35,6 +35,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
     }
 
     public BackendSession? Session { get; private set; }
+    public ITorrentBackendClient? Client => _api;
     public bool IsRunning => _process is { HasExited: false };
     public event EventHandler<string>? OutputReceived;
     public event EventHandler<Exception>? Failed;
@@ -96,7 +97,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
             _api = await AuthenticateAsync(baseAddress, cancellationToken).ConfigureAwait(false);
 
             var version = (await _api.Application.GetVersionAsync(cancellationToken).ConfigureAwait(false)).Trim();
-            var apiVersion = (await _api.Application.GetWebApiVersionAsync(cancellationToken).ConfigureAwait(false)).Trim();
+            var apiVersion = (await _api.Application.GetProtocolVersionAsync(cancellationToken).ConfigureAwait(false)).Trim();
             if (!version.Equals(RequiredQbittorrentVersion, StringComparison.OrdinalIgnoreCase)
                 || !apiVersion.Equals(RequiredWebApiVersion, StringComparison.OrdinalIgnoreCase))
             {

@@ -329,7 +329,7 @@ public sealed partial class MainWindow : Window
                 Width = 680,
                 Text = $"Transfer statistics\n{transfer.ToJsonString(new() { WriteIndented = true })}\n\nBackend process\n{process.ToJsonString(new() { WriteIndented = true })}"
             };
-            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = "qBittorrent statistics", Content = content, CloseButtonText = "Close" }.ShowAsync();
+            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = "Torrent engine statistics", Content = content, CloseButtonText = "Close" }.ShowAsync();
         }
         catch (Exception exception)
         {
@@ -417,7 +417,7 @@ public sealed partial class MainWindow : Window
     }
 
     private async void Documentation_Click(object sender, RoutedEventArgs e)
-        => await Launcher.LaunchUriAsync(new Uri("https://github.com/qbittorrent/qBittorrent/wiki"));
+        => await Launcher.LaunchUriAsync(RepositoryUri);
 
     private async void About_Click(object sender, RoutedEventArgs e)
     {
@@ -426,7 +426,11 @@ public sealed partial class MainWindow : Window
         {
             try
             {
-                backend = $"qBittorrent {await ViewModel.Api.Application.GetVersionAsync()} / Web API {await ViewModel.Api.Application.GetWebApiVersionAsync()}";
+                var version = await ViewModel.Api.Application.GetVersionAsync();
+                var protocol = await ViewModel.Api.Application.GetProtocolVersionAsync();
+                backend = ViewModel.Api.Profile.Kind == ProfileKind.LocalLibtorrent
+                    ? $"{version} / EngineRPC {protocol}"
+                    : $"qBittorrent {version} / Web API {protocol}";
             }
             catch
             {
@@ -445,7 +449,7 @@ public sealed partial class MainWindow : Window
         titleColumn.Children.Add(new TextBlock { Text = $"v{AppVersion.Display}", FontSize = 12, Opacity = 0.7 });
         header.Children.Add(titleColumn);
 
-        var description = Localizer.Get("Dialog_AboutDescription", "Native WinUI 3 client for qBittorrent 5.2.3 / Web API 2.15.1");
+        var description = Localizer.Get("Dialog_AboutDescription", "Native WinUI 3 BitTorrent client powered by libtorrent 2.0.13");
         if (!string.IsNullOrEmpty(backend))
             description += $"\n{string.Format(Localizer.Get("Dialog_AboutConnectedBackend", "Connected backend: {0}"), backend)}";
 
@@ -469,7 +473,7 @@ public sealed partial class MainWindow : Window
         body.Children.Add(links);
         body.Children.Add(new TextBlock
         {
-            Text = Localizer.Get("Dialog_AboutLicense", "qBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app."),
+            Text = Localizer.Get("Dialog_AboutLicense", "WinBitTorrent is licensed under GPL-3.0-or-later. Third-party notices and native source information are included with the app."),
             FontSize = 11,
             Opacity = 0.7,
             TextWrapping = TextWrapping.Wrap

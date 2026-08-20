@@ -40,13 +40,13 @@
   <data name="LogMenu.Text" xml:space="preserve"><value>Execution Log</value></data>
   <data name="CookiesMenu.Text" xml:space="preserve"><value>Cookies</value></data>
   <data name="StatisticsMenu.Text" xml:space="preserve"><value>Statistics</value></data>
-  <data name="DocumentationMenu.Text" xml:space="preserve"><value>Documentation</value></data>
+  <data name="DocumentationMenu.Text" xml:space="preserve"><value>WinBitTorrent documentation</value></data>
   <data name="AboutMenu.Text" xml:space="preserve"><value>About</value></data>
-  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Native WinUI 3 client for qBittorrent 5.2.3 / Web API 2.15.1</value></data>
+  <data name="Dialog_AboutDescription" xml:space="preserve"><value>Native WinUI 3 BitTorrent client powered by libtorrent 2.0.13</value></data>
   <data name="Dialog_AboutConnectedBackend" xml:space="preserve"><value>Connected backend: {0}</value></data>
   <data name="Dialog_AboutRepository" xml:space="preserve"><value>GitHub repository</value></data>
   <data name="Dialog_AboutHomepage" xml:space="preserve"><value>Homepage</value></data>
-  <data name="Dialog_AboutLicense" xml:space="preserve"><value>qBittorrent is licensed under GPL-2.0-or-later. Third-party notices and the corresponding-source offer are included with the app.</value></data>
+  <data name="Dialog_AboutLicense" xml:space="preserve"><value>WinBitTorrent is licensed under GPL-3.0-or-later. Third-party notices and native source information are included with the app.</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
   <data name="CheckUpdatesMenu.Text" xml:space="preserve"><value>Check for updates…</value></data>
   <data name="Update_DialogTitle" xml:space="preserve"><value>Update available</value></data>
@@ -473,7 +473,7 @@
   <data name="Dialog_LocalFilesUnavailableTitle" xml:space="preserve"><value>Local files are unavailable</value></data>
   <data name="Dialog_LocalFilesUnavailableMessage" xml:space="preserve"><value>This torrent belongs to a remote profile. WinBitTorrent can only open folders for the managed local backend.</value></data>
   <data name="Dialog_DestinationUnavailableTitle" xml:space="preserve"><value>Destination folder is not available</value></data>
-  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>qBittorrent reported save path</value></data>
+  <data name="Dialog_ReportedSavePath" xml:space="preserve"><value>Backend-reported save path</value></data>
   <data name="Dialog_DownloadPath" xml:space="preserve"><value>Download path</value></data>
   <data name="Dialog_PathUnavailableReason" xml:space="preserve"><value>The path may not exist yet, or the torrent metadata has not finished syncing.</value></data>
   <data name="Category_Uncategorized" xml:space="preserve"><value>Uncategorized</value></data>
@@ -500,7 +500,7 @@
   <data name="Dialog_RenameTorrent" xml:space="preserve"><value>Rename torrent</value></data>
   <data name="Dialog_NewName" xml:space="preserve"><value>New name</value></data>
   <data name="Dialog_SetTorrentLocation" xml:space="preserve"><value>Set torrent location</value></data>
-  <data name="Dialog_ServerPath" xml:space="preserve"><value>Path on the qBittorrent server</value></data>
+  <data name="Dialog_ServerPath" xml:space="preserve"><value>Path on the torrent backend</value></data>
   <data name="Dialog_AddTrackers" xml:space="preserve"><value>Add trackers</value></data>
   <data name="Dialog_TrackerPerLine" xml:space="preserve"><value>One tracker URL per line</value></data>
   <data name="Dialog_AddHttpSources" xml:space="preserve"><value>Add HTTP sources</value></data>
@@ -566,7 +566,7 @@
   <data name="CreateTorrentReady.Text" xml:space="preserve"><value>Ready</value></data>
   <data name="CommonCreate.Content" xml:space="preserve"><value>Create</value></data>
   <data name="CookiesWindow.Title" xml:space="preserve"><value>Cookies</value></data>
-  <data name="CookiesTitle.Text" xml:space="preserve"><value>qBittorrent cookies</value></data>
+  <data name="CookiesTitle.Text" xml:space="preserve"><value>Backend cookies</value></data>
   <data name="CookiesJson.Header" xml:space="preserve"><value>JSON cookie array</value></data>
   <data name="CookiesSave.Content" xml:space="preserve"><value>Save cookies</value></data>
   <data name="SearchPluginsWindow.Title" xml:space="preserve"><value>Search plugins</value></data>
@@ -660,9 +660,9 @@
   <data name="Tracker_SearchingNamed" xml:space="preserve"><value>Searching {0}…</value></data>
   <data name="Tracker_SeasonQuerySuffix" xml:space="preserve"><value>season {0}</value></data>
   <data name="Tracker_ResultCount" xml:space="preserve"><value>Results: {0}</value></data>
-  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Connect to qBittorrent before downloading.</value></data>
+  <data name="Tracker_QBittorrentRequired" xml:space="preserve"><value>Connect to a torrent backend before downloading.</value></data>
   <data name="Tracker_Downloading" xml:space="preserve"><value>Downloading torrent file…</value></data>
-  <data name="Tracker_Added" xml:space="preserve"><value>Torrent added to qBittorrent.</value></data>
+  <data name="Tracker_Added" xml:space="preserve"><value>Torrent added.</value></data>
   <data name="Tracker_AddWindowReady" xml:space="preserve"><value>Torrent file downloaded. Review add options.</value></data>
   <data name="Tracker_MagnetReady" xml:space="preserve"><value>Magnet link ready. Review add options.</value></data>
   <data name="Tracker_SignedOut" xml:space="preserve"><value>Signed out. Sign in with another account.</value></data>
@@ -710,17 +710,17 @@
   <data name="DuplicateTorrent_Title" xml:space="preserve"><value>Torrent is already present</value></data>
   <data name="DuplicateTorrent_Message" xml:space="preserve"><value>Torrent '{0}' is already in the transfer list. Do you want to merge trackers from the new source?</value></data>
   <data name="DuplicateTorrent_Private" xml:space="preserve"><value>Torrent '{0}' is private. Its trackers cannot be merged.</value></data>
-  <data name="Connection_NotConnected" xml:space="preserve"><value>Not connected to qBittorrent.</value></data>
-  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>qBittorrent is not connected</value></data>
-  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Connect to a qBittorrent profile to view and change these settings.</value></data>
-  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Settings were applied and verified by qBittorrent.</value></data>
-  <data name="Settings_VerificationFailed" xml:space="preserve"><value>qBittorrent did not apply these settings: {0}</value></data>
+  <data name="Connection_NotConnected" xml:space="preserve"><value>Not connected to a torrent backend.</value></data>
+  <data name="Settings_NotConnectedTitle" xml:space="preserve"><value>Torrent backend is not connected</value></data>
+  <data name="Settings_NotConnectedMessage" xml:space="preserve"><value>Connect to a torrent backend to view and change these settings.</value></data>
+  <data name="Settings_AppliedVerified" xml:space="preserve"><value>Settings were applied and verified by the backend.</value></data>
+  <data name="Settings_VerificationFailed" xml:space="preserve"><value>The backend did not apply these settings: {0}</value></data>
   <data name="SettingsConnection_ProtocolTitle" xml:space="preserve"><value>Protocol and listening port</value></data>
   <data name="SettingsConnection_ProtocolDescription" xml:space="preserve"><value>Controls how peers reach this client. Port 0 lets the operating system select an available port.</value></data>
   <data name="SettingsConnection_LimitsTitle" xml:space="preserve"><value>Connection limits</value></data>
   <data name="SettingsConnection_LimitsDescription" xml:space="preserve"><value>Use -1 for no limit. Conservative limits can reduce router and memory load.</value></data>
   <data name="SettingsConnection_ProxyTitle" xml:space="preserve"><value>Proxy server</value></data>
-  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Choose which qBittorrent traffic is routed through the proxy.</value></data>
+  <data name="SettingsConnection_ProxyDescription" xml:space="preserve"><value>Choose which torrent traffic is routed through the proxy.</value></data>
   <data name="SettingsConnection_I2pTitle" xml:space="preserve"><value>I2P (experimental)</value></data>
   <data name="SettingsConnection_I2pDescription" xml:space="preserve"><value>Requires a running I2P router with a SAM bridge.</value></data>
   <data name="SettingsConnection_FilterTitle" xml:space="preserve"><value>IP filtering</value></data>
@@ -748,10 +748,10 @@
   <data name="Setting_ip_filter_trackers" xml:space="preserve"><value>Apply IP filter to trackers</value></data>
   <data name="Setting_banned_IPs" xml:space="preserve"><value>Manually banned IP addresses (one per line)</value></data>
   <data name="Setting_random_port_Description" xml:space="preserve"><value>Overrides the fixed port with automatic selection at every backend start.</value></data>
-  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>qBittorrent stores this password without encryption.</value></data>
+  <data name="Setting_proxy_password_Description" xml:space="preserve"><value>The backend stores this password without encryption.</value></data>
   <data name="Setting_proxy_peer_connections_Description" xml:space="preserve"><value>Enable this to prevent direct peer connections when BitTorrent proxying is active.</value></data>
   <data name="Setting_i2p_mixed_mode_Description" xml:space="preserve"><value>Mixed mode can connect to regular IP peers and therefore does not provide I2P anonymity.</value></data>
-  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Enter a path that is accessible on the remote qBittorrent server.</value></data>
+  <data name="Setting_ip_filter_path_RemoteDescription" xml:space="preserve"><value>Enter a path that is accessible on the remote torrent server.</value></data>
   <data name="Choice_ProtocolBoth" xml:space="preserve"><value>TCP and µTP</value></data>
   <data name="Choice_ProtocolTcp" xml:space="preserve"><value>TCP only</value></data>
   <data name="Choice_ProtocolUtp" xml:space="preserve"><value>µTP only</value></data>
@@ -769,8 +769,8 @@
   <data name="Files_LocalItemUnavailable" xml:space="preserve"><value>The selected file or folder is not available locally yet.</value></data>
   <data name="Files_SelectionUpdated" xml:space="preserve"><value>Download selection updated for {0} files.</value></data>
   <data name="AddTorrent_PriorityTorrentNotFound" xml:space="preserve"><value>The torrent was added, but its file list is not available yet.</value></data>
-  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>The torrent was added, but qBittorrent did not return a compatible file list for applying priorities.</value></data>
-  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>The torrent was added, but qBittorrent did not apply all selected file priorities.</value></data>
+  <data name="AddTorrent_PriorityFilesUnavailable" xml:space="preserve"><value>The torrent was added, but the backend did not return a compatible file list for applying priorities.</value></data>
+  <data name="AddTorrent_PriorityVerificationFailed" xml:space="preserve"><value>The torrent was added, but the backend did not apply all selected file priorities.</value></data>
   <data name="Settings_EditContextMenu" xml:space="preserve"><value>Edit the context menu…</value></data>
   <data name="Settings_EditContextMenuDescription" xml:space="preserve"><value>Choose which commands the menu shows when you right-click a torrent, and in what order.</value></data>
   <data name="MenuEditor_Title" xml:space="preserve"><value>Context menu editor</value></data>

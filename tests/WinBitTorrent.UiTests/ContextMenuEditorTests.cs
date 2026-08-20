@@ -38,7 +38,7 @@ public sealed class ContextMenuEditorTests
 
             // The Behavior section is selected when the window opens, so the launcher is already there.
             var launcher = Retry.WhileNull(
-                () => FindByAnyName(settingsWindow!, "Edit the context menu…", "Редактировать контекстное меню…", "Рэдагаваць кантэкстнае меню…"),
+                () => FindButtonByAnyName(settingsWindow!, "Edit the context menu…", "Редактировать контекстное меню…", "Рэдагаваць кантэкстнае меню…"),
                 TimeSpan.FromSeconds(10)).Result;
             Assert.NotNull(launcher);
             launcher!.Click();
@@ -122,6 +122,11 @@ public sealed class ContextMenuEditorTests
 
     private static AutomationElement? FindByAnyName(AutomationElement root, params string[] names)
         => root.FindAllDescendants().FirstOrDefault(element => names.Contains(SafeName(element), StringComparer.Ordinal));
+
+    private static AutomationElement? FindButtonByAnyName(AutomationElement root, params string[] names)
+        => root.FindAllDescendants().FirstOrDefault(element =>
+            element.ControlType == FlaUI.Core.Definitions.ControlType.Button
+            && names.Contains(SafeName(element), StringComparer.Ordinal));
 
     private static string SafeName(AutomationElement element)
     {

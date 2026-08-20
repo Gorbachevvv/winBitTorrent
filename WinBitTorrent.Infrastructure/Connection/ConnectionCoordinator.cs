@@ -12,6 +12,8 @@ namespace WinBitTorrent.Infrastructure.Connection;
 
 public sealed class ConnectionCoordinator : IConnectionCoordinator
 {
+    private const string RequiredQbittorrentVersion = "v5.2.3";
+    private const string RequiredWebApiVersion = "2.15.1";
     private readonly IManagedBackendHost _backendHost;
     private readonly ICredentialStore _credentialStore;
     private readonly ILogger<ConnectionCoordinator> _logger;
@@ -29,55 +31,62 @@ public sealed class ConnectionCoordinator : IConnectionCoordinator
     }
 
     public ConnectionSnapshot Snapshot { get; private set; } = new(ConnectionState.Disconnected, null, null);
-    public IQBittorrentApi? Api { get; private set; }
+    public ITorrentBackendClient? Api { get; private set; }
     public event EventHandler<ConnectionSnapshot>? StateChanged;
 
-    public async Task<IQBittorrentApi> ConnectAsync(ServerProfile profile, CancellationToken cancellationToken = default)
+    public async Task<ITorrentBackendClient> ConnectAsync(ServerProfile profile, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await DisconnectCoreAsync(cancellationToken).ConfigureAwait(false);
-            SetState(profile.Kind == ProfileKind.LocalManaged ? ConnectionState.StartingBackend : ConnectionState.Connecting, profile);
+            SetState(profile.Kind == ProfileKind.LocalLibtorrent ? ConnectionState.StartingBackend : ConnectionState.Connecting, profile);
 
             BackendSession? session = null;
             var effectiveProfile = profile;
-            if (profile.Kind == ProfileKind.LocalManaged)
+            ITorrentBackendClient api;
+            if (profile.Kind == ProfileKind.LocalLibtorrent)
             {
                 session = await _backendHost.StartAsync(cancellationToken).ConfigureAwait(false);
-                effectiveProfile = profile with { BaseAddress = session.BaseAddress };
+                api = _backendHost.Client
+                    ?? throw new InvalidOperationException("The local backend started without exposing a client connection.");
+                effectiveProfile = api.Profile;
             }
-
-            SetState(ConnectionState.Authenticating, effectiveProfile, session);
-            var secret = await _credentialStore.GetSecretAsync(profile.Id, cancellationToken).ConfigureAwait(false);
-            var api = CreateApi(effectiveProfile, secret);
-
-            if (profile.Authentication == AuthenticationMode.UserNamePassword)
+            else
             {
-                if (string.IsNullOrWhiteSpace(profile.UserName) || string.IsNullOrEmpty(secret))
-                    throw new InvalidOperationException("The remote profile does not contain a user name and password.");
-                await api.Auth.LoginAsync(profile.UserName, secret, cancellationToken).ConfigureAwait(false);
+                SetState(ConnectionState.Authenticating, effectiveProfile, session);
+                var secret = await _credentialStore.GetSecretAsync(profile.Id, cancellationToken).ConfigureAwait(false);
+                api = CreateApi(effectiveProfile, secret);
+
+                if (profile.Authentication == AuthenticationMode.UserNamePassword)
+                {
+                    if (string.IsNullOrWhiteSpace(profile.UserName) || string.IsNullOrEmpty(secret))
+                        throw new InvalidOperationException("The remote profile does not contain a user name and password.");
+                    await api.Auth.LoginAsync(profile.UserName, secret, cancellationToken).ConfigureAwait(false);
+                }
             }
 
             var version = (await api.Application.GetVersionAsync(cancellationToken).ConfigureAwait(false)).Trim();
-            var webApiVersion = (await api.Application.GetWebApiVersionAsync(cancellationToken).ConfigureAwait(false)).Trim();
-            if (!version.Equals(ManagedBackendHost.RequiredQbittorrentVersion, StringComparison.OrdinalIgnoreCase)
-                || !webApiVersion.Equals(ManagedBackendHost.RequiredWebApiVersion, StringComparison.OrdinalIgnoreCase))
+            var protocolVersion = (await api.Application.GetProtocolVersionAsync(cancellationToken).ConfigureAwait(false)).Trim();
+            if (profile.Kind == ProfileKind.RemoteQbittorrent
+                && (!version.Equals(RequiredQbittorrentVersion, StringComparison.OrdinalIgnoreCase)
+                || !protocolVersion.Equals(RequiredWebApiVersion, StringComparison.OrdinalIgnoreCase))
+                )
             {
                 await api.DisposeAsync().ConfigureAwait(false);
                 throw new InvalidOperationException(
-                    $"This profile exposes {version}/API {webApiVersion}; WinBitTorrent requires " +
-                    $"{ManagedBackendHost.RequiredQbittorrentVersion}/API {ManagedBackendHost.RequiredWebApiVersion}.");
+                    $"This profile exposes {version}/API {protocolVersion}; WinBitTorrent requires " +
+                    $"{RequiredQbittorrentVersion}/API {RequiredWebApiVersion}.");
             }
 
             Api = api;
             SetState(ConnectionState.Connected, effectiveProfile, session);
-            _logger.LogInformation("Connected to qBittorrent profile {ProfileName} at {Address}.", profile.Name, effectiveProfile.BaseAddress);
+            _logger.LogInformation("Connected to {BackendKind} profile {ProfileName} at {Address}.", profile.Kind, profile.Name, effectiveProfile.BaseAddress);
             return api;
         }
         catch (Exception exception)
         {
-            if (profile.Kind == ProfileKind.LocalManaged && _backendHost.IsRunning)
+            if (profile.Kind == ProfileKind.LocalLibtorrent && _backendHost.IsRunning)
             {
                 try { await _backendHost.StopAsync(force: false, CancellationToken.None).ConfigureAwait(false); }
                 catch (Exception stopException) { _logger.LogWarning(stopException, "Unable to stop backend after a failed connection."); }
@@ -113,7 +122,7 @@ public sealed class ConnectionCoordinator : IConnectionCoordinator
             return;
         }
 
-        var stopManagedBackend = Api.Profile.Kind == ProfileKind.LocalManaged;
+        var stopManagedBackend = Api.Profile.Kind == ProfileKind.LocalLibtorrent;
 
         try
         {

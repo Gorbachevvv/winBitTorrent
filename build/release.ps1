@@ -106,12 +106,13 @@ Write-Info "Zip portable:   $makeZip"
 # ---------------------------------------------------------------------------
 # 2. Sanity checks.
 # ---------------------------------------------------------------------------
-$backendExe = Join-Path $repoRoot 'Backend\qbittorrent-nox.exe'
-if (-not (Test-Path $backendExe)) {
-    throw "Backend\qbittorrent-nox.exe is missing. Run build\build-backend.ps1 first, or extract the CI artifact into Backend\."
-}
+$nativeEngine = Join-Path $repoRoot 'Engine\WinBitTorrent.Native.dll'
+$pythonExe = Join-Path $repoRoot 'Backend\Python\python.exe'
+if (-not (Test-Path $nativeEngine)) { throw "Engine\WinBitTorrent.Native.dll is missing. Run build\build-engine.ps1 first." }
+if (-not (Test-Path $pythonExe)) { throw "Backend\Python\python.exe is missing. Build or restore the pinned runtime assets first." }
 
 $publishDir = Join-Path $repoRoot 'bin\Release\net8.0-windows10.0.19041.0\win-x64\publish'
+$enginePublishDir = Join-Path $repoRoot 'WinBitTorrent.EngineHost\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish'
 $distRoot = Join-Path $repoRoot 'dist'
 $portableName = "WinBitTorrent-$effectiveVersion-portable"
 $portableDir = Join-Path $distRoot $portableName
@@ -120,12 +121,21 @@ $zipPath = Join-Path $distRoot "$portableName.zip"
 
 New-Item -ItemType Directory -Force -Path $distRoot | Out-Null
 
+# A release rebuilt without -Zip must not leave an older archive with the same version next to
+# the fresh folder. Otherwise the summary makes that stale archive look like a current artifact.
+if (-not $NoClean -and -not $makeZip -and (Test-Path $zipPath)) {
+    Remove-Item $zipPath -Force
+}
+
 # ---------------------------------------------------------------------------
 # 3. Publish (self-contained win-x64).
 # ---------------------------------------------------------------------------
 if ($SkipPublish) {
     if (-not (Test-Path (Join-Path $publishDir 'WinBitTorrent.exe'))) {
         throw "SkipPublish was requested but no existing publish output was found at $publishDir."
+    }
+    if (-not (Test-Path (Join-Path $publishDir 'EngineHost\WinBitTorrent.EngineHost.exe'))) {
+        throw "SkipPublish was requested but the staged EngineHost is missing from $publishDir."
     }
     Write-Step "Skipping publish, reusing existing output"
 }
@@ -136,7 +146,21 @@ else {
         -c $configuration -p:Platform=$platform -p:PublishProfile=win-$platform `
         -p:Version=$effectiveVersion -p:AssemblyVersion=$versionParts -p:FileVersion=$versionParts
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE." }
+    & dotnet publish (Join-Path $repoRoot 'WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj') `
+        -c $configuration -r win-x64 --self-contained true -o $enginePublishDir `
+        -p:Version=$effectiveVersion -p:AssemblyVersion=$versionParts -p:FileVersion=$versionParts
+    if ($LASTEXITCODE -ne 0) { throw "EngineHost publish failed with exit code $LASTEXITCODE." }
+    $engineTarget = Join-Path $publishDir 'EngineHost'
+    if (Test-Path $engineTarget) { Remove-Item $engineTarget -Recurse -Force }
+    Copy-Item $enginePublishDir $engineTarget -Recurse
     Write-Ok "Publish complete"
+}
+
+$forbiddenPayload = Get-ChildItem $publishDir -Recurse -File | Where-Object {
+    $_.Name -ieq 'qbittorrent-nox.exe' -or $_.Name -like 'Qt6*.dll' -or $_.Name -ieq 'qsqlite.dll'
+}
+if ($forbiddenPayload) {
+    throw "Publish payload contains removed qBittorrent/Qt files: $($forbiddenPayload.FullName -join ', ')"
 }
 
 # ---------------------------------------------------------------------------
@@ -152,7 +176,7 @@ if (-not (Test-Path $portableDir)) {
 WinBitTorrent $effectiveVersion (win-x64, portable)
 $('=' * ("WinBitTorrent $effectiveVersion (win-x64, portable)".Length))
 
-A native WinUI 3 desktop client for qBittorrent.
+A native WinUI 3 desktop BitTorrent client powered by libtorrent.
 https://github.com/Gorbachevvv/winBitTorrent
 
 HOW TO RUN
@@ -160,9 +184,8 @@ HOW TO RUN
 1. Unzip this folder anywhere (e.g. a USB drive or C:\Tools\WinBitTorrent).
 2. Double-click WinBitTorrent.exe.
 
-That's it - the qBittorrent engine (qbittorrent-nox) is bundled in the
-Backend\ folder and is started and managed automatically. No separate
-install or server setup is required.
+That's it - WinBitTorrent.EngineHost and libtorrent are bundled and managed
+automatically. No separate torrent process, HTTP service or server setup is required.
 
 REQUIREMENTS
 ------------
@@ -170,7 +193,7 @@ REQUIREMENTS
 
 WHERE YOUR DATA IS STORED
 -------------------------
-Settings, torrents and the managed engine's profile live in:
+Settings, torrents and the engine state live in:
     %LOCALAPPDATA%\WinBitTorrent
 
 To keep everything in one place (fully portable), set the environment

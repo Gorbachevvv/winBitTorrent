@@ -2,8 +2,27 @@ namespace WinBitTorrent.Core.Models;
 
 public enum ProfileKind
 {
-    LocalManaged,
-    Remote
+    LocalLibtorrent = 0,
+    RemoteQbittorrent = 1,
+
+    // Serialized profiles from releases through 1.2 use these numeric values.
+    // Keep aliases so upgrades do not invalidate profiles.json.
+    LocalManaged = LocalLibtorrent,
+    Remote = RemoteQbittorrent
+}
+
+[Flags]
+public enum BackendCapabilities
+{
+    None = 0,
+    LocalFileSystem = 1 << 0,
+    Preferences = 1 << 1,
+    Rss = 1 << 2,
+    Search = 1 << 3,
+    TorrentCreator = 1 << 4,
+    Logs = 1 << 5,
+    RemoteAccess = 1 << 6,
+    All = LocalFileSystem | Preferences | Rss | Search | TorrentCreator | Logs | RemoteAccess
 }
 
 public enum AuthenticationMode
@@ -39,8 +58,8 @@ public sealed record ServerProfile(
 
     public static ServerProfile CreateLocal(Uri baseAddress) => new(
         LocalProfileId,
-        "Local qBittorrent",
-        ProfileKind.LocalManaged,
+        "Local WinBitTorrent",
+        ProfileKind.LocalLibtorrent,
         baseAddress,
         AuthenticationMode.LocalApiKey,
         IsBuiltIn: true);
@@ -49,8 +68,8 @@ public sealed record ServerProfile(
 public sealed record BackendSession(
     int ProcessId,
     Uri BaseAddress,
-    string QbittorrentVersion,
-    string WebApiVersion,
+    string BackendVersion,
+    string ProtocolVersion,
     DateTimeOffset StartedAt);
 
 public sealed record ConnectionSnapshot(

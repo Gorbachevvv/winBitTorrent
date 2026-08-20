@@ -18,8 +18,20 @@ public sealed class MainWindowTests
             var window = Retry.WhileNull(() => application.GetMainWindow(automation), TimeSpan.FromSeconds(15)).Result;
             Assert.NotNull(window);
             Assert.Contains("WinBitTorrent", window!.Title, StringComparison.OrdinalIgnoreCase);
-            var tabs = window.FindAllDescendants(condition => condition.ByControlType(ControlType.TabItem));
-            Assert.True(tabs.Length >= 4, $"Expected at least four workspace tabs, found {tabs.Length}.");
+            // WinUI virtualizes TabView headers when the restored window is narrow, so UIA may
+            // expose only the currently realized headers. The View menu is the stable keyboard
+            // and accessibility contract for all workspace destinations.
+            var viewMenu = Retry.WhileNull(
+                () => FindByAnyName(window, "View", "Вид", "Выгляд"),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(viewMenu);
+            viewMenu!.Click();
+            Assert.NotNull(Retry.WhileNull(() => FindByAnyName(window, "Transfers", "Передачи", "Перадачы"), TimeSpan.FromSeconds(5)).Result);
+            Assert.NotNull(FindByAnyName(window, "RSS Reader", "RSS-лента", "RSS-стужка"));
+            Assert.NotNull(FindByAnyName(window, "Search", "Поисковая система", "Пошукавая сістэма"));
+            Assert.NotNull(FindByAnyName(window, "Tracker Search", "Поиск по трекерам", "Пошук па трэкерах"));
+            Assert.NotNull(FindByAnyName(window, "Execution Log", "Журнал выполнения", "Часопіс выканання"));
+            FlaUI.Core.Input.Keyboard.Press(FlaUI.Core.WindowsAPI.VirtualKeyShort.ESCAPE);
             window.Focus();
             FlaUI.Core.Input.Keyboard.Press(FlaUI.Core.WindowsAPI.VirtualKeyShort.TAB);
             Assert.NotNull(automation.FocusedElement());

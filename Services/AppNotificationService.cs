@@ -120,6 +120,20 @@ public sealed class AppNotificationService(ILogger<AppNotificationService> logge
             null);
     }
 
+    public void ShowMigrationReport(int torrentCount, int needsHashCheck, string backupPath)
+    {
+        if (!CanShow)
+            return;
+
+        var summary = needsHashCheck == 0
+            ? $"Imported {torrentCount} torrents. Existing data was not moved."
+            : $"Imported {torrentCount} torrents. {needsHashCheck} must be hash-checked before starting.";
+        Show(
+            Localizer.Get("Notification_Migration_Title", "Torrent profile migration completed"),
+            $"{summary} Backup: {backupPath}",
+            null);
+    }
+
     private void Show(string title, string message, string? torrentHash)
     {
         try

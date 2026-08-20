@@ -21,7 +21,7 @@
     <PublishTrimmed>false</PublishTrimmed>
     <AppxSymbolPackageEnabled>false</AppxSymbolPackageEnabled>
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
-    <DefaultItemExcludes>$(DefaultItemExcludes);WinBitTorrent.Core\**;WinBitTorrent.Infrastructure\**;tests\**;build\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);WinBitTorrent.Core\**;WinBitTorrent.Infrastructure\**;WinBitTorrent.EngineHost\**;native\**;tests\**;build\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,6 +46,21 @@
     <ProjectReference Include="WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
   </ItemGroup>
 
+  <Target Name="BuildEngineHostForDevelopment" BeforeTargets="CopyEngineHostForDevelopment" Condition="'$(Configuration)' == 'Debug'">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=x64" />
+  </Target>
+
+  <Target Name="CopyEngineHostForDevelopment" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <ItemGroup>
+      <EngineHostDevelopmentFiles Include="WinBitTorrent.EngineHost\bin\$(Configuration)\net8.0-windows10.0.19041.0\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(EngineHostDevelopmentFiles)"
+          DestinationFiles="@(EngineHostDevelopmentFiles->'$(OutDir)EngineHost\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
@@ -54,7 +69,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Backend\**\*" Exclude="Backend\**\*.pdb" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Backend\Python\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Backend\SearchPlugins\**\*" Exclude="Backend\SearchPlugins\**\__pycache__\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Backend\GeoDB\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Backend\Licenses\libtorrent-COPYING.txt;Backend\Licenses\openssl-copyright.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Licenses\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
