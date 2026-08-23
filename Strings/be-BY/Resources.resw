@@ -289,6 +289,12 @@
   <data name="SpeedGraph_TwoMinutesAgo" xml:space="preserve"><value>−2 хв</value></data>
   <data name="SpeedGraph_OneMinuteAgo" xml:space="preserve"><value>−1 хв</value></data>
   <data name="SpeedGraph_Now" xml:space="preserve"><value>Зараз</value></data>
+  <data name="SpeedGraphRangeOneMinute.Content" xml:space="preserve"><value>Апошняя хвіліна</value></data>
+  <data name="SpeedGraphRangeThreeMinutes.Content" xml:space="preserve"><value>Апошнія 3 хвіліны</value></data>
+  <data name="SpeedGraphRangeFiveMinutes.Content" xml:space="preserve"><value>Апошнія 5 хвілін</value></data>
+  <data name="SpeedGraphRangeFifteenMinutes.Content" xml:space="preserve"><value>Апошнія 15 хвілін</value></data>
+  <data name="SpeedGraph_SecondsAgoFormat" xml:space="preserve"><value>{0} с</value></data>
+  <data name="SpeedGraph_MinutesAgoFormat" xml:space="preserve"><value>{0} хв</value></data>
   <data name="DetailsProgress.Text" xml:space="preserve"><value>Прагрэс</value></data>
   <data name="DetailsAvailability.Text" xml:space="preserve"><value>Даступнасць</value></data>
   <data name="DetailsTimeActive.Text" xml:space="preserve"><value>Час актыўнасці</value></data>
