@@ -244,9 +244,9 @@ public sealed partial class TorrentMapBar : UserControl
         MapCanvas.Children.Add(rectangle);
     }
 
-    private Color ProgressMissingColor() => ActualTheme == ElementTheme.Light
-        ? Color.FromArgb(0xFF, 0xE2, 0xE7, 0xEE)
-        : Color.FromArgb(0xFF, 0x2B, 0x31, 0x39);
+    // Base colors intentionally match the legend in TransfersView. Progress may blend them when
+    // multiple pieces land in one screen pixel; availability itself stays categorical.
+    private static Color ProgressMissingColor() => Color.FromArgb(0xFF, 0x59, 0x61, 0x6C);
 
     private static Color ProgressCompleteColor() => Color.FromArgb(0xFF, 0x4C, 0x8D, 0xF6);
     private static Color ProgressActiveColor() => Color.FromArgb(0xFF, 0xFF, 0xB0, 0x20);
@@ -259,11 +259,9 @@ public sealed partial class TorrentMapBar : UserControl
                 : Color.FromArgb(0xFF, 0x3B, 0x42, 0x4C);
         if (availability <= 0.001)
             return Color.FromArgb(0xFF, 0xD9, 0x5C, 0x5C);
-        if (availability < 0.5)
-            return Blend(Color.FromArgb(0xFF, 0xD9, 0x5C, 0x5C), Color.FromArgb(0xFF, 0xF2, 0xA7, 0x2C), availability * 2);
         if (availability < 1)
-            return Blend(Color.FromArgb(0xFF, 0xF2, 0xA7, 0x2C), Color.FromArgb(0xFF, 0x2A, 0xB3, 0x85), (availability - 0.5) * 2);
-        return Blend(Color.FromArgb(0xFF, 0x2A, 0xB3, 0x85), Color.FromArgb(0xFF, 0x32, 0x78, 0xC8), Math.Clamp((availability - 1) / 2, 0, 1));
+            return Color.FromArgb(0xFF, 0xF2, 0xA7, 0x2C);
+        return Color.FromArgb(0xFF, 0x2A, 0xB3, 0x85);
     }
 
     private Color BoundaryColor(double opacity)

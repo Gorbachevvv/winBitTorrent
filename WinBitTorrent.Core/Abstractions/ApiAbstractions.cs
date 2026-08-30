@@ -70,6 +70,7 @@ public interface ITorrentsApi
     Task<IReadOnlyList<string>> GetWebSeedsAsync(string hash, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TorrentFile>> GetFilesAsync(string hash, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<int>> GetPieceStatesAsync(string hash, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<int>> GetPieceAvailabilityAsync(string hash, CancellationToken cancellationToken = default);
     Task AddAsync(TorrentAddRequest request, CancellationToken cancellationToken = default);
     Task DeleteAsync(string hashes, bool deleteFiles, CancellationToken cancellationToken = default);
     Task ExecuteAsync(TorrentCommand command, string hashes, CancellationToken cancellationToken = default);

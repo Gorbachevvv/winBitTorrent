@@ -125,6 +125,8 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
             => InvokeList<TorrentFile>(rpc, EngineRpcMethods.TorrentsFiles, new { hash }, cancellationToken);
         public Task<IReadOnlyList<int>> GetPieceStatesAsync(string hash, CancellationToken cancellationToken = default)
             => InvokeList<int>(rpc, EngineRpcMethods.TorrentsPieceStates, new { hash }, cancellationToken);
+        public Task<IReadOnlyList<int>> GetPieceAvailabilityAsync(string hash, CancellationToken cancellationToken = default)
+            => InvokeList<int>(rpc, EngineRpcMethods.TorrentsPieceAvailability, new { hash }, cancellationToken);
         public Task AddAsync(TorrentAddRequest request, CancellationToken cancellationToken = default)
             => rpc.InvokeAsync(EngineRpcMethods.TorrentsAdd, request, cancellationToken);
         public Task DeleteAsync(string hashes, bool deleteFiles, CancellationToken cancellationToken = default)

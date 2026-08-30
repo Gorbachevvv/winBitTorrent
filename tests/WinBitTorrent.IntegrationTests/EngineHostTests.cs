@@ -260,6 +260,7 @@ public sealed class EngineHostTests
             Assert.NotEmpty(await api.Torrents.GetTrackersAsync(first.Hash));
             Assert.Single(await api.Torrents.GetFilesAsync(first.Hash));
             Assert.Single(await api.Torrents.GetPieceStatesAsync(first.Hash));
+            Assert.Single(await api.Torrents.GetPieceAvailabilityAsync(first.Hash));
 
             var managedPath = Path.Combine(dataRoot, "managed");
             await api.Torrents.CreateCategoryAsync("Managed", managedPath);

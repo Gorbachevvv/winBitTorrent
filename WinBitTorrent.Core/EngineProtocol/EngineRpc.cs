@@ -64,6 +64,7 @@ public static class EngineRpcMethods
     public const string TorrentsWebSeeds = "torrents.webSeeds";
     public const string TorrentsFiles = "torrents.files";
     public const string TorrentsPieceStates = "torrents.pieceStates";
+    public const string TorrentsPieceAvailability = "torrents.pieceAvailability";
     public const string TorrentsAdd = "torrents.add";
     public const string TorrentsDelete = "torrents.delete";
     public const string TorrentsCommand = "torrents.command";

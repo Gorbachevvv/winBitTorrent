@@ -643,12 +643,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var webSeedsTask = _api.Torrents.GetWebSeedsAsync(selected.Hash, cancellationToken);
             var filesTask = _api.Torrents.GetFilesAsync(selected.Hash, cancellationToken);
             var pieceStatesTask = GetPieceStatesOrEmptyAsync(_api, selected.Hash, cancellationToken);
-            await Task.WhenAll(propertiesTask, trackersTask, webSeedsTask, filesTask, pieceStatesTask);
+            var pieceAvailabilityTask = GetPieceAvailabilityOrEmptyAsync(_api, selected.Hash, cancellationToken);
+            await Task.WhenAll(propertiesTask, trackersTask, webSeedsTask, filesTask, pieceStatesTask, pieceAvailabilityTask);
 
             if (!string.Equals(SelectedTorrent?.Hash, selected.Hash, StringComparison.OrdinalIgnoreCase))
                 return;
 
-            SelectedProperties = await propertiesTask;
+            var properties = await propertiesTask;
+            SelectedProperties = properties;
             foreach (var item in await trackersTask)
                 SelectedTrackers.Add(item);
             foreach (var item in await webSeedsTask)
@@ -657,7 +659,10 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             foreach (var item in files)
                 SelectedFiles.Add(item);
             SelectedPieceStates = (await pieceStatesTask).ToArray();
-            SelectedAvailabilitySegments = BuildAvailabilitySegments(files);
+            SelectedAvailabilitySegments = BuildAvailabilitySegments(
+                files,
+                await pieceAvailabilityTask,
+                properties.PieceSize);
         }
         catch (OperationCanceledException)
         {
@@ -675,11 +680,18 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         if (selected is null || api is null)
             return;
 
-        var files = await api.Torrents.GetFilesAsync(selected.Hash, _detailsLifetime?.Token ?? default);
+        var cancellationToken = _detailsLifetime?.Token ?? default;
+        var filesTask = api.Torrents.GetFilesAsync(selected.Hash, cancellationToken);
+        var pieceAvailabilityTask = GetPieceAvailabilityOrEmptyAsync(api, selected.Hash, cancellationToken);
+        await Task.WhenAll(filesTask, pieceAvailabilityTask);
+        var files = await filesTask;
         if (!string.Equals(SelectedTorrent?.Hash, selected.Hash, StringComparison.OrdinalIgnoreCase))
             return;
 
-        SelectedAvailabilitySegments = BuildAvailabilitySegments(files);
+        SelectedAvailabilitySegments = BuildAvailabilitySegments(
+            files,
+            await pieceAvailabilityTask,
+            SelectedProperties?.PieceSize ?? 0);
 
         var currentByIndex = SelectedFiles.ToDictionary(static file => file.Index);
         if (files.Count == SelectedFiles.Count
@@ -737,13 +749,17 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             var pieceStatesTask = GetPieceStatesOrEmptyAsync(api, selected.Hash, cancellationToken);
             var filesTask = api.Torrents.GetFilesAsync(selected.Hash, cancellationToken);
-            await Task.WhenAll(pieceStatesTask, filesTask);
+            var pieceAvailabilityTask = GetPieceAvailabilityOrEmptyAsync(api, selected.Hash, cancellationToken);
+            await Task.WhenAll(pieceStatesTask, filesTask, pieceAvailabilityTask);
 
             if (!string.Equals(SelectedTorrent?.Hash, selected.Hash, StringComparison.OrdinalIgnoreCase))
                 return;
 
             SelectedPieceStates = (await pieceStatesTask).ToArray();
-            SelectedAvailabilitySegments = BuildAvailabilitySegments(await filesTask);
+            SelectedAvailabilitySegments = BuildAvailabilitySegments(
+                await filesTask,
+                await pieceAvailabilityTask,
+                SelectedProperties?.PieceSize ?? 0);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -757,11 +773,47 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
 
     private static IReadOnlyList<TorrentAvailabilitySegment> BuildAvailabilitySegments(
-        IEnumerable<TorrentFile> files)
-        => files
-            .OrderBy(static file => file.Index)
-            .Select(static file => new TorrentAvailabilitySegment(file.Size, file.Availability))
-            .ToArray();
+        IEnumerable<TorrentFile> files,
+        IReadOnlyList<int> pieceAvailability,
+        long pieceSize)
+    {
+        var orderedFiles = files.OrderBy(static file => file.Index).ToArray();
+        var totalSize = orderedFiles.Sum(static file => Math.Max(0, file.Size));
+        var expectedPieces = pieceSize > 0 && totalSize > 0
+            ? 1 + ((totalSize - 1) / pieceSize)
+            : 0;
+        if (pieceSize <= 0
+            || pieceAvailability.Count < expectedPieces
+            || totalSize <= 0)
+        {
+            return orderedFiles
+                .Select(static file => new TorrentAvailabilitySegment(file.Size, file.Availability))
+                .ToArray();
+        }
+
+        var result = new List<TorrentAvailabilitySegment>();
+        var remaining = totalSize;
+        foreach (var availability in pieceAvailability)
+        {
+            if (remaining <= 0)
+                break;
+            var size = Math.Min(pieceSize, remaining);
+            remaining -= size;
+            if (result.Count > 0 && result[^1].Availability == availability)
+            {
+                var previous = result[^1];
+                result[^1] = previous with { Size = previous.Size + size };
+            }
+            else
+            {
+                result.Add(new TorrentAvailabilitySegment(size, availability));
+            }
+        }
+
+        return result.Count > 0
+            ? result
+            : orderedFiles.Select(static file => new TorrentAvailabilitySegment(file.Size, file.Availability)).ToArray();
+    }
 
     private async Task<IReadOnlyList<int>> GetPieceStatesOrEmptyAsync(
         ITorrentBackendClient api,
@@ -779,6 +831,26 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         catch (Exception exception) when (exception is HttpRequestException or QbittorrentApiException)
         {
             _logger.LogDebug(exception, "Piece states are unavailable for torrent {Hash}.", hash);
+            return [];
+        }
+    }
+
+    private async Task<IReadOnlyList<int>> GetPieceAvailabilityOrEmptyAsync(
+        ITorrentBackendClient api,
+        string hash,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await api.Torrents.GetPieceAvailabilityAsync(hash, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TorrentBackendException)
+        {
+            _logger.LogDebug(exception, "Piece availability is unavailable for torrent {Hash}.", hash);
             return [];
         }
     }

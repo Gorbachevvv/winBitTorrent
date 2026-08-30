@@ -329,6 +329,11 @@ public sealed class QbittorrentApi : ITorrentBackendClient
         public async Task<IReadOnlyList<int>> GetPieceStatesAsync(string hash, CancellationToken cancellationToken = default)
             => await api.GetJsonAsync<List<int>>("api/v2/torrents/pieceStates", new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken).ConfigureAwait(false);
 
+        // qBittorrent Web API exposes availability per file, but not per piece. The UI falls
+        // back to GetFilesAsync for remote profiles when this collection is empty.
+        public Task<IReadOnlyList<int>> GetPieceAvailabilityAsync(string hash, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<int>>([]);
+
         public async Task AddAsync(TorrentAddRequest request, CancellationToken cancellationToken = default)
         {
             using var content = new MultipartFormDataContent();

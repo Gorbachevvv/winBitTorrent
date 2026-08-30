@@ -280,6 +280,7 @@ namespace winbittorrent
             if (method == "torrents.webSeeds") return json::serialize(web_seeds(payload));
             if (method == "torrents.files") return json::serialize(files(payload));
             if (method == "torrents.pieceStates") return json::serialize(piece_states(payload));
+            if (method == "torrents.pieceAvailability") return json::serialize(piece_availability(payload));
             if (method == "torrents.add") { add(payload); resume_saved_ = false; return "{}"; }
             if (method == "torrents.delete") { remove(payload); resume_saved_ = false; return "{}"; }
             if (method == "torrents.command") { command(payload); resume_saved_ = false; return "{}"; }
@@ -786,9 +787,42 @@ namespace winbittorrent
 
         json::array piece_states(json::object const& payload) const
         {
-            auto const status = require(text(payload, "hash")).status(lt::torrent_handle::query_pieces);
+            auto const handle = require(text(payload, "hash"));
+            auto const status = handle.status(lt::torrent_handle::query_pieces);
+            std::vector<int> states;
+            states.reserve(status.pieces.size());
+            for (bool value : status.pieces) states.push_back(value ? 2 : 0);
+
+            // status.pieces only distinguishes complete/missing. Mark pieces currently being
+            // requested or written so the managed UI can render its documented yellow state.
+            for (auto const& piece : handle.get_download_queue())
+            {
+                auto const index = static_cast<std::size_t>(static_cast<int>(piece.piece_index));
+                if (index < states.size() && states[index] == 0)
+                    states[index] = 1;
+            }
+
             json::array result;
-            for (bool value : status.pieces) result.push_back(value ? 2 : 0);
+            for (int value : states) result.push_back(value);
+            return result;
+        }
+
+        json::array piece_availability(json::object const& payload) const
+        {
+            auto const handle = require(text(payload, "hash"));
+            std::vector<int> availability;
+            handle.piece_availability(availability);
+
+            // A piece present locally is available even when there are no connected peers. This
+            // also compensates for libtorrent not maintaining picker availability while seeding.
+            auto const status = handle.status(lt::torrent_handle::query_pieces);
+            auto const count = std::min(static_cast<int>(availability.size()), status.pieces.size());
+            for (int index = 0; index < count; ++index)
+                if (status.pieces[lt::piece_index_t{ index }])
+                    ++availability[static_cast<std::size_t>(index)];
+
+            json::array result;
+            for (int value : availability) result.push_back(value);
             return result;
         }
 
