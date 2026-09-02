@@ -6,12 +6,34 @@ internal sealed partial class EngineState
     private Task? _rssBackgroundWork;
     private Task? _resumeBackgroundWork;
     private Task? _schedulerBackgroundWork;
+    private Task? _nativeAlertBackgroundWork;
 
     private void StartBackgroundServices()
     {
         _rssBackgroundWork = RunRssBackgroundLoopAsync(_backgroundLifetime.Token);
         _resumeBackgroundWork = RunResumeBackgroundLoopAsync(_backgroundLifetime.Token);
         _schedulerBackgroundWork = RunSchedulerBackgroundLoopAsync(_backgroundLifetime.Token);
+        _nativeAlertBackgroundWork = RunNativeAlertLoopAsync(_backgroundLifetime.Token);
+    }
+
+    private async Task RunNativeAlertLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
+                // Every native invocation drains libtorrent's alert queue. Keeping that work in
+                // EngineHost makes completion, metadata and storage persistence independent of
+                // whether the desktop UI happens to be polling at the time.
+                InvokeNative("engine.poll", EngineJson.EmptyObject);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
+            catch (Exception exception)
+            {
+                await AppendLogAsync(8, $"Native alert processing failed: {exception.Message}", CancellationToken.None).ConfigureAwait(false);
+            }
+        }
     }
 
     private async Task RunResumeBackgroundLoopAsync(CancellationToken cancellationToken)
@@ -21,7 +43,7 @@ internal sealed partial class EngineState
             try
             {
                 await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken).ConfigureAwait(false);
-                _native.Invoke(SaveResumeMethod, EngineJson.EmptyObject);
+                InvokeNative(SaveResumeMethod, EngineJson.EmptyObject);
                 await CaptureResumeStorageAsync(cancellationToken).ConfigureAwait(false);
                 await PersistNativeStateAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -69,7 +91,7 @@ internal sealed partial class EngineState
                     var to = new TimeSpan(PreferenceInt(preferences, "schedule_to_hour", 20), PreferenceInt(preferences, "schedule_to_min", 0), 0);
                     var inTimeRange = from <= to ? now.TimeOfDay >= from && now.TimeOfDay < to : now.TimeOfDay >= from || now.TimeOfDay < to;
                     var inDayRange = SchedulerDayMatches(PreferenceInt(preferences, "scheduler_days", 0), now.DayOfWeek);
-                    _native.Invoke(WinBitTorrent.Core.EngineProtocol.EngineRpcMethods.TransferSetAlternativeLimits,
+                    InvokeNative(WinBitTorrent.Core.EngineProtocol.EngineRpcMethods.TransferSetAlternativeLimits,
                         EngineJson.Element(new { enabled = inTimeRange && inDayRange }));
                 }
                 await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken).ConfigureAwait(false);
@@ -109,6 +131,10 @@ internal sealed partial class EngineState
         if (_schedulerBackgroundWork is not null)
         {
             try { await _schedulerBackgroundWork.ConfigureAwait(false); } catch (OperationCanceledException) { }
+        }
+        if (_nativeAlertBackgroundWork is not null)
+        {
+            try { await _nativeAlertBackgroundWork.ConfigureAwait(false); } catch (OperationCanceledException) { }
         }
         await StopSearchServicesAsync().ConfigureAwait(false);
         await StopCreatorServicesAsync().ConfigureAwait(false);

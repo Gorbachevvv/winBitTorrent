@@ -1,5 +1,7 @@
 #include "engine_api.hpp"
 
+#include <Windows.h>
+
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/bdecode.hpp>
@@ -31,7 +33,9 @@
 #include <set>
 #include <stdexcept>
 #include <string_view>
+#include <system_error>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace lt = libtorrent;
@@ -195,10 +199,22 @@ namespace
             std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
             if (!output) throw std::runtime_error("Unable to write " + path_text(path));
             output.write(value.data(), static_cast<std::streamsize>(value.size()));
+            output.flush();
+            if (!output)
+            {
+                output.close();
+                std::error_code ignored;
+                fs::remove(temporary, ignored);
+                throw std::runtime_error("Unable to flush " + path_text(path));
+            }
         }
-        std::error_code ignored;
-        fs::remove(path, ignored);
-        fs::rename(temporary, path);
+        if (!::MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+        {
+            auto const error = static_cast<int>(::GetLastError());
+            std::error_code ignored;
+            fs::remove(temporary, ignored);
+            throw std::system_error(error, std::system_category(), "Unable to replace " + path_text(path));
+        }
     }
 
     json::object string_parameters(json::object const& payload)
@@ -253,6 +269,9 @@ namespace winbittorrent
 
         ~engine()
         {
+            // EngineState flushes and, in SQLite mode, captures the resulting files before
+            // destroying the native session. Do not create a second uncaptured snapshot after
+            // that flush; only save here when the caller did not already do so.
             try { if (!resume_saved_) save_resume_files(); }
             catch (...) {}
         }
@@ -289,6 +308,7 @@ namespace winbittorrent
             if (method == "torrents.parseMetadata") return json::serialize(parse_metadata(payload));
             if (method == "torrents.metadata") return json::serialize(metadata(payload));
             if (method == "engine.saveResume") { save_resume_files(); return "{}"; }
+            if (method == "engine.poll") return "{}";
             if (method == "engine.restoreAppState") { restore_app_state(payload); return "{}"; }
             if (method == "engine.applySettings") { apply_settings(payload); return "{}"; }
             throw std::runtime_error("Unsupported native method: " + method);
@@ -308,6 +328,40 @@ namespace winbittorrent
                 lt::alert_category::error | lt::alert_category::status | lt::alert_category::storage);
             settings.set_str(lt::settings_pack::user_agent, "WinBitTorrent/1.0");
             return settings;
+        }
+
+        static bool resume_files_changed_after_snapshot(
+            lt::bdecode_node const& root,
+            lt::add_torrent_params const& params)
+        {
+            if (!params.ti || bool(params.flags & lt::torrent_flags::seed_mode)) return false;
+
+            auto const pieces = root.dict_find_string_value("pieces");
+            if (!pieces.empty()
+                && std::none_of(pieces.begin(), pieces.end(), [](char value) { return value == 0; }))
+                return false;
+
+            auto const snapshot_time = std::max(
+                root.dict_find_int_value("last_download", 0),
+                root.dict_find_int_value("completed_time", 0));
+            auto const save_path = utf8_path(params.save_path);
+            auto const& files = params.ti->files();
+            for (lt::file_index_t index{ 0 }; index < files.num_files(); ++index)
+            {
+                if (files.pad_file_at(index)) continue;
+                auto const path = save_path / utf8_path(files.file_path(index));
+                std::error_code error;
+                auto const size = fs::file_size(path, error);
+                if (error || size != static_cast<std::uintmax_t>(files.file_size(index))) continue;
+                auto const modified = fs::last_write_time(path, error);
+                if (error) continue;
+                auto const modified_system = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+                    modified - fs::file_time_type::clock::now() + std::chrono::system_clock::now());
+                auto const modified_seconds = std::chrono::system_clock::to_time_t(modified_system);
+                if (snapshot_time == 0 || modified_seconds > snapshot_time + 1)
+                    return true;
+            }
+            return false;
         }
 
         void load_resume_files()
@@ -349,12 +403,27 @@ namespace winbittorrent
                         params.ti = std::make_shared<lt::torrent_info>(path_text(torrent_path), error);
                     if (!error)
                     {
+                        auto const needs_recheck = resume_files_changed_after_snapshot(root, params);
+                        auto const pause_after_recheck = needs_recheck
+                            && bool(params.flags & lt::torrent_flags::paused);
+                        if (needs_recheck)
+                        {
+                            params.have_pieces.clear();
+                            params.verified_pieces.clear();
+                            params.unfinished_pieces.clear();
+                            params.flags &= ~lt::torrent_flags::paused;
+                            params.flags &= ~lt::torrent_flags::auto_managed;
+                            if (pause_after_recheck)
+                                params.flags |= lt::torrent_flags::upload_mode;
+                        }
                         auto handle = session_.add_torrent(std::move(params), error);
                         if (!error)
                         {
                             states_[primary_hash(handle.info_hashes())] = std::move(imported);
                             set_first_last(handle, state(handle).first_last);
                             global_tags_.insert(state(handle).tags.begin(), state(handle).tags.end());
+                            if (pause_after_recheck)
+                                pause_after_recheck_.insert(primary_hash(handle.info_hashes()));
                         }
                     }
                 }
@@ -397,28 +466,11 @@ namespace winbittorrent
         {
             std::vector<lt::alert*> alerts;
             session_.pop_alerts(&alerts);
+            std::vector<lt::torrent_handle> completed;
             for (auto const* alert : alerts)
-            {
-                persist_resume_alert(alert);
-                if (auto const* statistics = lt::alert_cast<lt::session_stats_alert>(alert))
-                {
-                    auto const counters = statistics->counters();
-                    if (dht_nodes_metric_ >= 0)
-                    {
-                        auto const metric = static_cast<decltype(counters.size())>(dht_nodes_metric_);
-                        if (metric < counters.size()) dht_nodes_ = static_cast<int>(counters[metric]);
-                    }
-                }
-                if (auto const* finished = lt::alert_cast<lt::torrent_finished_alert>(alert))
-                {
-                    auto const& extra = state(finished->handle);
-                    if (!extra.complete_path.empty() && finished->handle.status().save_path != extra.complete_path)
-                        finished->handle.move_storage(extra.complete_path);
-                    auto const hash = primary_hash(finished->handle.info_hashes());
-                    if (recheck_completed_ && rechecked_completed_.insert(hash).second)
-                        finished->handle.force_recheck();
-                }
-            }
+                process_alert(alert, completed);
+            if (!completed.empty())
+                save_resume_files(std::move(completed), false);
             if (std::chrono::steady_clock::now() - last_stats_request_ >= std::chrono::seconds(1))
             {
                 session_.post_session_stats();
@@ -427,9 +479,57 @@ namespace winbittorrent
             enforce_share_limits();
         }
 
+        void process_alert(lt::alert const* alert, std::vector<lt::torrent_handle>& completed)
+        {
+            persist_resume_alert(alert);
+            if (auto const* statistics = lt::alert_cast<lt::session_stats_alert>(alert))
+            {
+                auto const counters = statistics->counters();
+                if (dht_nodes_metric_ >= 0)
+                {
+                    auto const metric = static_cast<decltype(counters.size())>(dht_nodes_metric_);
+                    if (metric < counters.size()) dht_nodes_ = static_cast<int>(counters[metric]);
+                }
+            }
+            if (auto const* finished = lt::alert_cast<lt::torrent_finished_alert>(alert))
+            {
+                auto const& extra = state(finished->handle);
+                if (!extra.complete_path.empty() && finished->handle.status().save_path != extra.complete_path)
+                    finished->handle.move_storage(extra.complete_path);
+                auto const hash = primary_hash(finished->handle.info_hashes());
+                if (recheck_completed_ && rechecked_completed_.insert(hash).second)
+                    finished->handle.force_recheck();
+                completed.push_back(finished->handle);
+                resume_saved_ = false;
+            }
+            if (auto const* checked = lt::alert_cast<lt::torrent_checked_alert>(alert))
+            {
+                auto const hash = primary_hash(checked->handle.info_hashes());
+                if (pause_after_recheck_.erase(hash) > 0)
+                {
+                    checked->handle.pause();
+                    checked->handle.unset_flags(lt::torrent_flags::upload_mode);
+                }
+                completed.push_back(checked->handle);
+                resume_saved_ = false;
+            }
+            if (auto const* metadata = lt::alert_cast<lt::metadata_received_alert>(alert))
+            {
+                persist_torrent_file(metadata->handle);
+                completed.push_back(metadata->handle);
+                resume_saved_ = false;
+            }
+            if (auto const* moved = lt::alert_cast<lt::storage_moved_alert>(alert))
+            {
+                completed.push_back(moved->handle);
+                resume_saved_ = false;
+            }
+        }
+
         void enforce_share_limits()
         {
             auto const now = lt::clock_type::now();
+            std::vector<lt::torrent_handle> stopped;
             for (auto const& handle : session_.get_torrents())
             {
                 if (!handle.is_valid()) continue;
@@ -447,10 +547,11 @@ namespace winbittorrent
                 {
                     handle.unset_flags(lt::torrent_flags::auto_managed);
                     handle.pause();
-                    handle.save_resume_data();
+                    stopped.push_back(handle);
                     resume_saved_ = false;
                 }
             }
+            if (!stopped.empty()) save_resume_files(std::move(stopped), false);
         }
 
         static std::string peer_address(std::string value)
@@ -505,31 +606,53 @@ namespace winbittorrent
 
         void save_resume_files()
         {
-            int pending = 0;
-            for (auto const& handle : session_.get_torrents())
+            save_resume_files(session_.get_torrents(), true);
+        }
+
+        void save_resume_files(std::vector<lt::torrent_handle> handles, bool complete_snapshot)
+        {
+            std::unordered_set<std::string> pending;
+            bool save_failed = false;
+            auto request_save = [&](lt::torrent_handle const& handle)
             {
-                if (!handle.is_valid()) continue;
+                if (!handle.is_valid()) return;
+                auto const hash = primary_hash(handle.info_hashes());
+                if (hash.empty() || !pending.insert(hash).second) return;
                 persist_torrent_file(handle);
                 handle.save_resume_data();
-                ++pending;
-            }
+            };
+            for (auto const& handle : handles) request_save(handle);
+
             auto const deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
-            while (pending > 0 && std::chrono::steady_clock::now() < deadline)
+            while (!pending.empty() && std::chrono::steady_clock::now() < deadline)
             {
                 if (session_.wait_for_alert(std::chrono::milliseconds(200)) == nullptr) continue;
                 std::vector<lt::alert*> alerts;
                 session_.pop_alerts(&alerts);
+                std::vector<lt::torrent_handle> completed;
                 for (auto const* alert : alerts)
                 {
-                    if (lt::alert_cast<lt::save_resume_data_alert>(alert) != nullptr)
+                    if (auto const* saved = lt::alert_cast<lt::save_resume_data_alert>(alert))
                     {
                         persist_resume_alert(alert);
-                        --pending;
+                        pending.erase(primary_hash(saved->params.info_hashes));
                     }
-                    else if (lt::alert_cast<lt::save_resume_data_failed_alert>(alert) != nullptr) --pending;
+                    else if (auto const* failure = lt::alert_cast<lt::save_resume_data_failed_alert>(alert))
+                    {
+                        pending.erase(primary_hash(failure->handle.info_hashes()));
+                        save_failed = true;
+                    }
+                    else
+                    {
+                        process_alert(alert, completed);
+                    }
                 }
+                for (auto const& handle : completed) request_save(handle);
             }
-            resume_saved_ = pending == 0;
+            if (complete_snapshot)
+                resume_saved_ = pending.empty() && !save_failed;
+            else if (!pending.empty() || save_failed)
+                resume_saved_ = false;
         }
 
         lt::torrent_handle require(std::string const& hash) const
@@ -869,6 +992,7 @@ namespace winbittorrent
 
         void add(json::object const& payload)
         {
+            std::vector<lt::torrent_handle> added;
             for (auto const& path : strings(payload, "torrentFiles"))
             {
                 lt::error_code error;
@@ -876,7 +1000,7 @@ namespace winbittorrent
                 params.ti = std::make_shared<lt::torrent_info>(path, error);
                 if (error) throw std::runtime_error("Unable to parse torrent: " + error.message());
                 configure(params, payload);
-                add_one(std::move(params), payload);
+                added.push_back(add_one(std::move(params), payload));
             }
             for (auto const& uri : strings(payload, "urls"))
             {
@@ -886,11 +1010,12 @@ namespace winbittorrent
                 auto params = lt::parse_magnet_uri(uri, error);
                 if (error) throw std::runtime_error("Unable to parse magnet: " + error.message());
                 configure(params, payload);
-                add_one(std::move(params), payload);
+                added.push_back(add_one(std::move(params), payload));
             }
+            if (!added.empty()) save_resume_files(std::move(added), false);
         }
 
-        void add_one(lt::add_torrent_params params, json::object const& payload)
+        lt::torrent_handle add_one(lt::add_torrent_params params, json::object const& payload)
         {
             lt::error_code error;
             auto handle = session_.add_torrent(std::move(params), error);
@@ -906,6 +1031,7 @@ namespace winbittorrent
             if (payload.contains("uploadLimit") && !payload.at("uploadLimit").is_null()) handle.set_upload_limit(static_cast<int>(integer(payload, "uploadLimit")));
             if (payload.contains("downloadLimit") && !payload.at("downloadLimit").is_null()) handle.set_download_limit(static_cast<int>(integer(payload, "downloadLimit")));
             set_first_last(handle, extra.first_last);
+            return handle;
         }
 
         void persist_torrent_file(lt::torrent_handle const& handle)
@@ -943,13 +1069,23 @@ namespace winbittorrent
 
         void command(json::object const& payload)
         {
+            std::vector<lt::torrent_handle> stopped;
             for (auto const& handle : selected(text(payload, "hashes")))
             {
                 switch (integer(payload, "command"))
                 {
                 case 0: handle.resume(); state(handle).force_start = false; break;
-                case 1: handle.pause(); handle.save_resume_data(); break;
-                case 2: handle.force_recheck(); break;
+                case 1: handle.pause(); stopped.push_back(handle); break;
+                case 2:
+                    if (handle.status().flags & lt::torrent_flags::paused)
+                    {
+                        handle.unset_flags(lt::torrent_flags::auto_managed);
+                        handle.set_flags(lt::torrent_flags::upload_mode);
+                        handle.resume();
+                        pause_after_recheck_.insert(primary_hash(handle.info_hashes()));
+                    }
+                    handle.force_recheck();
+                    break;
                 case 3: handle.force_reannounce(); break;
                 case 4: handle.queue_position_up(); break;
                 case 5: handle.queue_position_down(); break;
@@ -963,6 +1099,7 @@ namespace winbittorrent
                 default: throw std::runtime_error("Unknown torrent command.");
                 }
             }
+            if (!stopped.empty()) save_resume_files(std::move(stopped), false);
         }
 
         void action(json::object const& payload)
@@ -1128,7 +1265,10 @@ namespace winbittorrent
                         auto const desired_path = !text(item, "downloadPath").empty()
                             ? text(item, "downloadPath") : text(item, "savePath");
                         auto const needs_recheck = boolean(item, "needsRecheck");
-                        if (needs_recheck && !desired_path.empty()
+                        auto const loaded_from_metadata_fallback = !desired_path.empty()
+                            && utf8_path(handle.status().save_path).lexically_normal() == root_.lexically_normal()
+                            && utf8_path(desired_path).lexically_normal() != root_.lexically_normal();
+                        if ((needs_recheck || loaded_from_metadata_fallback) && !desired_path.empty()
                             && utf8_path(handle.status().save_path).lexically_normal() == root_.lexically_normal())
                         {
                             auto const hash = primary_hash(handle.info_hashes());
@@ -1155,7 +1295,7 @@ namespace winbittorrent
                         extra.seeding_time_limit = static_cast<int>(integer(item, "seedingTimeLimit", -1));
                         extra.inactive_seeding_time_limit = static_cast<int>(integer(item, "inactiveSeedingTimeLimit", -1));
                         extra.queue_position = static_cast<int>(integer(item, "queuePosition", -1));
-                        extra.needs_recheck = needs_recheck;
+                        extra.needs_recheck = needs_recheck || loaded_from_metadata_fallback;
                         extra.tags.clear();
                         for (auto const& tag : split(text(item, "tags"))) extra.tags.insert(tag);
                         if (extra.queue_position >= 0)
@@ -1346,6 +1486,7 @@ namespace winbittorrent
         int max_connections_per_torrent_ = -1;
         int max_uploads_per_torrent_ = -1;
         std::set<std::string> rechecked_completed_;
+        std::unordered_set<std::string> pause_after_recheck_;
         std::vector<lt::port_mapping_t> remote_api_mappings_;
         int const dht_nodes_metric_ = lt::find_metric_idx("dht.dht_nodes");
         int dht_nodes_ = 0;

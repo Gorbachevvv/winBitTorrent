@@ -10,41 +10,52 @@ internal sealed partial class EngineState
         var storage = await GetSettingStringAsync("resume_data_storage_type", "SQLite", cancellationToken).ConfigureAwait(false);
         if (!force && !storage.Equals("SQLite", StringComparison.OrdinalIgnoreCase)) return;
 
-        var snapshot = _native.Invoke(WinBitTorrent.Core.EngineProtocol.EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }));
-        var values = new List<(string Hash, byte[]? Metadata, byte[]? Resume)>();
-        foreach (var torrent in snapshot.EnumerateArray())
-        {
-            var hash = torrent.GetProperty("hash").GetString()!;
-            var metadataPath = Path.Combine(_dataRoot, "torrents", hash + ".torrent");
-            var resumePath = Path.Combine(_dataRoot, "resume", hash + ".fastresume");
-            values.Add((hash,
-                File.Exists(metadataPath) ? await File.ReadAllBytesAsync(metadataPath, cancellationToken).ConfigureAwait(false) : null,
-                File.Exists(resumePath) ? await File.ReadAllBytesAsync(resumePath, cancellationToken).ConfigureAwait(false) : null));
-        }
-
-        await _databaseGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _nativeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await using var transaction = await _database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-            foreach (var value in values)
+            // Hold the same gate used by every native invocation until the files have been
+            // committed and removed. Otherwise an alert may publish a newer resume between our
+            // read and delete, causing the database to retain the older snapshot.
+            var snapshot = _native.Invoke(WinBitTorrent.Core.EngineProtocol.EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }));
+            var values = new List<(string Hash, byte[]? Metadata, byte[]? Resume)>();
+            foreach (var torrent in snapshot.EnumerateArray())
             {
-                await using var command = _database.CreateCommand();
-                command.Transaction = (SqliteTransaction)transaction;
-                command.CommandText = "UPDATE torrents SET metadata=COALESCE($metadata, metadata), resume_data=COALESCE($resume, resume_data) WHERE hash=$hash";
-                command.Parameters.AddWithValue("$hash", value.Hash);
-                command.Parameters.AddWithValue("$metadata", (object?)value.Metadata ?? DBNull.Value);
-                command.Parameters.AddWithValue("$resume", (object?)value.Resume ?? DBNull.Value);
-                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                var hash = torrent.GetProperty("hash").GetString()!;
+                var metadataPath = Path.Combine(_dataRoot, "torrents", hash + ".torrent");
+                var resumePath = Path.Combine(_dataRoot, "resume", hash + ".fastresume");
+                values.Add((hash,
+                    File.Exists(metadataPath) ? await File.ReadAllBytesAsync(metadataPath, cancellationToken).ConfigureAwait(false) : null,
+                    File.Exists(resumePath) ? await File.ReadAllBytesAsync(resumePath, cancellationToken).ConfigureAwait(false) : null));
             }
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+            await _databaseGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await using var transaction = await _database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                foreach (var value in values)
+                {
+                    await using var command = _database.CreateCommand();
+                    command.Transaction = (SqliteTransaction)transaction;
+                    command.CommandText = "UPDATE torrents SET metadata=COALESCE($metadata, metadata), resume_data=COALESCE($resume, resume_data) WHERE hash=$hash";
+                    command.Parameters.AddWithValue("$hash", value.Hash);
+                    command.Parameters.AddWithValue("$metadata", (object?)value.Metadata ?? DBNull.Value);
+                    command.Parameters.AddWithValue("$resume", (object?)value.Resume ?? DBNull.Value);
+                    await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                }
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _databaseGate.Release();
+            }
+
+            DeleteResumeFiles("resume", "*.fastresume");
+            DeleteResumeFiles("torrents", "*.torrent");
         }
         finally
         {
-            _databaseGate.Release();
+            _nativeGate.Release();
         }
-
-        DeleteResumeFiles("resume", "*.fastresume");
-        DeleteResumeFiles("torrents", "*.torrent");
     }
 
     private static async Task HydrateResumeFilesFromDatabaseAsync(
@@ -71,8 +82,17 @@ internal sealed partial class EngineState
         {
             var hash = reader.GetString(0);
             if (hash.Length is not (40 or 64) || !hash.All(Uri.IsHexDigit)) continue;
-            if (!reader.IsDBNull(1)) await WriteAtomicAsync(Path.Combine(torrentsRoot, hash + ".torrent"), (byte[])reader[1], cancellationToken).ConfigureAwait(false);
-            if (!reader.IsDBNull(2)) await WriteAtomicAsync(Path.Combine(resumeRoot, hash + ".fastresume"), (byte[])reader[2], cancellationToken).ConfigureAwait(false);
+            var metadataPath = Path.Combine(torrentsRoot, hash + ".torrent");
+            var resumePath = Path.Combine(resumeRoot, hash + ".fastresume");
+
+            // SQLite-mode files are normally removed after capture. If one exists here, the
+            // previous worker produced it after the last database capture and then terminated
+            // unexpectedly. It is the recovery journal and must not be overwritten by the older
+            // database blob.
+            if (!reader.IsDBNull(1) && !File.Exists(metadataPath))
+                await WriteAtomicAsync(metadataPath, (byte[])reader[1], cancellationToken).ConfigureAwait(false);
+            if (!reader.IsDBNull(2) && !File.Exists(resumePath))
+                await WriteAtomicAsync(resumePath, (byte[])reader[2], cancellationToken).ConfigureAwait(false);
         }
     }
 

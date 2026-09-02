@@ -14,6 +14,7 @@ internal sealed partial class EngineState
     private int _nextSearchId;
     private string _searchRoot = string.Empty;
     private string _searchEnginePath = string.Empty;
+    private string _bundledPythonPath = string.Empty;
     private string _pythonPath = string.Empty;
     private string _searchStatePath = string.Empty;
     private readonly SemaphoreSlim _searchPluginGate = new(1, 1);
@@ -21,7 +22,8 @@ internal sealed partial class EngineState
     private void InitializeSearchRuntime()
     {
         var backendRoot = ResolveBackendRoot();
-        _pythonPath = Path.Combine(backendRoot, "Python", "python.exe");
+        _bundledPythonPath = Path.Combine(backendRoot, "Python", "python.exe");
+        _pythonPath = _bundledPythonPath;
         var bundled = Path.Combine(backendRoot, "SearchPlugins");
         _searchRoot = Path.Combine(_dataRoot, "SearchPlugins", "nova3");
         _searchEnginePath = Path.Combine(_searchRoot, "nova2.py");
@@ -48,6 +50,7 @@ internal sealed partial class EngineState
 
     private async Task<JsonElement> StartSearchAsync(JsonElement payload, CancellationToken cancellationToken)
     {
+        await ApplySearchPreferencesAsync(requireEnabled: true, cancellationToken: cancellationToken).ConfigureAwait(false);
         EnsureSearchRuntime();
         var pattern = payload.GetProperty("pattern").GetString()?.Trim();
         if (string.IsNullOrWhiteSpace(pattern)) throw new ArgumentException("Search pattern is required.");
@@ -101,6 +104,7 @@ internal sealed partial class EngineState
 
     private async Task<JsonElement> GetSearchPluginsAsync(CancellationToken cancellationToken)
     {
+        await ApplySearchPreferencesAsync(requireEnabled: false, cancellationToken: cancellationToken).ConfigureAwait(false);
         EnsureSearchRuntime();
         var capabilities = await ReadSearchCapabilitiesAsync(cancellationToken).ConfigureAwait(false);
         var enabled = await LoadSearchPluginStateAsync(cancellationToken).ConfigureAwait(false);
@@ -123,6 +127,7 @@ internal sealed partial class EngineState
 
     private async Task<JsonElement> HandleSearchActionAsync(JsonElement payload, CancellationToken cancellationToken)
     {
+        await ApplySearchPreferencesAsync(requireEnabled: false, cancellationToken: cancellationToken).ConfigureAwait(false);
         var action = payload.GetProperty("action").GetString() ?? throw new ArgumentException("action is required.");
         var parameters = payload.GetProperty("parameters");
         string Parameter(string name) => parameters.TryGetProperty(name, out var value) ? value.GetString() ?? string.Empty : string.Empty;
@@ -424,6 +429,18 @@ internal sealed partial class EngineState
     {
         if (!File.Exists(_pythonPath)) throw new FileNotFoundException("The bundled Python runtime was not found.", _pythonPath);
         if (!File.Exists(_searchEnginePath)) throw new FileNotFoundException("The Nova search runtime was not found.", _searchEnginePath);
+    }
+
+    private async Task ApplySearchPreferencesAsync(bool requireEnabled, CancellationToken cancellationToken)
+    {
+        var preferences = await LoadPreferencesAsync(cancellationToken).ConfigureAwait(false);
+        if (requireEnabled && preferences.TryGetProperty("search_enabled", out var enabled) && !enabled.GetBoolean())
+            throw new InvalidOperationException("The torrent search engine is disabled in settings.");
+        var configured = preferences.TryGetProperty("python_executable_path", out var value)
+            ? value.GetString()?.Trim() : null;
+        _pythonPath = string.IsNullOrWhiteSpace(configured)
+            ? _bundledPythonPath
+            : Path.GetFullPath(Environment.ExpandEnvironmentVariables(configured));
     }
 
     private static string ResolveBackendRoot()

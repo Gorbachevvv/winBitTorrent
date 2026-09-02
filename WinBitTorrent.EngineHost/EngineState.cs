@@ -14,6 +14,7 @@ internal sealed partial class EngineState : IAsyncDisposable
     private const string ApplySettingsMethod = "engine.applySettings";
     private readonly SqliteConnection _database;
     private readonly SemaphoreSlim _databaseGate = new(1, 1);
+    private readonly SemaphoreSlim _nativeGate = new(1, 1);
     private readonly NativeEngine _native;
     private readonly string _dataRoot;
 
@@ -148,10 +149,11 @@ internal sealed partial class EngineState : IAsyncDisposable
             state.InitializeSearchRuntime();
             state.InitializeGeoIp();
             var preferences = await state.LoadPreferencesAsync(CancellationToken.None).ConfigureAwait(false);
-            state._native.Invoke(ApplySettingsMethod, preferences);
+            state.InvokeNative(ApplySettingsMethod, preferences);
             ApplyProcessLimits(preferences);
             await state.RestoreNativeStateAsync(CancellationToken.None).ConfigureAwait(false);
-            state._native.Invoke(SaveResumeMethod, EngineJson.EmptyObject);
+            // Preserve the loaded resume snapshot until libtorrent has validated it. Saving here
+            // can replace a valid pre-start snapshot with transient checking-resume state.
             await state.CaptureResumeStorageAsync(CancellationToken.None).ConfigureAwait(false);
             state.StartBackgroundServices();
             await state.AppendLogAsync(2, $"WinBitTorrent Engine {state.Hello.EngineVersion} started with libtorrent {state.Hello.LibtorrentVersion}.", CancellationToken.None).ConfigureAwait(false);
@@ -211,7 +213,7 @@ internal sealed partial class EngineState : IAsyncDisposable
             EngineRpcMethods.CreatorDelete => DeleteCreatorTask(payload),
             EngineRpcMethods.ClientDataLoad => await LoadClientDataAsync(payload, cancellationToken).ConfigureAwait(false),
             EngineRpcMethods.ClientDataStore => await StoreClientDataAsync(payload, cancellationToken).ConfigureAwait(false),
-            _ when IsNativeMethod(method) => _native.Invoke(method, payload),
+            _ when IsNativeMethod(method) => InvokeNative(method, payload),
             _ => throw new NotSupportedException($"Engine method '{method}' is not implemented.")
         };
         }
@@ -229,13 +231,13 @@ internal sealed partial class EngineState : IAsyncDisposable
 
     private JsonElement ExportTorrent(JsonElement payload)
     {
-        var native = _native.Invoke(EngineRpcMethods.TorrentsExport, payload);
+        var native = InvokeNative(EngineRpcMethods.TorrentsExport, payload);
         return EngineJson.Element(native.EnumerateArray().Select(static value => value.GetByte()).ToArray());
     }
 
     private async Task<JsonElement> InvokeNativeMutationAsync(string method, JsonElement payload, CancellationToken cancellationToken)
     {
-        var result = _native.Invoke(method, payload);
+        var result = InvokeNative(method, payload);
         await PersistNativeStateAsync(cancellationToken).ConfigureAwait(false);
         if (method == EngineRpcMethods.TransferBanPeers && payload.TryGetProperty("peers", out var peers))
         {
@@ -367,7 +369,7 @@ internal sealed partial class EngineState : IAsyncDisposable
             using var client = await CreateHttpClientAsync("proxy_bittorrent", cancellationToken).ConfigureAwait(false);
             var bytes = await client.GetByteArrayAsync(url, cancellationToken).ConfigureAwait(false);
             await File.WriteAllBytesAsync(path, bytes, cancellationToken).ConfigureAwait(false);
-            return _native.Invoke(EngineRpcMethods.TorrentsParseMetadata, EngineJson.Element(new { torrentFilePath = path }));
+            return InvokeNative(EngineRpcMethods.TorrentsParseMetadata, EngineJson.Element(new { torrentFilePath = path }));
         }
         finally
         {
@@ -377,25 +379,25 @@ internal sealed partial class EngineState : IAsyncDisposable
 
     private async Task<JsonElement> FetchMagnetMetadataAsync(string magnet, CancellationToken cancellationToken)
     {
-        var before = _native.Invoke(EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }))
+        var before = InvokeNative(EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }))
             .EnumerateArray().Select(static value => value.GetProperty("hash").GetString()!).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var stagingRoot = Path.Combine(_dataRoot, "staging", "metadata", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(stagingRoot);
         string? hash = null;
         try
         {
-            _native.Invoke(EngineRpcMethods.TorrentsAdd, EngineJson.Element(new
+            InvokeNative(EngineRpcMethods.TorrentsAdd, EngineJson.Element(new
             {
                 urls = new[] { magnet }, torrentFiles = Array.Empty<string>(), savePath = stagingRoot,
                 startTorrent = true, automaticTorrentManagement = false
             }));
-            var after = _native.Invoke(EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }));
+            var after = InvokeNative(EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }));
             hash = after.EnumerateArray().Select(static value => value.GetProperty("hash").GetString()!).FirstOrDefault(value => !before.Contains(value));
             if (hash is null) throw new InvalidOperationException("The magnet is already present in the torrent list.");
             for (var attempt = 0; attempt < 120; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                try { return _native.Invoke(EngineRpcMethods.TorrentsMetadata, EngineJson.Element(new { hash })); }
+                try { return InvokeNative(EngineRpcMethods.TorrentsMetadata, EngineJson.Element(new { hash })); }
                 catch (InvalidOperationException exception) when (exception.Message.Contains("not available", StringComparison.OrdinalIgnoreCase)) { }
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
             }
@@ -405,7 +407,7 @@ internal sealed partial class EngineState : IAsyncDisposable
         {
             if (hash is not null)
             {
-                try { _native.Invoke(EngineRpcMethods.TorrentsDelete, EngineJson.Element(new { hashes = hash, deleteFiles = true })); } catch { }
+                try { InvokeNative(EngineRpcMethods.TorrentsDelete, EngineJson.Element(new { hashes = hash, deleteFiles = true })); } catch { }
                 await PersistNativeStateAsync(CancellationToken.None).ConfigureAwait(false);
             }
             try { Directory.Delete(stagingRoot, recursive: true); } catch (IOException) { }
@@ -451,7 +453,7 @@ internal sealed partial class EngineState : IAsyncDisposable
         {
             _databaseGate.Release();
         }
-        _native.Invoke(RestoreAppStateMethod, EngineJson.Element(new { torrents, categories, tags }));
+        InvokeNative(RestoreAppStateMethod, EngineJson.Element(new { torrents, categories, tags }));
     }
 
     private async Task ImportLegacyStateAsync(CancellationToken cancellationToken)
@@ -552,8 +554,8 @@ internal sealed partial class EngineState : IAsyncDisposable
 
     private async Task PersistNativeStateAsync(CancellationToken cancellationToken)
     {
-        var torrents = _native.Invoke(EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }));
-        var mainData = _native.Invoke(EngineRpcMethods.SyncMainData, EngineJson.Element(new { responseId = 0 }));
+        var torrents = InvokeNative(EngineRpcMethods.TorrentsInfo, EngineJson.Element(new { filter = "all" }));
+        var mainData = InvokeNative(EngineRpcMethods.SyncMainData, EngineJson.Element(new { responseId = 0 }));
 
         await _databaseGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -675,11 +677,11 @@ internal sealed partial class EngineState : IAsyncDisposable
         var storageChanged = !string.Equals(previousStorage, currentStorage, StringComparison.OrdinalIgnoreCase);
         try
         {
-            _native.Invoke(ApplySettingsMethod, prospective);
+            InvokeNative(ApplySettingsMethod, prospective);
             ApplyProcessLimits(prospective);
             if (storageChanged)
             {
-                _native.Invoke(SaveResumeMethod, EngineJson.EmptyObject);
+                InvokeNative(SaveResumeMethod, EngineJson.EmptyObject);
                 if (currentStorage.Equals("SQLite", StringComparison.OrdinalIgnoreCase))
                     await CaptureResumeStorageAsync(cancellationToken, force: true).ConfigureAwait(false);
             }
@@ -689,14 +691,16 @@ internal sealed partial class EngineState : IAsyncDisposable
         {
             try
             {
-                _native.Invoke(ApplySettingsMethod, previous);
+                InvokeNative(ApplySettingsMethod, previous);
                 ApplyProcessLimits(previous);
                 if (storageChanged)
                 {
                     if (previousStorage.Equals("SQLite", StringComparison.OrdinalIgnoreCase))
                     {
-                        DeleteResumeFiles("resume", "*.fastresume");
-                        DeleteResumeFiles("torrents", "*.torrent");
+                        // The failed transition to Legacy already produced fresh files. Capture
+                        // them back into SQLite before cleaning up instead of discarding the
+                        // newest resume snapshot during rollback.
+                        await CaptureResumeStorageAsync(CancellationToken.None, force: true).ConfigureAwait(false);
                     }
                     else
                     {
@@ -894,9 +898,16 @@ internal sealed partial class EngineState : IAsyncDisposable
     private static string DefaultSavePath()
         => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 
+    private JsonElement InvokeNative(string method, JsonElement payload)
+    {
+        _nativeGate.Wait();
+        try { return _native.Invoke(method, payload); }
+        finally { _nativeGate.Release(); }
+    }
+
     public async Task FlushAsync(CancellationToken cancellationToken)
     {
-        _native.Invoke(SaveResumeMethod, EngineJson.EmptyObject);
+        InvokeNative(SaveResumeMethod, EngineJson.EmptyObject);
         await CaptureResumeStorageAsync(cancellationToken).ConfigureAwait(false);
         await PersistNativeStateAsync(cancellationToken).ConfigureAwait(false);
         await _databaseGate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -919,6 +930,7 @@ internal sealed partial class EngineState : IAsyncDisposable
         await _database.DisposeAsync().ConfigureAwait(false);
         _geoIpReader?.Dispose();
         _native.Dispose();
+        _nativeGate.Dispose();
         _databaseGate.Dispose();
     }
 }

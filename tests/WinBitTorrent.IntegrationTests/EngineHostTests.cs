@@ -149,8 +149,10 @@ public sealed class EngineHostTests
         }
     }
 
-    [Fact]
-    public async Task DownloadsFromHermeticWebSeedAndResumesAfterWorkerRestart()
+    [Theory]
+    [InlineData("SQLite")]
+    [InlineData("Legacy")]
+    public async Task DownloadsFromHermeticWebSeedAndResumesAfterWorkerRestart(string resumeStorage)
     {
         var engineHost = FindEngineHost();
         var dataRoot = Path.Combine(Path.GetTempPath(), "WinBitTorrent.EngineHost.Swarm", Guid.NewGuid().ToString("N"));
@@ -163,11 +165,19 @@ public sealed class EngineHostTests
         try
         {
             await host.StartAsync();
+            await host.Client!.Application.SetPreferencesAsync(new JsonObject
+            {
+                ["resume_data_storage_type"] = resumeStorage
+            });
             var torrentPath = Path.Combine(dataRoot, "web-seed.torrent");
             var downloads = Path.Combine(dataRoot, "downloads");
+            var incomplete = Path.Combine(dataRoot, "incomplete");
             Directory.CreateDirectory(downloads);
+            Directory.CreateDirectory(incomplete);
             await File.WriteAllBytesAsync(torrentPath, CreateSingleFileTorrent("payload.bin", content));
-            await host.Client!.Torrents.AddAsync(new TorrentAddRequest([], [torrentPath], SavePath: downloads, StartTorrent: false));
+            await host.Client.Torrents.AddAsync(new TorrentAddRequest(
+                [], [torrentPath], SavePath: downloads, DownloadPath: incomplete,
+                UseDownloadPath: true, StartTorrent: false));
             var torrent = Assert.Single(await host.Client.Torrents.GetInfoAsync());
             await host.Client.Torrents.AddWebSeedsAsync(torrent.Hash, [webSeed.Url]);
             await host.Client.Torrents.ExecuteAsync(TorrentCommand.Start, torrent.Hash);
@@ -176,19 +186,178 @@ public sealed class EngineHostTests
             await host.Client.Torrents.ExecuteAsync(TorrentCommand.Stop, torrent.Hash);
             var beforeRestart = (await host.Client.Torrents.GetInfoAsync()).Single().Downloaded;
             Assert.InRange(beforeRestart, 1, content.Length - 1);
-            await host.StopAsync();
+            await host.StopAsync(force: true);
 
             await host.StartAsync();
             torrent = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
             Assert.True(torrent.Downloaded >= beforeRestart);
             await host.Client.Torrents.ExecuteAsync(TorrentCommand.Start, torrent.Hash);
-            await WaitUntilAsync(async () => (await host.Client.Torrents.GetInfoAsync()).Single().Progress >= 1, TimeSpan.FromSeconds(30));
-            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Stop, torrent.Hash);
+            await WaitUntilAsync(() => Task.FromResult(File.Exists(Path.Combine(downloads, "payload.bin"))), TimeSpan.FromSeconds(30));
+            await Task.Delay(750); // let EngineHost persist storage_moved without any UI poll
+            await host.StopAsync(force: true);
+
+            await host.StartAsync();
+            var completedAfterRestart = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
+            Assert.Equal(1d, completedAfterRestart.Progress, precision: 6);
+            Assert.Equal(content.Length, completedAfterRestart.Completed);
+            Assert.Equal(downloads, (await host.Client.Torrents.GetPropertiesAsync(completedAfterRestart.Hash)).SavePath);
+
+            var relocated = Path.Combine(dataRoot, "relocated");
+            await host.Client.Torrents.SetLocationAsync(completedAfterRestart.Hash, relocated);
+            await WaitUntilAsync(() => Task.FromResult(File.Exists(Path.Combine(relocated, "payload.bin"))), TimeSpan.FromSeconds(20));
+            await Task.Delay(750);
+            await host.StopAsync(force: true);
+
+            await host.StartAsync();
+            var relocatedAfterRestart = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
+            Assert.Equal(relocated, (await host.Client.Torrents.GetPropertiesAsync(relocatedAfterRestart.Hash)).SavePath);
+            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Recheck, relocatedAfterRestart.Hash);
+            await WaitUntilAsync(async () =>
+                (await host.Client.Torrents.GetInfoAsync()).Single().Progress >= 1,
+                TimeSpan.FromSeconds(20));
             await host.StopAsync();
 
-            var downloaded = await File.ReadAllBytesAsync(Path.Combine(downloads, "payload.bin"));
+            var downloaded = await File.ReadAllBytesAsync(Path.Combine(relocated, "payload.bin"));
             Assert.Equal(SHA256.HashData(content), SHA256.HashData(downloaded));
             Assert.True(webSeed.BytesServed < content.Length * 2L, $"Resume downloaded too much data: {webSeed.BytesServed} bytes.");
+        }
+        finally
+        {
+            await host.StopAsync(force: true);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", null);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", null);
+            DeleteWritableTree(dataRoot);
+        }
+    }
+
+    [Fact]
+    public async Task RechecksFilesChangedAfterTheLastResumeSnapshot()
+    {
+        var engineHost = FindEngineHost();
+        var dataRoot = Path.Combine(Path.GetTempPath(), "WinBitTorrent.EngineHost.ExternalData", Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", engineHost);
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", dataRoot);
+        var content = new byte[512 * 1024];
+        new Random(73).NextBytes(content);
+        await using var host = new EngineHostProcess(NullLogger<EngineHostProcess>.Instance);
+        try
+        {
+            await host.StartAsync();
+            await host.Client!.Application.SetPreferencesAsync(new JsonObject
+            {
+                ["resume_data_storage_type"] = "Legacy"
+            });
+            var torrentPath = Path.Combine(dataRoot, "external-data.torrent");
+            var downloads = Path.Combine(dataRoot, "downloads");
+            Directory.CreateDirectory(downloads);
+            await File.WriteAllBytesAsync(torrentPath, CreateSingleFileTorrent("external-data.bin", content));
+            await host.Client.Torrents.AddAsync(new TorrentAddRequest([], [torrentPath], SavePath: downloads, StartTorrent: false));
+            var torrent = Assert.Single(await host.Client.Torrents.GetInfoAsync());
+            Assert.Equal(0, torrent.Progress);
+            await host.StopAsync();
+
+            var downloadedPath = Path.Combine(downloads, "external-data.bin");
+            await File.WriteAllBytesAsync(downloadedPath, content);
+            File.SetLastWriteTimeUtc(downloadedPath, DateTime.UtcNow.AddSeconds(2));
+
+            await host.StartAsync();
+            await WaitUntilAsync(async () =>
+                (await host.Client!.Torrents.GetInfoAsync()).Single().Progress >= 1,
+                TimeSpan.FromSeconds(20));
+            var recovered = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
+            Assert.Equal(content.Length, recovered.Completed);
+
+            var corrupted = (byte[])content.Clone();
+            corrupted[0] ^= 0xff;
+            await File.WriteAllBytesAsync(downloadedPath, corrupted);
+            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Recheck, recovered.Hash);
+            await WaitUntilAsync(async () =>
+                (await host.Client.Torrents.GetInfoAsync()).Single().Progress < 1,
+                TimeSpan.FromSeconds(20));
+            var failedCheck = Assert.Single(await host.Client.Torrents.GetInfoAsync());
+            Assert.Equal("stoppedDL", failedCheck.State);
+
+            await File.WriteAllBytesAsync(downloadedPath, content);
+            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Recheck, recovered.Hash);
+            await WaitUntilAsync(async () =>
+                (await host.Client.Torrents.GetInfoAsync()).Single().Progress >= 1,
+                TimeSpan.FromSeconds(20));
+            var successfulCheck = Assert.Single(await host.Client.Torrents.GetInfoAsync());
+            Assert.Equal("stoppedUP", successfulCheck.State);
+            await host.StopAsync();
+        }
+        finally
+        {
+            await host.StopAsync(force: true);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", null);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", null);
+            DeleteWritableTree(dataRoot);
+        }
+    }
+
+    [Fact]
+    public async Task PersistsMagnetWithoutMetadataAcrossWorkerCrash()
+    {
+        var engineHost = FindEngineHost();
+        var dataRoot = Path.Combine(Path.GetTempPath(), "WinBitTorrent.EngineHost.Magnet", Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", engineHost);
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", dataRoot);
+        await using var host = new EngineHostProcess(NullLogger<EngineHostProcess>.Instance);
+        const string hash = "0123456789abcdef0123456789abcdef01234567";
+        try
+        {
+            await host.StartAsync();
+            await host.Client!.Torrents.AddAsync(new TorrentAddRequest(
+                [$"magnet:?xt=urn:btih:{hash}&dn=metadata-pending"], [],
+                SavePath: Path.Combine(dataRoot, "downloads"), StartTorrent: false));
+            Assert.Equal(hash, Assert.Single(await host.Client.Torrents.GetInfoAsync()).Hash, ignoreCase: true);
+            await host.StopAsync(force: true);
+
+            await host.StartAsync();
+            var restored = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
+            Assert.Equal(hash, restored.Hash, ignoreCase: true);
+            Assert.Equal("stoppedDL", restored.State);
+            await host.StopAsync();
+        }
+        finally
+        {
+            await host.StopAsync(force: true);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", null);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", null);
+            DeleteWritableTree(dataRoot);
+        }
+    }
+
+    [Fact]
+    public async Task CorruptedResumeRestoresTorrentAtItsOriginalPath()
+    {
+        var engineHost = FindEngineHost();
+        var dataRoot = Path.Combine(Path.GetTempPath(), "WinBitTorrent.EngineHost.CorruptResume", Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", engineHost);
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", dataRoot);
+        await using var host = new EngineHostProcess(NullLogger<EngineHostProcess>.Instance);
+        try
+        {
+            await host.StartAsync();
+            await host.Client!.Application.SetPreferencesAsync(new JsonObject
+            {
+                ["resume_data_storage_type"] = "Legacy"
+            });
+            var downloads = Path.Combine(dataRoot, "downloads");
+            var torrentPath = Path.Combine(dataRoot, "corrupt-resume.torrent");
+            Directory.CreateDirectory(downloads);
+            await File.WriteAllBytesAsync(torrentPath, CreateSingleFileTorrent("corrupt-resume.bin", new byte[64 * 1024]));
+            await host.Client.Torrents.AddAsync(new TorrentAddRequest([], [torrentPath], SavePath: downloads, StartTorrent: false));
+            var torrent = Assert.Single(await host.Client.Torrents.GetInfoAsync());
+            await host.StopAsync();
+
+            await File.WriteAllTextAsync(Path.Combine(dataRoot, "Engine", "resume", torrent.Hash + ".fastresume"), "damaged resume data");
+            await host.StartAsync();
+            var restored = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
+            Assert.Equal("stoppedDL", restored.State);
+            Assert.Equal(Path.GetFullPath(downloads), Path.GetFullPath((await host.Client.Torrents.GetPropertiesAsync(restored.Hash)).SavePath));
+            Assert.False(File.Exists(Path.Combine(dataRoot, "Engine", "corrupt-resume.bin")));
+            await host.StopAsync();
         }
         finally
         {
@@ -483,6 +652,9 @@ public sealed class EngineHostTests
 
             var plugins = await host.Client.Search.GetPluginsAsync();
             Assert.NotEmpty(plugins);
+            await host.Client.Application.SetPreferencesAsync(new JsonObject { ["search_enabled"] = false });
+            await Assert.ThrowsAsync<LocalEngineException>(() => host.Client.Search.StartAsync("must not run"));
+            await host.Client.Application.SetPreferencesAsync(new JsonObject { ["search_enabled"] = true });
 
             var creatorSource = Path.Combine(dataRoot, "creator-source.txt");
             await File.WriteAllTextAsync(creatorSource, "created directly by libtorrent");

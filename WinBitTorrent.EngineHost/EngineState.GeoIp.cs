@@ -38,7 +38,7 @@ internal sealed partial class EngineState
 
     private async Task<JsonElement> GetTorrentPeersWithGeoIpAsync(JsonElement payload, CancellationToken cancellationToken)
     {
-        var result = _native.Invoke(EngineRpcMethods.SyncTorrentPeers, payload);
+        var result = InvokeNative(EngineRpcMethods.SyncTorrentPeers, payload);
         if (_geoIpReader is null) return result;
         var preferences = await LoadPreferencesAsync(cancellationToken).ConfigureAwait(false);
         if (preferences.TryGetProperty("resolve_peer_countries", out var enabled) && !enabled.GetBoolean()) return result;
