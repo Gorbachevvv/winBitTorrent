@@ -106,6 +106,12 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private FilterItemViewModel? _selectedFilter;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(StartSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StopSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RecheckSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ReannounceSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(MoveUpSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(MoveDownSelectedCommand))]
     private TorrentRowViewModel? _selectedTorrent;
 
     [ObservableProperty]
@@ -224,10 +230,10 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             : _rows.Values.FirstOrDefault(row => TorrentIdentity.Matches(row.Model, candidates));
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteSelectedCommand))]
     public Task StartSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.Start);
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteSelectedCommand))]
     public Task StopSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.Stop);
 
     public async Task ExecuteAllAsync(TorrentCommand command)
@@ -237,17 +243,19 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         await RefreshNowAsync();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteSelectedCommand))]
     public Task RecheckSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.Recheck);
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteSelectedCommand))]
     public Task ReannounceSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.Reannounce);
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteSelectedCommand))]
     public Task MoveUpSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.IncreasePriority);
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteSelectedCommand))]
     public Task MoveDownSelectedAsync() => ExecuteSelectedAsync(TorrentCommand.DecreasePriority);
+
+    private bool CanExecuteSelectedCommand() => HasSelectedTorrent;
 
     public async Task DeleteSelectedAsync(bool deleteFiles)
     {

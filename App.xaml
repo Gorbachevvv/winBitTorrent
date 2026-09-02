@@ -51,9 +51,10 @@
                 <Setter Property="SelectionMode" Value="Single" />
                 <Setter Property="IsItemClickEnabled" Value="True" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                <!-- Expander already indents its content. Pull the list back toward the
-                     section edge so the item template does not receive two left gutters. -->
-                <Setter Property="Margin" Value="-16,0,0,0" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="ItemContainerStyle" Value="{StaticResource CompactSidebarListViewItemStyle}" />
                 <Setter Property="ItemContainerTransitions">
                     <Setter.Value>

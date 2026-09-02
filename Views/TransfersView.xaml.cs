@@ -28,12 +28,18 @@ namespace WinBitTorrent.Views;
 
 public sealed partial class TransfersView : UserControl
 {
+    private static readonly InputCursor HorizontalResizeCursor =
+        InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+    private static readonly InputCursor VerticalResizeCursor =
+        InputSystemCursor.Create(InputSystemCursorShape.SizeNorthSouth);
+
     private const double SidebarDefaultWidth = 220;
     private const double SidebarMinExpandedWidth = 180;
     private const double SidebarMaxWidth = 300;
     private const double SidebarCollapseThreshold = 112;
-    private const double SidebarSplitterWidth = 6;
-    private const double SidebarRevealRailWidth = 40;
+    private const double SidebarSplitterWidth = 10;
+    private const double ColumnMenuMinHeight = 320;
+    private const double ColumnMenuMaxHeight = 480;
 
     private static readonly int[] FilePriorityValues = [0, 1, 6, 7];
     private readonly ObservableCollection<TorrentFileTreeNode> _fileTreeRoots = [];
@@ -42,6 +48,7 @@ public sealed partial class TransfersView : UserControl
     private bool _fileTreeRefreshQueued;
     private bool _isRefreshingFiles;
     private bool _sidebarCollapsed;
+    private double _sidebarDragWidth;
     private double _expandedSidebarWidth = SidebarDefaultWidth;
     private int _detailsSelectedIndex;
     private Storyboard? _detailsTransition;
@@ -318,61 +325,77 @@ public sealed partial class TransfersView : UserControl
         SaveLayout();
     }
 
+    private void DetailsSplitter_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = VerticalResizeCursor;
+        DetailsSplitterGrip.Opacity = 1;
+    }
+
+    private void SidebarSplitter_PointerEntered(object sender, PointerRoutedEventArgs e)
+        => ProtectedCursor = HorizontalResizeCursor;
+
+    private void Splitter_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        ProtectedCursor = null;
+        if (ReferenceEquals(sender, DetailsSplitter))
+            DetailsSplitterGrip.Opacity = 0.72;
+    }
+
+    private void SidebarSplitter_DragStarted(object sender, DragStartedEventArgs e)
+    {
+        _sidebarDragWidth = _sidebarCollapsed ? 0 : SidebarColumn.ActualWidth;
+        if (_sidebarCollapsed)
+            SidebarPanel.Visibility = Visibility.Visible;
+        UpdateSidebarPanelClip(_sidebarDragWidth);
+    }
+
     private void SidebarSplitter_DragDelta(object sender, DragDeltaEventArgs e)
     {
-        if (_sidebarCollapsed)
-            return;
-
-        var targetWidth = Math.Clamp(SidebarColumn.ActualWidth + e.HorizontalChange, 0, SidebarMaxWidth);
-        if (targetWidth <= SidebarCollapseThreshold)
-        {
-            SetSidebarCollapsed(true);
-            return;
-        }
-
-        SidebarColumn.Width = new GridLength(targetWidth);
-        _expandedSidebarWidth = targetWidth;
+        _sidebarDragWidth = Math.Clamp(_sidebarDragWidth + e.HorizontalChange, 0, SidebarMaxWidth);
+        SidebarColumn.Width = new GridLength(_sidebarDragWidth);
+        SidebarPanel.Visibility = _sidebarDragWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
+        UpdateSidebarPanelClip(_sidebarDragWidth);
     }
 
     private void SidebarSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
     {
-        if (_sidebarCollapsed)
-            return;
-
-        if (SidebarColumn.ActualWidth < SidebarMinExpandedWidth)
+        if (_sidebarDragWidth <= SidebarCollapseThreshold)
         {
             SetSidebarCollapsed(true);
             return;
         }
 
-        _expandedSidebarWidth = Math.Clamp(SidebarColumn.ActualWidth, SidebarMinExpandedWidth, SidebarMaxWidth);
-        SidebarColumn.Width = new GridLength(_expandedSidebarWidth);
-        SaveLayout();
+        _expandedSidebarWidth = Math.Clamp(_sidebarDragWidth, SidebarMinExpandedWidth, SidebarMaxWidth);
+        SetSidebarCollapsed(false);
     }
 
-    private void SidebarCollapse_Click(object sender, RoutedEventArgs e)
-        => SetSidebarCollapsed(true);
+    private void SidebarPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+        => UpdateSidebarPanelClip(Math.Min(SidebarColumn.ActualWidth, e.NewSize.Width));
 
-    private void SidebarExpand_Click(object sender, RoutedEventArgs e)
-        => SetSidebarCollapsed(false);
+    private void UpdateSidebarPanelClip(double visibleWidth)
+    {
+        var visibleHeight = Math.Max(SidebarPanel.ActualHeight, LayoutRoot.ActualHeight);
+        SidebarPanelClip.Rect = new Rect(0, 0, Math.Max(0, visibleWidth), Math.Max(0, visibleHeight));
+    }
 
     private void SidebarSplitter_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        => SetSidebarCollapsed(true);
+        => SetSidebarCollapsed(!_sidebarCollapsed);
 
     private void ConfigureSidebarAccessibility()
     {
         var header = Localizer.Get("Sidebar_Filters", "Filters");
-        var collapse = Localizer.Get("Sidebar_Collapse", "Collapse filters");
-        var expand = Localizer.Get("Sidebar_Expand", "Expand filters");
-        var resize = Localizer.Get("Sidebar_Resize", "Drag to resize. Double-click to collapse.");
 
         SidebarHeaderText.Text = header;
-        ToolTipService.SetToolTip(SidebarCollapseButton, collapse);
-        ToolTipService.SetToolTip(SidebarExpandButton, expand);
-        ToolTipService.SetToolTip(SidebarSplitter, resize);
-        AutomationProperties.SetName(SidebarCollapseButton, collapse);
-        AutomationProperties.SetName(SidebarExpandButton, expand);
-        AutomationProperties.SetName(SidebarSplitter, resize);
+        UpdateSidebarSplitterAccessibility();
+    }
+
+    private void UpdateSidebarSplitterAccessibility()
+    {
+        var description = _sidebarCollapsed
+            ? Localizer.Get("Sidebar_Expand", "Expand filters")
+            : Localizer.Get("Sidebar_Resize", "Drag to resize. Double-click to collapse.");
+        ToolTipService.SetToolTip(SidebarSplitter, description);
+        AutomationProperties.SetName(SidebarResizeThumb, description);
     }
 
     private void SetSidebarCollapsed(bool collapsed, bool save = true)
@@ -382,12 +405,12 @@ public sealed partial class TransfersView : UserControl
 
         _sidebarCollapsed = collapsed;
         SidebarPanel.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
-        SidebarSplitter.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
-        SidebarRevealRail.Visibility = collapsed ? Visibility.Visible : Visibility.Collapsed;
         SidebarColumn.Width = collapsed
             ? new GridLength(0)
             : new GridLength(Math.Clamp(_expandedSidebarWidth, SidebarMinExpandedWidth, SidebarMaxWidth));
-        SidebarDividerColumn.Width = new GridLength(collapsed ? SidebarRevealRailWidth : SidebarSplitterWidth);
+        SidebarDividerColumn.Width = new GridLength(SidebarSplitterWidth);
+        UpdateSidebarPanelClip(collapsed ? 0 : _expandedSidebarWidth);
+        UpdateSidebarSplitterAccessibility();
 
         if (save)
             SaveLayout();
@@ -1328,7 +1351,15 @@ public sealed partial class TransfersView : UserControl
         if (!IsColumnHeader(e.OriginalSource as DependencyObject))
             return;
 
-        var flyout = new MenuFlyout();
+        // The complete column set is intentionally long. Limit the presenter instead of letting
+        // it consume the monitor height; MenuFlyoutPresenter keeps its native mouse-wheel and
+        // touch scrolling when constrained by MaxHeight.
+        var presenterStyle = new Style(typeof(MenuFlyoutPresenter));
+        presenterStyle.Setters.Add(new Setter(
+            FrameworkElement.MaxHeightProperty,
+            Math.Clamp(ActualHeight * 0.58, ColumnMenuMinHeight, ColumnMenuMaxHeight)));
+
+        var flyout = new MenuFlyout { MenuFlyoutPresenterStyle = presenterStyle };
         foreach (var column in TorrentTable.Columns.OrderBy(static column => column.Order))
         {
             // The leading status-icon column has no header text and no business being hidden.

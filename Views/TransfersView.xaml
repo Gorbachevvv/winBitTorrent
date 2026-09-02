@@ -24,27 +24,32 @@
     <Grid x:Name="LayoutRoot">
         <Grid.ColumnDefinitions>
             <ColumnDefinition x:Name="SidebarColumn" Width="220" />
-            <ColumnDefinition x:Name="SidebarDividerColumn" Width="6" />
+            <ColumnDefinition x:Name="SidebarDividerColumn" Width="10" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <Border
             x:Name="SidebarPanel"
             Grid.Column="0"
-            Margin="0,0,4,0"
             Background="{ThemeResource LayerFillColorDefaultBrush}"
-            CornerRadius="6">
+            CornerRadius="6"
+            MinWidth="180"
+            SizeChanged="SidebarPanel_SizeChanged">
+            <Border.Clip>
+                <!-- Below the useful minimum width, keep the filter layout stable and reveal or
+                     hide it through this clip instead of squeezing its controls. -->
+                <RectangleGeometry x:Name="SidebarPanelClip" Rect="0,0,300,10000" />
+            </Border.Clip>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Grid Padding="12,8,6,6" ColumnSpacing="8">
+                <Grid Padding="12,8,12,6" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <FontIcon FontSize="14" Glyph="&#xE71C;" />
                     <TextBlock
@@ -53,21 +58,11 @@
                         VerticalAlignment="Center"
                         FontWeight="SemiBold"
                         Text="Filters" />
-                    <Button
-                        x:Name="SidebarCollapseButton"
-                        Grid.Column="2"
-                        Width="32"
-                        Height="32"
-                        Padding="0"
-                        Click="SidebarCollapse_Click"
-                        Style="{StaticResource CompactToolbarButtonStyle}">
-                        <FontIcon FontSize="12" Glyph="&#xE76B;" />
-                    </Button>
                 </Grid>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel HorizontalAlignment="Stretch" Padding="4,2,4,6" Spacing="2">
-                    <Expander x:Uid="StatusFilter" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Header="Status" IsExpanded="True">
+                    <Expander x:Uid="StatusFilter" Padding="4,4,4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" Header="Status" IsExpanded="True">
                         <ListView
                             x:Name="StatusList"
                             Style="{StaticResource SidebarListViewStyle}"
@@ -89,7 +84,7 @@
                             </ListView.ItemTemplate>
                         </ListView>
                     </Expander>
-                    <Expander x:Uid="CategoriesFilter" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Header="Categories" IsExpanded="True">
+                    <Expander x:Uid="CategoriesFilter" Padding="4,4,4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" Header="Categories" IsExpanded="True">
                         <ListView x:Name="CategoriesList" Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding CategoryFilters}" SelectionChanged="FilterList_SelectionChanged">
                             <ListView.ContextFlyout><MenuFlyout><MenuFlyoutItem x:Uid="NewCategory" Text="New category…" Click="CreateCategory_Click" /><MenuFlyoutItem x:Uid="EditCategory" Text="Edit category…" Click="EditCategory_Click" /><MenuFlyoutItem x:Uid="DeleteCategory" Text="Delete category" Click="DeleteCategory_Click" /></MenuFlyout></ListView.ContextFlyout>
                             <ListView.ItemTemplate>
@@ -104,7 +99,7 @@
                             </ListView.ItemTemplate>
                         </ListView>
                     </Expander>
-                    <Expander x:Uid="TagsFilter" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Header="Tags" IsExpanded="True">
+                    <Expander x:Uid="TagsFilter" Padding="4,4,4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" Header="Tags" IsExpanded="True">
                         <ListView x:Name="TagsList" Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding TagFilters}" SelectionChanged="FilterList_SelectionChanged">
                             <ListView.ContextFlyout><MenuFlyout><MenuFlyoutItem x:Uid="CreateTags" Text="Create tags…" Click="CreateTags_Click" /><MenuFlyoutItem x:Uid="DeleteTag" Text="Delete tag" Click="DeleteTag_Click" /></MenuFlyout></ListView.ContextFlyout>
                             <ListView.ItemTemplate>
@@ -119,7 +114,7 @@
                             </ListView.ItemTemplate>
                         </ListView>
                     </Expander>
-                    <Expander x:Uid="TrackersFilter" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Header="Trackers" IsExpanded="True">
+                    <Expander x:Uid="TrackersFilter" Padding="4,4,4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" Header="Trackers" IsExpanded="True">
                         <ListView Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding TrackerFilters}" SelectionChanged="FilterList_SelectionChanged">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -138,42 +133,26 @@
             </Grid>
         </Border>
 
-        <Grid x:Name="SidebarSplitter" Grid.Column="1" DoubleTapped="SidebarSplitter_DoubleTapped">
+        <Grid
+            x:Name="SidebarSplitter"
+            Grid.Column="1"
+            DoubleTapped="SidebarSplitter_DoubleTapped"
+            PointerEntered="SidebarSplitter_PointerEntered"
+            PointerExited="Splitter_PointerExited">
             <Thumb
+                x:Name="SidebarResizeThumb"
                 Background="Transparent"
                 DragCompleted="SidebarSplitter_DragCompleted"
-                DragDelta="SidebarSplitter_DragDelta" />
-            <Border
-                Width="1"
-                Margin="0,8"
-                HorizontalAlignment="Center"
-                Background="{ThemeResource DividerStrokeColorDefaultBrush}"
-                IsHitTestVisible="False" />
-        </Grid>
-
-        <Grid
-            x:Name="SidebarRevealRail"
-            Grid.Column="1"
-            Background="{ThemeResource LayerFillColorDefaultBrush}"
-            Visibility="Collapsed">
-            <Button
-                x:Name="SidebarExpandButton"
-                Width="32"
-                Height="44"
-                Margin="4,8,4,0"
-                Padding="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top"
-                Click="SidebarExpand_Click"
-                Style="{StaticResource CompactToolbarButtonStyle}">
-                <FontIcon FontSize="14" Glyph="&#xE76C;" />
-            </Button>
+                DragDelta="SidebarSplitter_DragDelta"
+                DragStarted="SidebarSplitter_DragStarted" />
         </Grid>
 
         <Grid x:Name="ContentGrid" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MinHeight="180" />
-                <RowDefinition Height="6" />
+                <!-- A dedicated resize zone keeps the splitter visually and physically separate
+                     from TableView's horizontal scrollbar. -->
+                <RowDefinition Height="10" />
                 <RowDefinition Height="260" MinHeight="140" />
             </Grid.RowDefinitions>
 
@@ -415,13 +394,24 @@
                     Visibility="Collapsed" />
             </Canvas>
 
-            <Grid x:Name="DetailsSplitter" Grid.Row="1">
+            <Grid
+                x:Name="DetailsSplitter"
+                Grid.Row="1"
+                Background="Transparent"
+                PointerEntered="DetailsSplitter_PointerEntered"
+                PointerExited="Splitter_PointerExited">
                 <Border
-                    Height="1"
+                    x:Name="DetailsSplitterGrip"
+                    Width="40"
+                    Height="3"
                     VerticalAlignment="Center"
-                    Background="{ThemeResource DividerStrokeColorDefaultBrush}"
-                    IsHitTestVisible="False" />
-                <Thumb Background="Transparent" DragDelta="DetailsSplitter_DragDelta" />
+                    Background="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                    CornerRadius="2"
+                    IsHitTestVisible="False"
+                    Opacity="0.72" />
+                <Thumb
+                    Background="Transparent"
+                    DragDelta="DetailsSplitter_DragDelta" />
             </Grid>
 
             <!-- The details area is a secondary surface belonging to the selected torrent. The
