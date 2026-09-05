@@ -26,7 +26,12 @@ internal sealed partial class EngineState
                 // Every native invocation drains libtorrent's alert queue. Keeping that work in
                 // EngineHost makes completion, metadata and storage persistence independent of
                 // whether the desktop UI happens to be polling at the time.
-                InvokeNative("engine.poll", EngineJson.EmptyObject);
+                var alerts = InvokeNative("engine.poll", EngineJson.EmptyObject);
+                if (alerts.TryGetProperty("storage_changed", out var changed) && changed.GetBoolean())
+                    await PersistNativeStateAsync(cancellationToken).ConfigureAwait(false);
+                if (alerts.TryGetProperty("storage_errors", out var errors))
+                    foreach (var error in errors.EnumerateArray())
+                        await AppendLogAsync(8, error.GetString() ?? "Storage move failed.", cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
             catch (Exception exception)

@@ -66,6 +66,7 @@
             <MenuBarItem x:Uid="ToolsMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Tools">
                 <MenuFlyoutItem x:Uid="ServerProfiles" Text="Server profiles…" Icon="World" Click="Profiles_Click" />
                 <MenuFlyoutItem x:Uid="Options" Text="Options…" Icon="Setting" Click="Options_Click" />
+                <MenuFlyoutItem x:Uid="Setup_Reopen" Text="First-run setup…" Click="FirstRunSetup_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="CookiesMenu" Text="Cookies…" Click="Cookies_Click" />
                 <MenuFlyoutItem x:Uid="StatisticsMenu" Text="Statistics…" Click="Statistics_Click" />

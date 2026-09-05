@@ -241,6 +241,7 @@ namespace winbittorrent
         std::string display_name;
         std::string download_path;
         std::string complete_path;
+        std::string pending_location;
         bool first_last = false;
         bool force_start = false;
         bool automatic_tmm = false;
@@ -308,7 +309,14 @@ namespace winbittorrent
             if (method == "torrents.parseMetadata") return json::serialize(parse_metadata(payload));
             if (method == "torrents.metadata") return json::serialize(metadata(payload));
             if (method == "engine.saveResume") { save_resume_files(); return "{}"; }
-            if (method == "engine.poll") return "{}";
+            if (method == "engine.poll")
+            {
+                auto errors = std::move(storage_errors_);
+                storage_errors_ = {};
+                auto const changed = storage_changed_;
+                storage_changed_ = false;
+                return json::serialize(json::object{ { "storage_errors", std::move(errors) }, { "storage_changed", changed } });
+            }
             if (method == "engine.restoreAppState") { restore_app_state(payload); return "{}"; }
             if (method == "engine.applySettings") { apply_settings(payload); return "{}"; }
             throw std::runtime_error("Unsupported native method: " + method);
@@ -494,7 +502,7 @@ namespace winbittorrent
             if (auto const* finished = lt::alert_cast<lt::torrent_finished_alert>(alert))
             {
                 auto const& extra = state(finished->handle);
-                if (!extra.complete_path.empty() && finished->handle.status().save_path != extra.complete_path)
+                if (extra.pending_location.empty() && !extra.complete_path.empty() && finished->handle.status().save_path != extra.complete_path)
                     finished->handle.move_storage(extra.complete_path);
                 auto const hash = primary_hash(finished->handle.info_hashes());
                 if (recheck_completed_ && rechecked_completed_.insert(hash).second)
@@ -521,7 +529,25 @@ namespace winbittorrent
             }
             if (auto const* moved = lt::alert_cast<lt::storage_moved_alert>(alert))
             {
+                auto& extra = state(moved->handle);
+                if (!extra.pending_location.empty())
+                {
+                    extra.complete_path = moved->storage_path();
+                    extra.download_path.clear();
+                    extra.pending_location.clear();
+                }
                 completed.push_back(moved->handle);
+                storage_changed_ = true;
+                resume_saved_ = false;
+            }
+            if (auto const* failed = lt::alert_cast<lt::storage_moved_failed_alert>(alert))
+            {
+                state(failed->handle).pending_location.clear();
+                // Keep the last confirmed path; a failed move must not be persisted as success.
+                if (storage_errors_.size() < 100)
+                    storage_errors_.emplace_back(failed->message());
+                completed.push_back(failed->handle);
+                storage_changed_ = true;
                 resume_saved_ = false;
             }
         }
@@ -1131,6 +1157,17 @@ namespace winbittorrent
                 return;
             }
             auto const hash_key = parameters.contains("hashes") ? "hashes" : "hash";
+            if (name == "setLocation")
+            {
+                auto const location = utf8_path(text(parameters, "location"));
+                if (location.empty() || !location.is_absolute())
+                    throw std::runtime_error("Torrent location must be an absolute directory path.");
+                // Validate all selected torrents before starting any asynchronous move.
+                for (auto const& handle : selected(text(parameters, hash_key)))
+                    if (!state(handle).pending_location.empty() || handle.status().moving_storage)
+                        throw std::runtime_error("A storage move is already in progress.");
+                fs::create_directories(location);
+            }
             for (auto const& handle : selected(text(parameters, hash_key)))
             {
                 auto& extra = state(handle);
@@ -1162,7 +1199,11 @@ namespace winbittorrent
                 }
                 else if (name == "addTags") for (auto const& value : split(text(parameters, "tags"))) { extra.tags.insert(value); global_tags_.insert(value); }
                 else if (name == "removeTags") for (auto const& value : split(text(parameters, "tags"))) extra.tags.erase(value);
-                else if (name == "setLocation") { extra.complete_path = text(parameters, "location"); handle.move_storage(extra.complete_path); }
+                else if (name == "setLocation")
+                {
+                    extra.pending_location = text(parameters, "location");
+                    handle.move_storage(extra.pending_location);
+                }
                 else if (name == "setDownloadLimit") handle.set_download_limit(static_cast<int>(integer(parameters, "limit")));
                 else if (name == "setUploadLimit") handle.set_upload_limit(static_cast<int>(integer(parameters, "limit")));
                 else if (name == "setShareLimits") { extra.ratio_limit = number(parameters, "ratioLimit", -1); extra.seeding_time_limit = static_cast<int>(integer(parameters, "seedingTimeLimit", -1)); extra.inactive_seeding_time_limit = static_cast<int>(integer(parameters, "inactiveSeedingTimeLimit", -1)); }
@@ -1472,6 +1513,8 @@ namespace winbittorrent
         std::unordered_map<std::string, app_state> states_;
         std::unordered_map<std::string, std::pair<std::string, std::string>> categories_;
         std::set<std::string> global_tags_;
+        json::array storage_errors_;
+        bool storage_changed_ = false;
         bool alternative_limits_ = false;
         std::int64_t download_limit_ = 0;
         std::int64_t upload_limit_ = 0;

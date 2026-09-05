@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>1.2.0</Version>
+    <Version>2.0.0</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <!-- The app only ships en-US, ru-RU and be-BY; without this, every NuGet
          package's satellite resources (Microsoft.UI.Xaml.dll.mui etc.) get

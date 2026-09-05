@@ -207,7 +207,7 @@
   <data name="Settings_ManagedTooltip" xml:space="preserve"><value>Управляется WinBitTorrent и доступно только через loopback.</value></data>
   <data name="Settings_ManagedTitle" xml:space="preserve"><value>Управляемый локальный профиль</value></data>
   <data name="Settings_ManagedMessage" xml:space="preserve"><value>Адрес, порт и аутентификация веб-интерфейса управляются WinBitTorrent.</value></data>
-  <data name="Settings_Applied" xml:space="preserve"><value>Настройки применены. Для смены языка, темы или плотности перезапустите приложение.</value></data>
+  <data name="Settings_Applied" xml:space="preserve"><value>Настройки применены.</value></data>
   <data name="Choice_System" xml:space="preserve"><value>Системный язык</value></data>
   <data name="Choice_English" xml:space="preserve"><value>English</value></data>
   <data name="Choice_Russian" xml:space="preserve"><value>Русский</value></data>
@@ -805,4 +805,85 @@
   <data name="Dialog_AddTorrentLinks_Primary" xml:space="preserve"><value>Продолжить</value></data>
   <data name="Dialog_AddTorrentLinks_Required" xml:space="preserve"><value>Введите хотя бы одну ссылку на торрент.</value></data>
   <data name="Dialog_AddTorrentLinks_Invalid" xml:space="preserve"><value>Строка {0} не является допустимой ссылкой на торрент или инфо-хешем.</value></data>
+  <data name="SetupText_Appearance" xml:space="preserve"><value>Оформление</value></data>
+  <data name="Setup_Appearance.Text" xml:space="preserve"><value>Оформление</value></data>
+  <data name="SetupText_Downloads" xml:space="preserve"><value>Загрузки</value></data>
+  <data name="Setup_Downloads.Text" xml:space="preserve"><value>Загрузки</value></data>
+  <data name="SetupText_Ready" xml:space="preserve"><value>Всё готово</value></data>
+  <data name="Setup_Ready.Text" xml:space="preserve"><value>Всё готово</value></data>
+  <data name="SetupText_SystemLabel" xml:space="preserve"><value>Системная</value></data>
+  <data name="Setup_SystemLabel.Text" xml:space="preserve"><value>Системная</value></data>
+  <data name="SetupText_LightLabel" xml:space="preserve"><value>Светлая</value></data>
+  <data name="Setup_LightLabel.Text" xml:space="preserve"><value>Светлая</value></data>
+  <data name="SetupText_DarkLabel" xml:space="preserve"><value>Тёмная</value></data>
+  <data name="Setup_DarkLabel.Text" xml:space="preserve"><value>Тёмная</value></data>
+  <data name="SetupText_PreviewTitle" xml:space="preserve"><value>Устраивайтесь поудобнее</value></data>
+  <data name="Setup_PreviewTitle.Text" xml:space="preserve"><value>Устраивайтесь поудобнее</value></data>
+  <data name="SetupText_PreviewHint" xml:space="preserve"><value>Тема меняется сразу. Позже её можно изменить в настройках.</value></data>
+  <data name="Setup_PreviewHint.Text" xml:space="preserve"><value>Тема меняется сразу. Позже её можно изменить в настройках.</value></data>
+  <data name="SetupText_FolderTitle" xml:space="preserve"><value>Место для ваших файлов</value></data>
+  <data name="Setup_FolderTitle.Text" xml:space="preserve"><value>Место для ваших файлов</value></data>
+  <data name="SetupText_FolderHint" xml:space="preserve"><value>Сюда будут сохраняться новые торренты. Для каждой загрузки можно выбрать другую папку.</value></data>
+  <data name="Setup_FolderHint.Text" xml:space="preserve"><value>Сюда будут сохраняться новые торренты. Для каждой загрузки можно выбрать другую папку.</value></data>
+  <data name="SetupText_Browse" xml:space="preserve"><value>Выбрать папку…</value></data>
+  <data name="Setup_Browse.Content" xml:space="preserve"><value>Выбрать папку…</value></data>
+  <data name="SetupText_NotifyTitle" xml:space="preserve"><value>Сообщать о важном</value></data>
+  <data name="Setup_NotifyTitle.Text" xml:space="preserve"><value>Сообщать о важном</value></data>
+  <data name="SetupText_NotifyHint" xml:space="preserve"><value>Показывать уведомления о завершении загрузок и событиях, требующих внимания.</value></data>
+  <data name="Setup_NotifyHint.Text" xml:space="preserve"><value>Показывать уведомления о завершении загрузок и событиях, требующих внимания.</value></data>
+  <data name="SetupText_StartupTitle" xml:space="preserve"><value>Запускать вместе с Windows</value></data>
+  <data name="Setup_StartupTitle.Text" xml:space="preserve"><value>Запускать вместе с Windows</value></data>
+  <data name="SetupText_StartupHint" xml:space="preserve"><value>Автоматически открывать WinBitTorrent при входе в систему.</value></data>
+  <data name="Setup_StartupHint.Text" xml:space="preserve"><value>Автоматически открывать WinBitTorrent при входе в систему.</value></data>
+  <data name="SetupText_LinksTitle" xml:space="preserve"><value>Открывайте торренты одним кликом</value></data>
+  <data name="Setup_LinksTitle.Text" xml:space="preserve"><value>Открывайте торренты одним кликом</value></data>
+  <data name="SetupText_LinksHint" xml:space="preserve"><value>Выберите WinBitTorrent для файлов .torrent и magnet-ссылок в разделе Windows «Приложения по умолчанию».</value></data>
+  <data name="Setup_LinksHint.Text" xml:space="preserve"><value>Выберите WinBitTorrent для файлов .torrent и magnet-ссылок в разделе Windows «Приложения по умолчанию».</value></data>
+  <data name="SetupText_DefaultApps" xml:space="preserve"><value>Приложения по умолчанию ↗</value></data>
+  <data name="Setup_DefaultApps.Content" xml:space="preserve"><value>Приложения по умолчанию ↗</value></data>
+  <data name="SetupText_WindowsHint" xml:space="preserve"><value>Автозапуск и приложения по умолчанию также можно изменить в параметрах Windows.</value></data>
+  <data name="Setup_WindowsHint.Text" xml:space="preserve"><value>Автозапуск и приложения по умолчанию также можно изменить в параметрах Windows.</value></data>
+  <data name="SetupText_SummaryTitle" xml:space="preserve"><value>Ваши настройки</value></data>
+  <data name="Setup_SummaryTitle.Text" xml:space="preserve"><value>Ваши настройки</value></data>
+  <data name="SetupText_ReadyHint" xml:space="preserve"><value>Всё подходит? Сохраните настройки и добавьте первый торрент.</value></data>
+  <data name="Setup_ReadyHint.Text" xml:space="preserve"><value>Всё подходит? Сохраните настройки и добавьте первый торрент.</value></data>
+  <data name="SetupText_FolderPath" xml:space="preserve"><value>Папка загрузок</value></data>
+  <data name="Setup_FolderPath.Header" xml:space="preserve"><value>Папка загрузок</value></data>
+  <data name="SetupText_SystemTheme" xml:space="preserve"><value>Использовать тему Windows</value></data>
+  <data name="Setup_SystemTheme.AutomationProperties.Name" xml:space="preserve"><value>Использовать тему Windows</value></data>
+  <data name="SetupText_LightTheme" xml:space="preserve"><value>Использовать светлую тему</value></data>
+  <data name="Setup_LightTheme.AutomationProperties.Name" xml:space="preserve"><value>Использовать светлую тему</value></data>
+  <data name="SetupText_DarkTheme" xml:space="preserve"><value>Использовать тёмную тему</value></data>
+  <data name="Setup_DarkTheme.AutomationProperties.Name" xml:space="preserve"><value>Использовать тёмную тему</value></data>
+  <data name="SetupText_Later" xml:space="preserve"><value>Настроить позже</value></data>
+  <data name="SetupText_Back" xml:space="preserve"><value>Назад</value></data>
+  <data name="SetupText_AccessibleTitle" xml:space="preserve"><value>Добро пожаловать в WinBitTorrent</value></data>
+  <data name="SetupText_TitleAppearance" xml:space="preserve"><value>В вашем стиле.</value></data>
+  <data name="SetupText_TitleDownloads" xml:space="preserve"><value>Всё на своём месте.</value></data>
+  <data name="SetupText_TitleWindows" xml:space="preserve"><value>В ритме вашей Windows.</value></data>
+  <data name="SetupText_TitleReady" xml:space="preserve"><value>Можно начинать.</value></data>
+  <data name="SetupText_DescAppearance" xml:space="preserve"><value>Добро пожаловать! Давайте настроим WinBitTorrent под вас.</value></data>
+  <data name="SetupText_DescDownloads" xml:space="preserve"><value>Выберите папку для загрузок и настройте уведомления.</value></data>
+  <data name="SetupText_DescWindows" xml:space="preserve"><value>Пара настроек, чтобы каждый день было удобнее.</value></data>
+  <data name="SetupText_DescReady" xml:space="preserve"><value>Проверьте выбранные параметры — и переходите к загрузкам.</value></data>
+  <data name="SetupText_StepFormat" xml:space="preserve"><value>ПЕРВЫЙ ЗАПУСК  /  {0} ИЗ 4</value></data>
+  <data name="SetupText_Finish" xml:space="preserve"><value>Начать работу</value></data>
+  <data name="SetupText_Next" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="SetupText_Saving" xml:space="preserve"><value>Сохранение…</value></data>
+  <data name="SetupText_On" xml:space="preserve"><value>Включён</value></data>
+  <data name="SetupText_Off" xml:space="preserve"><value>Выключен</value></data>
+  <data name="SetupText_SummaryTheme" xml:space="preserve"><value>Тема: {0}</value></data>
+  <data name="SetupText_SummaryPath" xml:space="preserve"><value>Папка загрузок: {0}</value></data>
+  <data name="SetupText_SummaryStartup" xml:space="preserve"><value>Автозапуск: {0}</value></data>
+  <data name="SetupText_SummaryNotifications" xml:space="preserve"><value>Уведомления: {0}</value></data>
+  <data name="SetupText_BackendUnavailable" xml:space="preserve"><value>Нет соединения с движком загрузок. Подождите немного и попробуйте снова.</value></data>
+  <data name="SetupText_FolderRequired" xml:space="preserve"><value>Выберите папку на шаге «Загрузки».</value></data>
+  <data name="SetupText_FolderAbsolute" xml:space="preserve"><value>Укажите полный путь к папке, например C:\Downloads.</value></data>
+  <data name="SetupText_FolderNotApplied" xml:space="preserve"><value>Не удалось применить папку загрузок. Выберите другую папку и попробуйте снова.</value></data>
+  <data name="SetupText_DefaultAppsFailed" xml:space="preserve"><value>Откройте Параметры Windows → Приложения → Приложения по умолчанию и выберите WinBitTorrent.</value></data>
+  <data name="SetupText_StartupBlocked" xml:space="preserve"><value>Windows заблокировала автозапуск. Разрешите его в Параметрах → Приложения → Автозагрузка или выключите эту опцию, чтобы продолжить.</value></data>
+  <data name="SetupText_StartupPolicy" xml:space="preserve"><value>Автозапуск управляется администратором. Отключить его не удалось.</value></data>
+  <data name="SetupText_Reopen" xml:space="preserve"><value>Первоначальная настройка…</value></data>
+  <data name="Setup_Reopen.Text" xml:space="preserve"><value>Первоначальная настройка…</value></data>
+  <data name="Settings_AppliedRestartLanguage" xml:space="preserve"><value>Настройки применены. Для смены языка перезапустите приложение.</value></data>
 </root>

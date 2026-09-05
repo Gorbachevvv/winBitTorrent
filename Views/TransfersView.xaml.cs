@@ -916,10 +916,71 @@ public sealed partial class TransfersView : UserControl
 
     private async void SetLocation_Click(object sender, RoutedEventArgs e)
     {
-        var value = await PromptAsync(Localizer.Get("Dialog_SetTorrentLocation", "Set torrent location"), Localizer.Get("Dialog_ServerPath", "Path on the torrent backend"), ViewModel.SelectedTorrent?.Model.SavePath);
-        if (string.IsNullOrWhiteSpace(value))
+        var input = new TextBox
+        {
+            Text = ViewModel.SelectedTorrent?.Model.SavePath ?? string.Empty,
+            PlaceholderText = Localizer.Get("Dialog_ServerPath", "Path on the torrent backend"),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        AutomationProperties.SetName(input, input.PlaceholderText);
+        var panel = new Grid { ColumnSpacing = 8, MinWidth = 320 };
+        panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        panel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        panel.Children.Add(input);
+        var pickerError = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed, Margin = new Thickness(0, 8, 0, 0) };
+        Grid.SetRow(pickerError, 1);
+        Grid.SetColumnSpan(pickerError, 2);
+        panel.Children.Add(pickerError);
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = Localizer.Get("Dialog_SetTorrentLocation", "Set torrent location"),
+            Content = panel,
+            PrimaryButtonText = Localizer.Get("Common_Apply", "Apply"),
+            CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"),
+            DefaultButton = ContentDialogButton.Primary,
+            IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(input.Text)
+        };
+        input.TextChanged += (_, _) => dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(input.Text);
+        // A Windows picker cannot choose a directory on a remote torrent server.
+        if (ViewModel.CanUseLocalFiles)
+        {
+            var browse = new Button
+            {
+                Content = Localizer.Get("CommonBrowse.Content", "Browse…"),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            panel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(browse, 1);
+            panel.Children.Add(browse);
+            browse.Click += async (_, _) =>
+            {
+                browse.IsEnabled = false;
+                pickerError.Visibility = Visibility.Collapsed;
+                try
+                {
+                    var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.Downloads };
+                    picker.FileTypeFilter.Add("*");
+                    InitializePicker(picker);
+                    if (await picker.PickSingleFolderAsync() is { } folder)
+                        input.Text = folder.Path;
+                }
+                catch (Exception exception)
+                {
+                    // Do not open another ContentDialog while this one is active.
+                    pickerError.Text = exception.Message;
+                    pickerError.Visibility = Visibility.Visible;
+                }
+                finally
+                {
+                    browse.IsEnabled = true;
+                }
+            };
+        }
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(input.Text))
             return;
-        await ExecuteMenuActionAsync(() => ViewModel.SetLocationSelectedAsync(value.Trim()));
+        await ExecuteMenuActionAsync(() => ViewModel.SetLocationSelectedAsync(input.Text.Trim()));
     }
 
     private async void AddTrackers_Click(object sender, RoutedEventArgs e)

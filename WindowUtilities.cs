@@ -12,6 +12,46 @@ namespace WinBitTorrent;
 
 internal static class WindowUtilities
 {
+    private static readonly Dictionary<Window, Action<ElementTheme>> ThemeWindows = [];
+    private static readonly List<(Window Owner, ElementTheme Theme)> ThemePreviews = [];
+
+    private static ElementTheme EffectiveTheme => ThemePreviews.Count > 0 ? ThemePreviews[^1].Theme : CurrentTheme();
+
+    internal static void RegisterThemeWindow(Window window, AppWindow appWindow, FrameworkElement root)
+    {
+        void Apply(ElementTheme theme)
+        {
+            root.RequestedTheme = theme;
+            ApplyTitleBarTheme(appWindow, theme);
+        }
+        ThemeWindows.Add(window, Apply);
+        Apply(EffectiveTheme);
+        window.Closed += (_, _) =>
+        {
+            ThemeWindows.Remove(window);
+            EndThemePreview(window);
+        };
+    }
+
+    internal static void PreviewTheme(Window owner, ElementTheme theme)
+    {
+        ThemePreviews.RemoveAll(preview => ReferenceEquals(preview.Owner, owner));
+        ThemePreviews.Add((owner, theme));
+        RefreshThemes();
+    }
+
+    internal static void EndThemePreview(Window owner)
+    {
+        ThemePreviews.RemoveAll(preview => ReferenceEquals(preview.Owner, owner));
+        RefreshThemes();
+    }
+
+    private static void RefreshThemes()
+    {
+        var theme = EffectiveTheme;
+        foreach (var apply in ThemeWindows.Values) apply(theme);
+    }
+
     private const int GwlpHwndParent = -8;
     private const int CaptionButtonReservedWidth = 138;
     private const int TitleBarHeight = 36;
@@ -161,7 +201,8 @@ internal static class WindowUtilities
 
         originalContent.HorizontalAlignment = HorizontalAlignment.Stretch;
         originalContent.VerticalAlignment = VerticalAlignment.Stretch;
-        originalContent.RequestedTheme = theme;
+        // Inherit live changes from the chrome root instead of pinning the old theme.
+        originalContent.RequestedTheme = ElementTheme.Default;
 
         var chromeRoot = new Grid
         {
@@ -180,6 +221,7 @@ internal static class WindowUtilities
         chromeRoot.Children.Add(originalContent);
         window.Content = chromeRoot;
         window.SetTitleBar(titleBarContent);
+        RegisterThemeWindow(window, appWindow, chromeRoot);
     }
 
     private static Grid CreateTitleBar(string title)

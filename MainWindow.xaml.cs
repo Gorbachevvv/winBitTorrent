@@ -38,7 +38,6 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         RootGrid.DataContext = viewModel;
         RestoreWorkspaceTabs();
-        RootGrid.RequestedTheme = WindowUtilities.CurrentTheme();
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBarDragRegion);
@@ -47,9 +46,7 @@ public sealed partial class MainWindow : Window
         var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(_windowHandle);
         _appWindow = AppWindow.GetFromWindowId(windowId);
         _appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "WinBitTorrent.ico"));
-        // The main window builds its own title bar in XAML instead of going through ConfigureOwned,
-        // so it has to theme the caption buttons itself.
-        WindowUtilities.ApplyTitleBarTheme(_appWindow, RootGrid.RequestedTheme);
+        WindowUtilities.RegisterThemeWindow(this, _appWindow, RootGrid);
         WindowUtilities.RestoreMainWindow(_appWindow, _windowHandle);
         _windowPlacementSaveTimer = DispatcherQueue.CreateTimer();
         _windowPlacementSaveTimer.Interval = TimeSpan.FromMilliseconds(500);
@@ -80,6 +77,11 @@ public sealed partial class MainWindow : Window
 
     public void HandleActivation(AppActivationArguments args, bool isInitialLaunch = false)
     {
+        if (_startupPending || _setupOpen)
+        {
+            _pendingActivations.Enqueue((args, isInitialLaunch));
+            return;
+        }
         switch (args.Kind)
         {
             case ExtendedActivationKind.File when args.Data is IFileActivatedEventArgs fileArgs:
@@ -498,6 +500,11 @@ public sealed partial class MainWindow : Window
             return;
 
         args.Cancel = true;
+        if (_setupOpen)
+        {
+            _ = ExitApplicationAsync();
+            return;
+        }
         HideToTray();
     }
 

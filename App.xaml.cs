@@ -126,9 +126,7 @@ public partial class App : Application
         _window.Activate();
         if (_window is MainWindow mainWindow)
         {
-            mainWindow.HandleActivation(current.GetActivatedEventArgs(), isInitialLaunch: true);
-            _ = mainWindow.ViewModel.InitializeAsync();
-            mainWindow.ScheduleStartupUpdateCheck();
+            mainWindow.StartApplication(current.GetActivatedEventArgs());
         }
     }
 

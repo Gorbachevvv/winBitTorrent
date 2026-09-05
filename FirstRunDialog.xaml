@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="WinBitTorrent.FirstRunDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    AutomationProperties.AutomationId="FirstRunDialog"
+    CornerRadius="16"
+    DefaultButton="Primary"
+    PrimaryButtonClick="Next_Click"
+    SecondaryButtonClick="Back_Click"
+    Closing="Dialog_Closing">
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMaxWidth">860</x:Double>
+        <Thickness x:Key="ContentDialogPadding">24</Thickness>
+        <GridLength x:Key="ContentDialogButtonSpacing">8</GridLength>
+        <Thickness x:Key="ContentDialogBorderWidth">1</Thickness>
+        <CornerRadius x:Key="ContentDialogCornerRadius">16</CornerRadius>
+        <SolidColorBrush x:Key="SetupAccentBrush" Color="#258A75" />
+        <SolidColorBrush x:Key="AccentButtonBackground" Color="#177864" />
+        <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#1D8973" />
+        <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#126553" />
+        <SolidColorBrush x:Key="AccentButtonForeground" Color="White" />
+        <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="White" />
+        <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="White" />
+        <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStroke" Color="#258A75" />
+        <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFill" Color="#258A75" />
+        <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokePointerOver" Color="#1D8973" />
+        <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFillPointerOver" Color="#1D8973" />
+        <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#258A75" />
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#258A75" />
+        <Style x:Key="SetupCard" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="18" />
+        </Style>
+        <Style x:Key="SetupHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </ContentDialog.Resources>
+    <ContentDialog.PrimaryButtonStyle>
+        <Style TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="MinHeight" Value="40"/>
+        </Style>
+    </ContentDialog.PrimaryButtonStyle>
+    <ContentDialog.SecondaryButtonStyle>
+        <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="MinHeight" Value="40"/>
+        </Style>
+    </ContentDialog.SecondaryButtonStyle>
+    <ContentDialog.CloseButtonStyle>
+        <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="MinHeight" Value="40"/>
+        </Style>
+    </ContentDialog.CloseButtonStyle>
+    <Grid x:Name="Layout" Width="808" Height="484">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="208"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Border x:Name="Sidebar" CornerRadius="15,0,0,0" Padding="24,28,20,24" RequestedTheme="Dark">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#102C34" Offset="0"/>
+                    <GradientStop Color="#164F56" Offset=".55"/>
+                    <GradientStop Color="#237767" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid RowSpacing="22">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel Spacing="12">
+                    <Border Width="44" Height="44" HorizontalAlignment="Left" CornerRadius="13" Background="#22FFFFFF" BorderBrush="#30FFFFFF" BorderThickness="1">
+                        <Image Width="30" Height="30" Source="ms-appx:///Assets/Square44x44Logo.scale-200.png"/>
+                    </Border>
+                    <TextBlock Text="WinBitTorrent" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Spacing="7" Margin="-8,4,-4,0">
+                    <Button x:Name="Step0" Tag="0" Click="Step_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="8" BorderThickness="0">
+                        <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE790;" FontSize="16"/><TextBlock x:Uid="Setup_Appearance" Text="Appearance"/></StackPanel>
+                    </Button>
+                    <Button x:Name="Step1" Tag="1" Click="Step_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="8" BorderThickness="0">
+                        <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE896;" FontSize="16"/><TextBlock x:Uid="Setup_Downloads" Text="Downloads"/></StackPanel>
+                    </Button>
+                    <Button x:Name="Step2" Tag="2" Click="Step_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="8" BorderThickness="0">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <PathIcon Width="16" Height="16" Data="M0,0 H7 V7 H0 Z M9,0 H16 V7 H9 Z M0,9 H7 V16 H0 Z M9,9 H16 V16 H9 Z"/>
+                            <TextBlock Text="Windows"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="Step3" Tag="3" Click="Step_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10" CornerRadius="8" BorderThickness="0">
+                        <StackPanel Orientation="Horizontal" Spacing="12"><FontIcon Glyph="&#xE73E;" FontSize="16"/><TextBlock x:Uid="Setup_Ready" Text="Ready to go"/></StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel x:Name="SidebarNote" Grid.Row="3" Spacing="8">
+                    <TextBlock Text="●  PEER TO PEER" FontSize="10" CharacterSpacing="130" Foreground="#B4F1D1"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <ScrollViewer x:Name="PageScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Padding="28,26,28,20" Spacing="18">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="StepCaption" FontSize="11" FontWeight="SemiBold" CharacterSpacing="100" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <ProgressBar x:Name="StepProgress" Minimum="0" Maximum="4" Height="3" Value="1" Foreground="{StaticResource SetupAccentBrush}" />
+                    <TextBlock x:Name="Heading" FontSize="27" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,0" AutomationProperties.HeadingLevel="Level1"/>
+                    <TextBlock x:Name="Description" Style="{StaticResource SetupHint}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel x:Name="AppearancePage" Spacing="16">
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        
+<RadioButton x:Name="SystemTheme" x:Uid="Setup_SystemTheme" Tag="Default" Grid.Column="0" GroupName="SetupTheme" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="6" CornerRadius="10" Checked="Theme_Checked" AutomationProperties.AutomationId="SetupThemeSystem">
+    <StackPanel Spacing="10">
+        <Border Background="#E2E7EC" Height="94" CornerRadius="7" Padding="8" BorderThickness="1" BorderBrush="#30677889">
+            <Grid RowSpacing="7">
+                <Grid.RowDefinitions><RowDefinition Height="9"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="3"><Ellipse Width="4" Height="4" Fill="#7E8EA0"/><Ellipse Width="4" Height="4" Fill="#7E8EA0"/><Ellipse Width="4" Height="4" Fill="#7E8EA0"/></StackPanel>
+                <Grid Grid.Row="1" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Border Background="#7E8EA0" Opacity=".5" CornerRadius="3"/>
+                    <Border Grid.Column="1" Background="#F8FAFC" CornerRadius="3" Padding="6">
+                        <StackPanel Spacing="7"><Border Height="5" Background="#7E8EA0" CornerRadius="2"/><Border Height="5" Background="#39AF94" CornerRadius="2"/><Border Height="5" Background="#7E8EA0" CornerRadius="2" Opacity=".5"/></StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+        <TextBlock x:Uid="Setup_SystemLabel" Text="System" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+    </StackPanel>
+</RadioButton>
+
+<RadioButton x:Name="LightTheme" x:Uid="Setup_LightTheme" Tag="Light" Grid.Column="1" GroupName="SetupTheme" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="6" CornerRadius="10" Checked="Theme_Checked" AutomationProperties.AutomationId="SetupThemeLight">
+    <StackPanel Spacing="10">
+        <Border Background="#E6EAF0" Height="94" CornerRadius="7" Padding="8" BorderThickness="1" BorderBrush="#30677889">
+            <Grid RowSpacing="7">
+                <Grid.RowDefinitions><RowDefinition Height="9"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="3"><Ellipse Width="4" Height="4" Fill="#CAD3DF"/><Ellipse Width="4" Height="4" Fill="#CAD3DF"/><Ellipse Width="4" Height="4" Fill="#CAD3DF"/></StackPanel>
+                <Grid Grid.Row="1" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Border Background="#CAD3DF" Opacity=".5" CornerRadius="3"/>
+                    <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="3" Padding="6">
+                        <StackPanel Spacing="7"><Border Height="5" Background="#CAD3DF" CornerRadius="2"/><Border Height="5" Background="#39AF94" CornerRadius="2"/><Border Height="5" Background="#CAD3DF" CornerRadius="2" Opacity=".5"/></StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+        <TextBlock x:Uid="Setup_LightLabel" Text="Light" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+    </StackPanel>
+</RadioButton>
+
+<RadioButton x:Name="DarkTheme" x:Uid="Setup_DarkTheme" Tag="Dark" Grid.Column="2" GroupName="SetupTheme" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="6" CornerRadius="10" Checked="Theme_Checked" AutomationProperties.AutomationId="SetupThemeDark">
+    <StackPanel Spacing="10">
+        <Border Background="#17232D" Height="94" CornerRadius="7" Padding="8" BorderThickness="1" BorderBrush="#30677889">
+            <Grid RowSpacing="7">
+                <Grid.RowDefinitions><RowDefinition Height="9"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="3"><Ellipse Width="4" Height="4" Fill="#526477"/><Ellipse Width="4" Height="4" Fill="#526477"/><Ellipse Width="4" Height="4" Fill="#526477"/></StackPanel>
+                <Grid Grid.Row="1" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Border Background="#526477" Opacity=".5" CornerRadius="3"/>
+                    <Border Grid.Column="1" Background="#273645" CornerRadius="3" Padding="6">
+                        <StackPanel Spacing="7"><Border Height="5" Background="#526477" CornerRadius="2"/><Border Height="5" Background="#39AF94" CornerRadius="2"/><Border Height="5" Background="#526477" CornerRadius="2" Opacity=".5"/></StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+        <TextBlock x:Uid="Setup_DarkLabel" Text="Dark" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+    </StackPanel>
+</RadioButton>
+                    </Grid>
+                    <Border Style="{StaticResource SetupCard}">
+                        <Grid ColumnSpacing="14">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE7F4;" FontSize="20" Foreground="{StaticResource SetupAccentBrush}"/>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock x:Uid="Setup_PreviewTitle" Text="Make yourself at home" FontWeight="SemiBold"/>
+                                <TextBlock x:Uid="Setup_PreviewHint" Text="The theme changes instantly. You can always change it later in Options." Style="{StaticResource SetupHint}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+                <StackPanel x:Name="DownloadsPage" Spacing="14" Visibility="Collapsed">
+                    <Border Style="{StaticResource SetupCard}">
+                        <StackPanel Spacing="14">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <FontIcon Glyph="&#xE8B7;" Foreground="{StaticResource SetupAccentBrush}"/>
+                                <TextBlock x:Uid="Setup_FolderTitle" Text="A home for your files" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock x:Uid="Setup_FolderHint" Text="New torrents will use this folder by default. You can choose another location for each download." Style="{StaticResource SetupHint}"/>
+                            <TextBox x:Name="DownloadPathBox" x:Uid="Setup_FolderPath" Header="Download folder" AutomationProperties.AutomationId="SetupDownloadPath" TextChanged="Draft_Changed"/>
+                            <Button x:Name="BrowseButton" x:Uid="Setup_Browse" Content="Choose folder…" Click="Browse_Click"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource SetupCard}">
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Spacing="5">
+                                <TextBlock x:Uid="Setup_NotifyTitle" Text="Keep me in the loop" FontWeight="SemiBold"/>
+                                <TextBlock x:Uid="Setup_NotifyHint" Text="Show notifications when a download finishes or needs attention." Style="{StaticResource SetupHint}"/>
+                            </StackPanel>
+                            <ToggleSwitch x:Name="NotificationsToggle" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" Toggled="Draft_Toggled"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+                <StackPanel x:Name="WindowsPage" Spacing="14" Visibility="Collapsed">
+                    <Border Style="{StaticResource SetupCard}">
+                        <Grid ColumnSpacing="14">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Spacing="5">
+                                <TextBlock x:Uid="Setup_StartupTitle" Text="Start with Windows" FontWeight="SemiBold"/>
+                                <TextBlock x:Uid="Setup_StartupHint" Text="Open WinBitTorrent automatically when you sign in." Style="{StaticResource SetupHint}"/>
+                            </StackPanel>
+                            <ToggleSwitch x:Name="StartupToggle" Grid.Column="1" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" Toggled="Startup_Toggled"/>
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource SetupCard}">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <FontIcon Glyph="&#xE71B;" Foreground="{StaticResource SetupAccentBrush}"/>
+                                <TextBlock x:Uid="Setup_LinksTitle" Text="Open torrents in one click" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock x:Uid="Setup_LinksHint" Text="Choose WinBitTorrent for .torrent files and magnet links in Windows Default apps." Style="{StaticResource SetupHint}"/>
+                            <Button x:Uid="Setup_DefaultApps" Content="Open Default apps ↗" Click="DefaultApps_Click"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Uid="Setup_WindowsHint" Text="Windows stays in control of startup and default apps." Style="{StaticResource SetupHint}" />
+                </StackPanel>
+                <StackPanel x:Name="ReadyPage" Spacing="16" Visibility="Collapsed">
+                    <Border Style="{StaticResource SetupCard}">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="36" Height="36" CornerRadius="18" Background="{StaticResource SetupAccentBrush}">
+                                    <FontIcon Glyph="&#xE73E;" FontSize="16" Foreground="White"/>
+                                </Border>
+                                <TextBlock x:Uid="Setup_SummaryTitle" Text="Your setup, at a glance" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock x:Name="SummaryTheme" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="SummaryPath" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+                            <TextBlock x:Name="SummaryStartup" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="SummaryNotifications" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Uid="Setup_ReadyHint" Text="Everything looks good? Save your choices and add your first torrent." Style="{StaticResource SetupHint}" FontSize="14"/>
+                </StackPanel>
+                <InfoBar x:Name="ErrorBar" IsOpen="False" IsClosable="True" Severity="Error" AutomationProperties.LiveSetting="Polite"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</ContentDialog>

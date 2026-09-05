@@ -210,7 +210,7 @@
   <data name="Settings_ManagedTooltip" xml:space="preserve"><value>Кіруецца WinBitTorrent і даступна толькі праз loopback.</value></data>
   <data name="Settings_ManagedTitle" xml:space="preserve"><value>Кіраваны лакальны профіль</value></data>
   <data name="Settings_ManagedMessage" xml:space="preserve"><value>Адрас, порт і аўтэнтыфікацыя вэб-інтэрфейса кіруюцца WinBitTorrent.</value></data>
-  <data name="Settings_Applied" xml:space="preserve"><value>Налады ўжытыя. Для змены мовы, тэмы ці шчыльнасці перазапусціце дадатак.</value></data>
+  <data name="Settings_Applied" xml:space="preserve"><value>Налады ўжытыя.</value></data>
   <data name="Choice_System" xml:space="preserve"><value>Сістэмная мова</value></data>
   <data name="Choice_English" xml:space="preserve"><value>English</value></data>
   <data name="Choice_Russian" xml:space="preserve"><value>Руская</value></data>
@@ -791,4 +791,85 @@
   <data name="Dialog_AddTorrentLinks_Primary" xml:space="preserve"><value>Працягнуць</value></data>
   <data name="Dialog_AddTorrentLinks_Required" xml:space="preserve"><value>Увядзіце хаця б адну спасылку на торэнт.</value></data>
   <data name="Dialog_AddTorrentLinks_Invalid" xml:space="preserve"><value>Радок {0} не з'яўляецца дапушчальнай спасылкай на торэнт або інфа-хэшам.</value></data>
+  <data name="SetupText_Appearance" xml:space="preserve"><value>Афармленне</value></data>
+  <data name="Setup_Appearance.Text" xml:space="preserve"><value>Афармленне</value></data>
+  <data name="SetupText_Downloads" xml:space="preserve"><value>Спампоўванні</value></data>
+  <data name="Setup_Downloads.Text" xml:space="preserve"><value>Спампоўванні</value></data>
+  <data name="SetupText_Ready" xml:space="preserve"><value>Усё гатова</value></data>
+  <data name="Setup_Ready.Text" xml:space="preserve"><value>Усё гатова</value></data>
+  <data name="SetupText_SystemLabel" xml:space="preserve"><value>Сістэмная</value></data>
+  <data name="Setup_SystemLabel.Text" xml:space="preserve"><value>Сістэмная</value></data>
+  <data name="SetupText_LightLabel" xml:space="preserve"><value>Светлая</value></data>
+  <data name="Setup_LightLabel.Text" xml:space="preserve"><value>Светлая</value></data>
+  <data name="SetupText_DarkLabel" xml:space="preserve"><value>Цёмная</value></data>
+  <data name="Setup_DarkLabel.Text" xml:space="preserve"><value>Цёмная</value></data>
+  <data name="SetupText_PreviewTitle" xml:space="preserve"><value>Уладкоўвайцеся зручней</value></data>
+  <data name="Setup_PreviewTitle.Text" xml:space="preserve"><value>Уладкоўвайцеся зручней</value></data>
+  <data name="SetupText_PreviewHint" xml:space="preserve"><value>Тэма змяняецца адразу. Пазней яе можна змяніць у наладах.</value></data>
+  <data name="Setup_PreviewHint.Text" xml:space="preserve"><value>Тэма змяняецца адразу. Пазней яе можна змяніць у наладах.</value></data>
+  <data name="SetupText_FolderTitle" xml:space="preserve"><value>Месца для вашых файлаў</value></data>
+  <data name="Setup_FolderTitle.Text" xml:space="preserve"><value>Месца для вашых файлаў</value></data>
+  <data name="SetupText_FolderHint" xml:space="preserve"><value>Тут будуць захоўвацца новыя торэнты. Для кожнага спампоўвання можна выбраць іншую папку.</value></data>
+  <data name="Setup_FolderHint.Text" xml:space="preserve"><value>Тут будуць захоўвацца новыя торэнты. Для кожнага спампоўвання можна выбраць іншую папку.</value></data>
+  <data name="SetupText_Browse" xml:space="preserve"><value>Выбраць папку…</value></data>
+  <data name="Setup_Browse.Content" xml:space="preserve"><value>Выбраць папку…</value></data>
+  <data name="SetupText_NotifyTitle" xml:space="preserve"><value>Паведамляць пра важнае</value></data>
+  <data name="Setup_NotifyTitle.Text" xml:space="preserve"><value>Паведамляць пра важнае</value></data>
+  <data name="SetupText_NotifyHint" xml:space="preserve"><value>Паказваць апавяшчэнні пра завяршэнне спампоўванняў і падзеі, якія патрабуюць увагі.</value></data>
+  <data name="Setup_NotifyHint.Text" xml:space="preserve"><value>Паказваць апавяшчэнні пра завяршэнне спампоўванняў і падзеі, якія патрабуюць увагі.</value></data>
+  <data name="SetupText_StartupTitle" xml:space="preserve"><value>Запускаць разам з Windows</value></data>
+  <data name="Setup_StartupTitle.Text" xml:space="preserve"><value>Запускаць разам з Windows</value></data>
+  <data name="SetupText_StartupHint" xml:space="preserve"><value>Аўтаматычна адкрываць WinBitTorrent пры ўваходзе ў сістэму.</value></data>
+  <data name="Setup_StartupHint.Text" xml:space="preserve"><value>Аўтаматычна адкрываць WinBitTorrent пры ўваходзе ў сістэму.</value></data>
+  <data name="SetupText_LinksTitle" xml:space="preserve"><value>Адкрывайце торэнты адным клікам</value></data>
+  <data name="Setup_LinksTitle.Text" xml:space="preserve"><value>Адкрывайце торэнты адным клікам</value></data>
+  <data name="SetupText_LinksHint" xml:space="preserve"><value>Выберыце WinBitTorrent для файлаў .torrent і magnet-спасылак у раздзеле Windows «Праграмы па змаўчанні».</value></data>
+  <data name="Setup_LinksHint.Text" xml:space="preserve"><value>Выберыце WinBitTorrent для файлаў .torrent і magnet-спасылак у раздзеле Windows «Праграмы па змаўчанні».</value></data>
+  <data name="SetupText_DefaultApps" xml:space="preserve"><value>Праграмы па змаўчанні ↗</value></data>
+  <data name="Setup_DefaultApps.Content" xml:space="preserve"><value>Праграмы па змаўчанні ↗</value></data>
+  <data name="SetupText_WindowsHint" xml:space="preserve"><value>Аўтазапуск і праграмы па змаўчанні таксама можна змяніць у параметрах Windows.</value></data>
+  <data name="Setup_WindowsHint.Text" xml:space="preserve"><value>Аўтазапуск і праграмы па змаўчанні таксама можна змяніць у параметрах Windows.</value></data>
+  <data name="SetupText_SummaryTitle" xml:space="preserve"><value>Вашы налады</value></data>
+  <data name="Setup_SummaryTitle.Text" xml:space="preserve"><value>Вашы налады</value></data>
+  <data name="SetupText_ReadyHint" xml:space="preserve"><value>Усё падыходзіць? Захавайце налады і дадайце першы торэнт.</value></data>
+  <data name="Setup_ReadyHint.Text" xml:space="preserve"><value>Усё падыходзіць? Захавайце налады і дадайце першы торэнт.</value></data>
+  <data name="SetupText_FolderPath" xml:space="preserve"><value>Папка спампоўванняў</value></data>
+  <data name="Setup_FolderPath.Header" xml:space="preserve"><value>Папка спампоўванняў</value></data>
+  <data name="SetupText_SystemTheme" xml:space="preserve"><value>Выкарыстоўваць тэму Windows</value></data>
+  <data name="Setup_SystemTheme.AutomationProperties.Name" xml:space="preserve"><value>Выкарыстоўваць тэму Windows</value></data>
+  <data name="SetupText_LightTheme" xml:space="preserve"><value>Выкарыстоўваць светлую тэму</value></data>
+  <data name="Setup_LightTheme.AutomationProperties.Name" xml:space="preserve"><value>Выкарыстоўваць светлую тэму</value></data>
+  <data name="SetupText_DarkTheme" xml:space="preserve"><value>Выкарыстоўваць цёмную тэму</value></data>
+  <data name="Setup_DarkTheme.AutomationProperties.Name" xml:space="preserve"><value>Выкарыстоўваць цёмную тэму</value></data>
+  <data name="SetupText_Later" xml:space="preserve"><value>Наладзіць пазней</value></data>
+  <data name="SetupText_Back" xml:space="preserve"><value>Назад</value></data>
+  <data name="SetupText_AccessibleTitle" xml:space="preserve"><value>Вітаем у WinBitTorrent</value></data>
+  <data name="SetupText_TitleAppearance" xml:space="preserve"><value>У вашым стылі.</value></data>
+  <data name="SetupText_TitleDownloads" xml:space="preserve"><value>Усё на сваім месцы.</value></data>
+  <data name="SetupText_TitleWindows" xml:space="preserve"><value>У рытме вашай Windows.</value></data>
+  <data name="SetupText_TitleReady" xml:space="preserve"><value>Можна пачынаць.</value></data>
+  <data name="SetupText_DescAppearance" xml:space="preserve"><value>Вітаем! Давайце наладзім WinBitTorrent пад вас.</value></data>
+  <data name="SetupText_DescDownloads" xml:space="preserve"><value>Выберыце папку для спампоўванняў і наладзьце апавяшчэнні.</value></data>
+  <data name="SetupText_DescWindows" xml:space="preserve"><value>Пара налад, каб кожны дзень было зручней.</value></data>
+  <data name="SetupText_DescReady" xml:space="preserve"><value>Праверце выбраныя параметры — і пераходзьце да спампоўванняў.</value></data>
+  <data name="SetupText_StepFormat" xml:space="preserve"><value>ПЕРШЫ ЗАПУСК  /  {0} З 4</value></data>
+  <data name="SetupText_Finish" xml:space="preserve"><value>Пачаць працу</value></data>
+  <data name="SetupText_Next" xml:space="preserve"><value>Працягнуць</value></data>
+  <data name="SetupText_Saving" xml:space="preserve"><value>Захаванне…</value></data>
+  <data name="SetupText_On" xml:space="preserve"><value>Уключаны</value></data>
+  <data name="SetupText_Off" xml:space="preserve"><value>Выключаны</value></data>
+  <data name="SetupText_SummaryTheme" xml:space="preserve"><value>Тэма: {0}</value></data>
+  <data name="SetupText_SummaryPath" xml:space="preserve"><value>Папка спампоўванняў: {0}</value></data>
+  <data name="SetupText_SummaryStartup" xml:space="preserve"><value>Аўтазапуск: {0}</value></data>
+  <data name="SetupText_SummaryNotifications" xml:space="preserve"><value>Апавяшчэнні: {0}</value></data>
+  <data name="SetupText_BackendUnavailable" xml:space="preserve"><value>Няма злучэння з рухавіком спампоўванняў. Пачакайце крыху і паспрабуйце зноў.</value></data>
+  <data name="SetupText_FolderRequired" xml:space="preserve"><value>Выберыце папку на кроку «Спампоўванні».</value></data>
+  <data name="SetupText_FolderAbsolute" xml:space="preserve"><value>Укажыце поўны шлях да папкі, напрыклад C:\Downloads.</value></data>
+  <data name="SetupText_FolderNotApplied" xml:space="preserve"><value>Не ўдалося ўжыць папку спампоўванняў. Выберыце іншую папку і паспрабуйце зноў.</value></data>
+  <data name="SetupText_DefaultAppsFailed" xml:space="preserve"><value>Адкрыйце Параметры Windows → Праграмы → Праграмы па змаўчанні і выберыце WinBitTorrent.</value></data>
+  <data name="SetupText_StartupBlocked" xml:space="preserve"><value>Windows заблакіравала аўтазапуск. Дазвольце яго ў Параметрах → Праграмы → Аўтазагрузка або выключыце гэту опцыю, каб працягнуць.</value></data>
+  <data name="SetupText_StartupPolicy" xml:space="preserve"><value>Аўтазапускам кіруе адміністратар. Адключыць яго не ўдалося.</value></data>
+  <data name="SetupText_Reopen" xml:space="preserve"><value>Першапачатковая наладка…</value></data>
+  <data name="Setup_Reopen.Text" xml:space="preserve"><value>Першапачатковая наладка…</value></data>
+  <data name="Settings_AppliedRestartLanguage" xml:space="preserve"><value>Налады ўжытыя. Для змены мовы перазапусціце дадатак.</value></data>
 </root>

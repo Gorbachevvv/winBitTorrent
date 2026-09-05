@@ -34,11 +34,18 @@ public static class ClientSettings
     }
 
     public static void SetValue(string key, object? value)
+        => SetValues(new Dictionary<string, object?> { [key] = value });
+
+    public static void SetValues(IReadOnlyDictionary<string, object?> values)
     {
         lock (Gate)
         {
-            Values()[key] = value is null ? null : JsonSerializer.SerializeToNode(value);
-            Save();
+            var next = (JsonObject)Values().DeepClone();
+            foreach (var (key, value) in values)
+                next[key] = value is null ? null : JsonSerializer.SerializeToNode(value);
+            Save(next);
+            // Publish only after the atomic replacement succeeds, including completion flags.
+            _values = next;
         }
     }
 
@@ -57,11 +64,11 @@ public static class ClientSettings
         return _values;
     }
 
-    private static void Save()
+    private static void Save(JsonObject values)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
         var temporary = FilePath + ".tmp";
-        File.WriteAllText(temporary, Values().ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(temporary, values.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
         File.Move(temporary, FilePath, true);
     }
 }

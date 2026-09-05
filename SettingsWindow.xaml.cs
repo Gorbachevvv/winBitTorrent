@@ -647,7 +647,7 @@ public sealed partial class SettingsWindow : Window
         return grid;
     }
 
-    private static Control CreateEditor(SettingSpec spec, object? value)
+    private Control CreateEditor(SettingSpec spec, object? value)
     {
         var label = Localizer.Get($"Setting_{spec.Key.Replace('.', '_')}", spec.Label);
         return spec.Kind switch
@@ -666,13 +666,31 @@ public sealed partial class SettingsWindow : Window
             SettingKind.Password => new PasswordBox { Password = value?.ToString() ?? string.Empty },
             SettingKind.Multiline => new TextBox { Text = value?.ToString() ?? string.Empty, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 110 },
             SettingKind.Language => ChoiceBox(label, value, [("", "Choice_System", "System default"), ("en-US", "Choice_English", "English"), ("ru-RU", "Choice_Russian", "Русский"), ("be-BY", "Choice_Belarusian", "Беларуская")]),
-            SettingKind.Theme => ChoiceBox(label, value, [("Default", "Choice_SystemTheme", "Use system setting"), ("Light", "Choice_Light", "Light"), ("Dark", "Choice_Dark", "Dark")]),
+            SettingKind.Theme => CreateThemeEditor(label, value),
             SettingKind.ProxyType => ChoiceBox(label, value, [("None", "Choice_None", "None"), ("HTTP", "Choice_HttpProxy", "HTTP"), ("SOCKS4", "Choice_Socks4", "SOCKS4"), ("SOCKS5", "Choice_Socks5", "SOCKS5")]),
             SettingKind.PeerProtocol => ChoiceBox(label, value, [(0, "Choice_ProtocolBoth", "TCP and µTP"), (1, "Choice_ProtocolTcp", "TCP only"), (2, "Choice_ProtocolUtp", "µTP only")]),
             SettingKind.Encryption => ChoiceBox(label, value, [(0, "Choice_EncryptionPrefer", "Prefer encryption"), (1, "Choice_EncryptionForce", "Require encryption"), (2, "Choice_EncryptionDisable", "Disable encryption")]),
             SettingKind.ResumeStorage => ChoiceBox(label, value, [("Legacy", "Choice_ResumeLegacy", "Fastresume files"), ("SQLite", "Choice_ResumeSqlite", "SQLite database")]),
             _ => new TextBox { Text = value?.ToString() ?? string.Empty }
         };
+    }
+
+    private ComboBox CreateThemeEditor(string label, object? value)
+    {
+        var combo = ChoiceBox(label, value, [("Default", "Choice_SystemTheme", "Use system setting"), ("Light", "Choice_Light", "Light"), ("Dark", "Choice_Dark", "Dark")]);
+        AutomationProperties.SetAutomationId(combo, "SettingsTheme");
+        combo.SelectionChanged += (_, _) =>
+        {
+            if (combo.SelectedItem is not ComboBoxItem { Tag: string theme }) return;
+            _localValues["ui.theme"] = theme;
+            WindowUtilities.PreviewTheme(this, theme switch
+            {
+                "Light" => ElementTheme.Light,
+                "Dark" => ElementTheme.Dark,
+                _ => ElementTheme.Default
+            });
+        };
+        return combo;
     }
 
     private static ComboBox ChoiceBox(string header, object? value, IReadOnlyList<(object Value, string ResourceKey, string Fallback)> choices)
@@ -943,9 +961,10 @@ public sealed partial class SettingsWindow : Window
                 }
             }
 
-            foreach (var (key, value) in _localValues)
-                ClientSettings.SetValue(key, value);
             var language = _localValues.GetValueOrDefault("ui.language") as string;
+            var languageChanged = !string.Equals(language ?? string.Empty, ClientSettings.Get("ui.language", ""), StringComparison.OrdinalIgnoreCase);
+            ClientSettings.SetValues(_localValues);
+            WindowUtilities.EndThemePreview(this);
             App.ApplyLanguageOverride(language ?? string.Empty);
 
             if (_menuEditorUsed)
@@ -965,9 +984,11 @@ public sealed partial class SettingsWindow : Window
             }
             else
             {
-                ShowMessage(hadRemoteChanges
+                ShowMessage(languageChanged
+                    ? Localizer.Get("Settings_AppliedRestartLanguage", "Settings applied. Restart the app to apply the language change.")
+                    : hadRemoteChanges
                     ? Localizer.Get("Settings_AppliedVerified", "Settings were applied and verified by the backend.")
-                    : Localizer.Get("Settings_Applied", "Settings applied. Restart the app to apply language, theme, or density changes."),
+                    : Localizer.Get("Settings_Applied", "Settings applied."),
                     InfoBarSeverity.Success);
             }
         }
