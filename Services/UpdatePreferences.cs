@@ -9,7 +9,11 @@ public static class UpdatePreferences
 
     public static bool CheckOnStartup
     {
-        get => ClientSettings.Get(CheckOnStartupKey, true);
-        set => ClientSettings.SetValue(CheckOnStartupKey, value);
+        get => ClientSettings.Current.Updates.CheckOnStartup;
+        set
+        {
+            ClientSettings.Current.Updates.CheckOnStartup = value;
+            ClientSettings.Save();
+        }
     }
 }

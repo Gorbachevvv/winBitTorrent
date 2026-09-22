@@ -384,21 +384,15 @@ public sealed partial class MainWindow : Window
     private void RestoreWorkspaceTabs()
     {
         var tabs = WorkspaceTabs.TabItems.OfType<TabViewItem>().ToList();
-        if (ClientSettings.GetValue("workspace.hiddenTabs") is string hiddenJson)
+        var hiddenTags = ClientSettings.Current.Workspace.HiddenTabs.ToList();
+        if (hiddenTags.Count > 0)
         {
-            try
-            {
-                var hiddenTags = JsonSerializer.Deserialize<List<string>>(hiddenJson) ?? [];
-                foreach (var tab in tabs)
-                    if (tab.Tag?.ToString() is { } tag && hiddenTags.Contains(tag))
-                        tab.Visibility = Visibility.Collapsed;
-            }
-            catch (JsonException)
-            {
-            }
+            foreach (var tab in tabs)
+                if (tab.Tag?.ToString() is { } tag && hiddenTags.Contains(tag))
+                    tab.Visibility = Visibility.Collapsed;
         }
 
-        var selectedTag = ClientSettings.GetValue("workspace.selectedTab") as string;
+        var selectedTag = ClientSettings.Current.Workspace.SelectedTab;
         var selected = tabs.FirstOrDefault(tab => tab.Visibility == Visibility.Visible
             && string.Equals(tab.Tag?.ToString(), selectedTag, StringComparison.Ordinal))
             ?? tabs.FirstOrDefault(static tab => tab.Visibility == Visibility.Visible);
@@ -413,9 +407,10 @@ public sealed partial class MainWindow : Window
             .Where(static tab => tab.Visibility == Visibility.Collapsed)
             .Select(static tab => tab.Tag?.ToString() ?? string.Empty)
             .ToList();
-        ClientSettings.SetValue("workspace.hiddenTabs", JsonSerializer.Serialize(hiddenTags));
+        ClientSettings.Current.Workspace.HiddenTabs = hiddenTags;
         if (WorkspaceTabs.SelectedItem is TabViewItem { Tag: { } selectedTag })
-            ClientSettings.SetValue("workspace.selectedTab", selectedTag.ToString());
+            ClientSettings.Current.Workspace.SelectedTab = selectedTag.ToString();
+        ClientSettings.Save();
     }
 
     private async void Documentation_Click(object sender, RoutedEventArgs e)

@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
 
@@ -92,10 +93,11 @@ public sealed class QbittorrentApi : ITorrentBackendClient
         return await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    internal async Task<T> GetJsonAsync<T>(string path, IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
+    internal async Task<T> GetJsonAsync<T>(string path, JsonTypeInfo<T> typeInfo, IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
     {
         var json = await GetStringAsync(path, query, cancellationToken).ConfigureAwait(false);
-        return Deserialize<T>(json);
+        return JsonSerializer.Deserialize(json, typeInfo)
+            ?? throw new QbittorrentApiException($"qBittorrent returned an empty {typeInfo.Type.Name} response.", response: json);
     }
 
     internal async Task<JsonObject> GetObjectAsync(string path, IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
@@ -127,10 +129,6 @@ public sealed class QbittorrentApi : ITorrentBackendClient
         using var response = await _client.PostAsync(path, content, cancellationToken).ConfigureAwait(false);
         return await ReadResponseAsync(response, cancellationToken).ConfigureAwait(false);
     }
-
-    private static T Deserialize<T>(string json)
-        => JsonSerializer.Deserialize<T>(json, JsonOptions)
-            ?? throw new QbittorrentApiException($"qBittorrent returned an empty {typeof(T).Name} response.", response: json);
 
     private static JsonObject ParseObject(string json)
         => JsonNode.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json)?.AsObject()
@@ -253,7 +251,7 @@ public sealed class QbittorrentApi : ITorrentBackendClient
     private sealed class SyncApi(QbittorrentApi api) : ISyncApi
     {
         public Task<MainDataResponse> GetMainDataAsync(int responseId, CancellationToken cancellationToken = default)
-            => api.GetJsonAsync<MainDataResponse>("api/v2/sync/maindata", new Dictionary<string, string?>
+            => api.GetJsonAsync("api/v2/sync/maindata", InfrastructureJsonContext.Default.MainDataResponse, new Dictionary<string, string?>
             {
                 ["rid"] = responseId.ToString(CultureInfo.InvariantCulture)
             }, cancellationToken);
@@ -300,7 +298,7 @@ public sealed class QbittorrentApi : ITorrentBackendClient
     {
         public async Task<IReadOnlyList<TorrentInfo>> GetInfoAsync(string filter = "all", string? category = null, string? tag = null, CancellationToken cancellationToken = default)
         {
-            var torrents = await api.GetJsonAsync<List<TorrentInfo>>("api/v2/torrents/info", new Dictionary<string, string?>
+            var torrents = await api.GetJsonAsync("api/v2/torrents/info", InfrastructureJsonContext.Default.ListTorrentInfo, new Dictionary<string, string?>
             {
                 ["filter"] = filter,
                 ["category"] = category,
@@ -310,10 +308,10 @@ public sealed class QbittorrentApi : ITorrentBackendClient
         }
 
         public Task<TorrentProperties> GetPropertiesAsync(string hash, CancellationToken cancellationToken = default)
-            => api.GetJsonAsync<TorrentProperties>("api/v2/torrents/properties", new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken);
+            => api.GetJsonAsync("api/v2/torrents/properties", InfrastructureJsonContext.Default.TorrentProperties, new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken);
 
         public async Task<IReadOnlyList<TorrentTracker>> GetTrackersAsync(string hash, CancellationToken cancellationToken = default)
-            => await api.GetJsonAsync<List<TorrentTracker>>("api/v2/torrents/trackers", new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken).ConfigureAwait(false);
+            => await api.GetJsonAsync("api/v2/torrents/trackers", InfrastructureJsonContext.Default.ListTorrentTracker, new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken).ConfigureAwait(false);
 
         public async Task<IReadOnlyList<string>> GetWebSeedsAsync(string hash, CancellationToken cancellationToken = default)
         {
@@ -324,10 +322,10 @@ public sealed class QbittorrentApi : ITorrentBackendClient
         }
 
         public async Task<IReadOnlyList<TorrentFile>> GetFilesAsync(string hash, CancellationToken cancellationToken = default)
-            => await api.GetJsonAsync<List<TorrentFile>>("api/v2/torrents/files", new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken).ConfigureAwait(false);
+            => await api.GetJsonAsync("api/v2/torrents/files", InfrastructureJsonContext.Default.ListTorrentFile, new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken).ConfigureAwait(false);
 
         public async Task<IReadOnlyList<int>> GetPieceStatesAsync(string hash, CancellationToken cancellationToken = default)
-            => await api.GetJsonAsync<List<int>>("api/v2/torrents/pieceStates", new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken).ConfigureAwait(false);
+            => await api.GetJsonAsync("api/v2/torrents/pieceStates", InfrastructureJsonContext.Default.ListInt32, new Dictionary<string, string?> { ["hash"] = hash }, cancellationToken).ConfigureAwait(false);
 
         // qBittorrent Web API exposes availability per file, but not per piece. The UI falls
         // back to GetFilesAsync for remote profiles when this collection is empty.

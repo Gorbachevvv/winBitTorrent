@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.IO.Pipes;
 using System.Security.Principal;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using WinBitTorrent.Core.EngineProtocol;
 
 namespace WinBitTorrent.Infrastructure.Engine;
@@ -39,9 +41,10 @@ internal sealed class EnginePipeClient : IAsyncDisposable
         var client = new EnginePipeClient(pipe);
         try
         {
-            var hello = await client.SendAsync<EngineHello>(
+            var hello = await client.SendAsync(
                 EngineRpcMethods.Authenticate,
-                new { },
+                null,
+                EngineRpcJsonContext.Default.EngineHello,
                 authenticationToken,
                 cancellationToken).ConfigureAwait(false);
             return (client, hello);
@@ -53,15 +56,16 @@ internal sealed class EnginePipeClient : IAsyncDisposable
         }
     }
 
-    public Task<T> InvokeAsync<T>(string method, object? payload = null, CancellationToken cancellationToken = default)
-        => SendAsync<T>(method, payload ?? new { }, null, cancellationToken);
+    public Task<T> InvokeAsync<T>(string method, JsonTypeInfo<T> responseTypeInfo, JsonNode? payload = null, CancellationToken cancellationToken = default)
+        => SendAsync(method, payload, responseTypeInfo, null, cancellationToken);
 
-    public async Task InvokeAsync(string method, object? payload = null, CancellationToken cancellationToken = default)
-        => _ = await SendAsync<JsonElement>(method, payload ?? new { }, null, cancellationToken).ConfigureAwait(false);
+    public async Task InvokeAsync(string method, JsonNode? payload = null, CancellationToken cancellationToken = default)
+        => _ = await SendAsync(method, payload, EngineRpcJsonContext.Default.JsonElement, null, cancellationToken).ConfigureAwait(false);
 
     private async Task<T> SendAsync<T>(
         string method,
-        object payload,
+        JsonNode? payload,
+        JsonTypeInfo<T> responseTypeInfo,
         string? authenticationToken,
         CancellationToken cancellationToken)
     {
@@ -84,13 +88,13 @@ internal sealed class EnginePipeClient : IAsyncDisposable
                 EngineRpcProtocol.Version,
                 id,
                 method,
-                JsonSerializer.SerializeToElement(payload, JsonOptions),
+                ToElement(payload),
                 authenticationToken);
             await WriteAsync(request, cancellationToken).ConfigureAwait(false);
             var response = await completion.Task.ConfigureAwait(false);
             if (!response.Success)
                 throw new LocalEngineException(response.Error?.Message ?? "The local engine rejected the request.", response.Error?.Code, response.Error?.Details);
-            return response.Payload.Deserialize<T>(JsonOptions)
+            return response.Payload.Deserialize(responseTypeInfo)
                 ?? throw new LocalEngineException($"Engine method '{method}' returned an empty response.");
         }
         finally
@@ -99,9 +103,15 @@ internal sealed class EnginePipeClient : IAsyncDisposable
         }
     }
 
+    private static JsonElement ToElement(JsonNode? payload)
+    {
+        using var document = JsonDocument.Parse((payload ?? new JsonObject()).ToJsonString());
+        return document.RootElement.Clone();
+    }
+
     private async Task WriteAsync(EngineRpcRequest request, CancellationToken cancellationToken)
     {
-        var payload = JsonSerializer.SerializeToUtf8Bytes(request, JsonOptions);
+        var payload = JsonSerializer.SerializeToUtf8Bytes(request, EngineRpcJsonContext.Default.EngineRpcRequest);
         if (payload.Length > EngineRpcProtocol.MaximumMessageBytes)
             throw new InvalidOperationException("The engine request is too large.");
         var length = new byte[sizeof(int)];
@@ -134,7 +144,7 @@ internal sealed class EnginePipeClient : IAsyncDisposable
                     throw new InvalidDataException($"Invalid engine response length {messageLength}.");
                 var payload = new byte[messageLength];
                 await _pipe.ReadExactlyAsync(payload, _lifetime.Token).ConfigureAwait(false);
-                var response = JsonSerializer.Deserialize<EngineRpcResponse>(payload, JsonOptions)
+                var response = JsonSerializer.Deserialize(payload, EngineRpcJsonContext.Default.EngineRpcResponse)
                     ?? throw new InvalidDataException("The engine returned an empty response.");
                 if (_pending.TryRemove(response.Id, out var completion))
                     completion.TrySetResult(response);

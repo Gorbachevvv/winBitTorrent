@@ -2,13 +2,14 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
 using WinBitTorrent.Infrastructure.Net;
 
 namespace WinBitTorrent.Infrastructure.Catalog;
 
-public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
+public sealed partial class TmdbCatalogProvider : ICatalogProvider, IDisposable
 {
     private const string BaseAddress = "https://api.themoviedb.org/3/";
     private const string PosterBase = "https://image.tmdb.org/t/p/w342";
@@ -143,7 +144,7 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
 
     private async Task<IReadOnlyList<CatalogItem>> FetchListAsync(string path, CatalogKind? kind, string language, CancellationToken cancellationToken, (string Key, string Value)[] parameters)
     {
-        var response = await GetAsync<TmdbListResponse>(path, language, cancellationToken, parameters).ConfigureAwait(false);
+        var response = await GetAsync(path, language, TmdbCatalogJsonContext.Default.TmdbListResponse, cancellationToken, parameters).ConfigureAwait(false);
         return (response.Results ?? [])
             .Where(result => kind is not null || !string.Equals(result.MediaType, "person", StringComparison.OrdinalIgnoreCase))
             .Select(result => ToCatalogItem(result, kind ?? ParseMediaKind(result.MediaType)))
@@ -174,7 +175,7 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
     {
         EnsureConfigured();
         var path = kind == CatalogKind.Movie ? $"movie/{id}" : $"tv/{id}";
-        var details = await GetAsync<TmdbDetailsResponse>(path, RequestLanguage, cancellationToken, ("append_to_response", "credits,translations")).ConfigureAwait(false);
+        var details = await GetAsync(path, RequestLanguage, TmdbCatalogJsonContext.Default.TmdbDetailsResponse, cancellationToken, ("append_to_response", "credits,translations")).ConfigureAwait(false);
 
         var runtimeMinutes = kind == CatalogKind.Movie
             ? details.Runtime
@@ -258,7 +259,7 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
     private Task<IReadOnlyList<CatalogItem>> SearchKindAsync(string path, string query, CatalogKind kind, CancellationToken cancellationToken)
         => LocalizeListAsync(path, kind, cancellationToken, ("query", query));
 
-    private async Task<T> GetAsync<T>(string path, string language, CancellationToken cancellationToken, params (string Key, string Value)[] parameters)
+    private async Task<T> GetAsync<T>(string path, string language, JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken, params (string Key, string Value)[] parameters)
     {
         var baseParameters = new List<(string Key, string Value)>
         {
@@ -274,7 +275,7 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
             .Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value)}"));
         try
         {
-            var response = await _client.GetFromJsonAsync<T>($"{path}?{query}", cancellationToken).ConfigureAwait(false);
+            var response = await _client.GetFromJsonAsync($"{path}?{query}", typeInfo, cancellationToken).ConfigureAwait(false);
             return response ?? throw new CatalogException("TMDB returned an empty response.");
         }
         catch (HttpRequestException exception)
@@ -307,6 +308,10 @@ public sealed class TmdbCatalogProvider : ICatalogProvider, IDisposable
             : null;
 
     public void Dispose() => _client.Dispose();
+
+    [JsonSerializable(typeof(TmdbListResponse))]
+    [JsonSerializable(typeof(TmdbDetailsResponse))]
+    private sealed partial class TmdbCatalogJsonContext : JsonSerializerContext;
 
     private sealed class TmdbListResponse
     {

@@ -516,7 +516,7 @@ public sealed partial class CatalogViewModel : ObservableObject
 
     private bool SyncProviderConfig()
     {
-        _catalog.ApiKey = ClientSettings.Get<string>("catalog.tmdb.apiKey");
+        _catalog.ApiKey = ClientSettings.Current.Catalog.TmdbApiKey;
         _catalog.Language = ResolveTmdbLanguage();
         _catalog.FallbackLanguage = ResolveTmdbFallback();
         _catalog.Region = ResolveTmdbRegion();
@@ -530,7 +530,7 @@ public sealed partial class CatalogViewModel : ObservableObject
     // system region (so "popular TV shows" isn't full of unrelated foreign shows).
     private static string ResolveTmdbLanguage()
     {
-        var setting = ClientSettings.Get<string>("ui.language");
+        var setting = ClientSettings.Current.Ui.Language;
         var culture = string.IsNullOrWhiteSpace(setting)
             ? System.Globalization.CultureInfo.CurrentUICulture.Name
             : setting;

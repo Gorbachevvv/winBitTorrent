@@ -1,5 +1,6 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using WinBitTorrent.Core.Models;
@@ -8,6 +9,7 @@ using WinBitTorrent.Services;
 
 namespace WinBitTorrent.ViewModels;
 
+[Bindable]
 public sealed class TorrentRowViewModel : ObservableObject
 {
     private TorrentInfo _model;

@@ -1,74 +1,179 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using WinBitTorrent.Core.Models;
 using WinBitTorrent.Infrastructure.Storage;
 
 namespace WinBitTorrent.Services;
 
-public static class ClientSettings
+public sealed class ClientSettingsDocument
+{
+    public UiClientSettings Ui { get; set; } = new();
+    public NotificationClientSettings Notifications { get; set; } = new();
+    public CatalogClientSettings Catalog { get; set; } = new();
+    public OnboardingClientSettings Onboarding { get; set; } = new();
+    public WorkspaceClientSettings Workspace { get; set; } = new();
+    public LayoutClientSettings Layout { get; set; } = new();
+    public TorrentClientSettings Torrents { get; set; } = new();
+    public Dictionary<string, TrackerClientSettings> Trackers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public WindowClientSettings Window { get; set; } = new();
+    public UpdateClientSettings Updates { get; set; } = new();
+}
+
+public sealed class UiClientSettings
+{
+    public string Language { get; set; } = string.Empty;
+    public string Theme { get; set; } = "Default";
+    public bool ConfirmDelete { get; set; } = true;
+}
+
+public sealed class NotificationClientSettings
+{
+    public bool Enabled { get; set; } = true;
+    public bool TorrentAdded { get; set; }
+}
+
+public sealed class CatalogClientSettings
+{
+    public string? TmdbApiKey { get; set; }
+    public List<CatalogFavorite> Favorites { get; set; } = [];
+}
+
+/// <summary>A single bookmarked catalog title, persisted in client settings.</summary>
+public sealed record CatalogFavorite(
+    string Id,
+    CatalogKind Kind,
+    string Title,
+    string? Year,
+    string? PosterUrl,
+    string RatingText);
+
+public sealed class OnboardingClientSettings
+{
+    public bool Completed { get; set; }
+    public OnboardingDraft? Draft { get; set; }
+}
+
+public sealed class WorkspaceClientSettings
+{
+    public List<string> HiddenTabs { get; set; } = [];
+    public string? SelectedTab { get; set; }
+}
+
+public sealed class LayoutClientSettings
+{
+    public double? SidebarWidth { get; set; }
+    public bool SidebarCollapsed { get; set; }
+    public double? DetailsHeight { get; set; }
+    public List<TorrentColumnLayout> TorrentColumns { get; set; } = [];
+}
+
+public sealed record TorrentColumnLayout(string Header, double Width, bool Visible);
+
+public sealed class TorrentClientSettings
+{
+    public Dictionary<string, string> SourceFiles { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public List<string> VisibleMenuItems { get; set; } = [];
+    public List<string> HiddenMenuItems { get; set; } = [];
+}
+
+public sealed class TrackerClientSettings
+{
+    public bool UseBuiltInProxy { get; set; }
+}
+
+public sealed class WindowClientSettings
+{
+    public MainWindowClientSettings Main { get; set; } = new();
+}
+
+public sealed class MainWindowClientSettings
+{
+    public bool Maximized { get; set; }
+    public double? WidthDip { get; set; }
+    public double? HeightDip { get; set; }
+}
+
+public sealed class UpdateClientSettings
+{
+    public bool CheckOnStartup { get; set; } = true;
+}
+
+public static partial class ClientSettings
 {
     private static readonly object Gate = new();
     private static string FilePath => Path.Combine(AppPaths.Root, "client-settings.json");
-    private static JsonObject? _values;
+    private static ClientSettingsDocument? _values;
+    private static string? _loadedFilePath;
+    private static string? _lastSavedJson;
 
-    public static object? GetValue(string key)
+    public static ClientSettingsDocument Current
     {
-        lock (Gate)
+        get
         {
-            var node = Values()[key];
-            if (node is not JsonValue value)
-                return null;
-            if (value.TryGetValue<bool>(out var boolean)) return boolean;
-            if (value.TryGetValue<double>(out var number)) return number;
-            if (value.TryGetValue<string>(out var text)) return text;
-            return node.ToJsonString();
+            lock (Gate)
+            {
+                var filePath = FilePath;
+                if (_values is null || !string.Equals(_loadedFilePath, filePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    (_values, _lastSavedJson) = Load(filePath);
+                    _loadedFilePath = filePath;
+                }
+                return _values;
+            }
         }
     }
 
-    public static T? Get<T>(string key, T? fallback = default)
+    public static void Save()
     {
         lock (Gate)
         {
-            try { return Values()[key] is { } node ? node.GetValue<T>() : fallback; }
-            catch (InvalidOperationException) { return fallback; }
+            Save(Current);
         }
     }
 
-    public static void SetValue(string key, object? value)
-        => SetValues(new Dictionary<string, object?> { [key] = value });
-
-    public static void SetValues(IReadOnlyDictionary<string, object?> values)
+    private static (ClientSettingsDocument Settings, string Json) Load(string filePath)
     {
-        lock (Gate)
-        {
-            var next = (JsonObject)Values().DeepClone();
-            foreach (var (key, value) in values)
-                next[key] = value is null ? null : JsonSerializer.SerializeToNode(value);
-            Save(next);
-            // Publish only after the atomic replacement succeeds, including completion flags.
-            _values = next;
-        }
-    }
-
-    private static JsonObject Values()
-    {
-        if (_values is not null)
-            return _values;
         try
         {
-            _values = File.Exists(FilePath) && JsonNode.Parse(File.ReadAllText(FilePath)) is JsonObject loaded ? loaded : [];
+            if (File.Exists(filePath))
+            {
+                var json = File.ReadAllText(filePath);
+                return (JsonSerializer.Deserialize(json, ClientSettingsJsonContext.Default.ClientSettingsDocument) ?? new ClientSettingsDocument(), json);
+            }
         }
         catch (JsonException)
         {
-            _values = [];
         }
-        return _values;
+
+        var settings = new ClientSettingsDocument();
+        return (settings, JsonSerializer.Serialize(settings, ClientSettingsJsonContext.Default.ClientSettingsDocument));
     }
 
-    private static void Save(JsonObject values)
+    private static void Save(ClientSettingsDocument values)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        var temporary = FilePath + ".tmp";
-        File.WriteAllText(temporary, values.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
-        File.Move(temporary, FilePath, true);
+        var filePath = FilePath;
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        var temporary = filePath + ".tmp";
+        var json = JsonSerializer.Serialize(values, ClientSettingsJsonContext.Default.ClientSettingsDocument);
+        try
+        {
+            File.WriteAllText(temporary, json);
+            File.Move(temporary, filePath, true);
+            _loadedFilePath = filePath;
+            _lastSavedJson = json;
+        }
+        catch
+        {
+            try { if (File.Exists(temporary)) File.Delete(temporary); } catch (IOException) { }
+            _values = _lastSavedJson is null
+                ? new ClientSettingsDocument()
+                : JsonSerializer.Deserialize(_lastSavedJson, ClientSettingsJsonContext.Default.ClientSettingsDocument) ?? new ClientSettingsDocument();
+            _loadedFilePath = filePath;
+            throw;
+        }
     }
+
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+    [JsonSerializable(typeof(ClientSettingsDocument))]
+    private sealed partial class ClientSettingsJsonContext : JsonSerializerContext;
 }

@@ -157,7 +157,7 @@ public sealed class TorrentInfo
     public HashSet<string> PresentFields { get; } = new(StringComparer.Ordinal);
 }
 
-internal sealed class TorrentInfoJsonConverter : JsonConverter<TorrentInfo>
+public sealed class TorrentInfoJsonConverter : JsonConverter<TorrentInfo>
 {
     public override TorrentInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -438,7 +438,7 @@ public sealed class ServerState
     public HashSet<string> PresentFields { get; } = new(StringComparer.Ordinal);
 }
 
-internal sealed class ServerStateJsonConverter : JsonConverter<ServerState>
+public sealed class ServerStateJsonConverter : JsonConverter<ServerState>
 {
     public override ServerState Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

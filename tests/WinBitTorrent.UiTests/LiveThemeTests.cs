@@ -16,7 +16,7 @@ public sealed class LiveThemeTests
         var root = Path.Combine(Path.GetTempPath(), "WinBitTorrent-ThemeTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var file = Path.Combine(root, "client-settings.json");
-        File.WriteAllText(file, """{"onboarding.completed":true,"ui.language":"en-US","ui.theme":"Dark","window.main.maximized":false,"updates.checkOnStartup":false}""");
+        File.WriteAllText(file, """{"onboarding":{"completed":true},"ui":{"language":"en-US","theme":"Dark"},"window":{"main":{"maximized":false}},"updates":{"checkOnStartup":false}}""");
         var start = new ProcessStartInfo(UiFactAttribute.FindExecutable()!) { UseShellExecute = false };
         start.Environment["WINBITTORRENT_DATA_ROOT"] = root;
         using var automation = new UIA3Automation();

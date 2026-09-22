@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Windows.Security.Credentials;
+using WinBitTorrent.Infrastructure;
 using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
 
@@ -17,7 +18,7 @@ public sealed class PasswordVaultTrackerCredentialStore : ITrackerCredentialStor
         {
             var credential = new PasswordVault().Retrieve(Resource, trackerId);
             credential.RetrievePassword();
-            return Task.FromResult(JsonSerializer.Deserialize<TrackerCredentials>(credential.Password));
+            return Task.FromResult(JsonSerializer.Deserialize(credential.Password, InfrastructureJsonContext.Default.TrackerCredentials));
         }
         catch (COMException)
         {
@@ -34,7 +35,7 @@ public sealed class PasswordVaultTrackerCredentialStore : ITrackerCredentialStor
         cancellationToken.ThrowIfCancellationRequested();
         var vault = new PasswordVault();
         Remove(vault, trackerId);
-        vault.Add(new PasswordCredential(Resource, trackerId, JsonSerializer.Serialize(credentials)));
+        vault.Add(new PasswordCredential(Resource, trackerId, JsonSerializer.Serialize(credentials, InfrastructureJsonContext.Default.TrackerCredentials)));
         return Task.CompletedTask;
     }
 

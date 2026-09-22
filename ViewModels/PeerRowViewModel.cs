@@ -1,9 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml.Data;
 using System.Text.Json.Nodes;
 using WinBitTorrent.Core.Services;
 
 namespace WinBitTorrent.ViewModels;
 
+[Bindable]
 public sealed partial class PeerRowViewModel : ObservableObject
 {
     private PeerRowViewModel(string id) => Id = id;

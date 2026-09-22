@@ -92,8 +92,8 @@ internal static class WindowUtilities
     /// </summary>
     public static void RestoreMainWindow(AppWindow appWindow, nint handle)
     {
-        var width = (int)Math.Round(ClientSettings.Get("window.main.widthDip", 1240d));
-        var height = (int)Math.Round(ClientSettings.Get("window.main.heightDip", 800d));
+        var width = (int)Math.Round(ClientSettings.Current.Window.Main.WidthDip ?? 1240d);
+        var height = (int)Math.Round(ClientSettings.Current.Window.Main.HeightDip ?? 800d);
         SetMinimumSize(appWindow, handle, MainWindowMinimumWidth, MainWindowMinimumHeight);
         ResizeAndCenter(
             appWindow,
@@ -102,7 +102,7 @@ internal static class WindowUtilities
             Math.Clamp(height, MainWindowMinimumHeight, 1600));
 
         if (appWindow.Presenter is OverlappedPresenter presenter
-            && ClientSettings.Get("window.main.maximized", true))
+            && ClientSettings.Current.Window.Main.Maximized)
         {
             presenter.Maximize();
         }
@@ -119,7 +119,8 @@ internal static class WindowUtilities
         const int restoreToMaximized = 2;
         var maximized = placement.ShowCommand == showMaximized
             || (placement.ShowCommand == showMinimized && (placement.Flags & restoreToMaximized) != 0);
-        ClientSettings.SetValue("window.main.maximized", maximized);
+        ClientSettings.Current.Window.Main.Maximized = maximized;
+        ClientSettings.Save();
 
         // rcNormalPosition is maintained by Windows even while the window is maximized. Reading
         // AppWindow.Size here lost the user's restored size whenever the app was closed from a
@@ -129,8 +130,9 @@ internal static class WindowUtilities
         if (normalWidth <= 0 || normalHeight <= 0)
             return;
         var scale = GetScale(handle);
-        ClientSettings.SetValue("window.main.widthDip", Math.Round(normalWidth / scale));
-        ClientSettings.SetValue("window.main.heightDip", Math.Round(normalHeight / scale));
+        ClientSettings.Current.Window.Main.WidthDip = Math.Round(normalWidth / scale);
+        ClientSettings.Current.Window.Main.HeightDip = Math.Round(normalHeight / scale);
+        ClientSettings.Save();
     }
 
     private static void ResizeAndCenter(
@@ -277,7 +279,7 @@ internal static class WindowUtilities
     }
 
     internal static ElementTheme CurrentTheme()
-        => (ClientSettings.GetValue("ui.theme") as string) switch
+        => ClientSettings.Current.Ui.Theme switch
         {
             "Light" => ElementTheme.Light,
             "Dark" => ElementTheme.Dark,

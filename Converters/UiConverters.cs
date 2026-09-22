@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace WinBitTorrent.Converters;
 
-public sealed class NonEmptyStringConverter : IValueConverter
+public sealed partial class NonEmptyStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is string text && !string.IsNullOrWhiteSpace(text);
@@ -12,7 +12,7 @@ public sealed class NonEmptyStringConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-public sealed class BooleanToVisibilityConverter : IValueConverter
+public sealed partial class BooleanToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is true ? Visibility.Visible : Visibility.Collapsed;
@@ -21,7 +21,7 @@ public sealed class BooleanToVisibilityConverter : IValueConverter
         => value is Visibility.Visible;
 }
 
-public sealed class InverseBooleanToVisibilityConverter : IValueConverter
+public sealed partial class InverseBooleanToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is true ? Visibility.Collapsed : Visibility.Visible;
@@ -30,7 +30,7 @@ public sealed class InverseBooleanToVisibilityConverter : IValueConverter
         => value is Visibility.Collapsed;
 }
 
-public sealed class StringToVisibilityConverter : IValueConverter
+public sealed partial class StringToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is string text && !string.IsNullOrWhiteSpace(text) ? Visibility.Visible : Visibility.Collapsed;
@@ -39,7 +39,7 @@ public sealed class StringToVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-public sealed class CountToVisibilityConverter : IValueConverter
+public sealed partial class CountToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is int count && count > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -66,7 +66,7 @@ public static class CommentLink
     }
 }
 
-public sealed class CommentLinkUriConverter : IValueConverter
+public sealed partial class CommentLinkUriConverter : IValueConverter
 {
     public object? Convert(object value, Type targetType, object parameter, string language)
         => value is string text && CommentLink.TryGetHttpUri(text, out var uri) ? uri : null;
@@ -75,7 +75,7 @@ public sealed class CommentLinkUriConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-public sealed class CommentLinkVisibilityConverter : IValueConverter
+public sealed partial class CommentLinkVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is string text && CommentLink.TryGetHttpUri(text, out _) ? Visibility.Visible : Visibility.Collapsed;
@@ -84,7 +84,7 @@ public sealed class CommentLinkVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-public sealed class CommentPlainTextVisibilityConverter : IValueConverter
+public sealed partial class CommentPlainTextVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
         => value is string text && CommentLink.TryGetHttpUri(text, out _) ? Visibility.Collapsed : Visibility.Visible;
@@ -93,7 +93,7 @@ public sealed class CommentPlainTextVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-public sealed class ProgressGridLengthConverter : IValueConverter
+public sealed partial class ProgressGridLengthConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
