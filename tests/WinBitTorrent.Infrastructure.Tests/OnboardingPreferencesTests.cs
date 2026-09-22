@@ -19,7 +19,6 @@ public sealed class OnboardingPreferencesTests
         try
         {
             Assert.False(OnboardingPreferences.IsComplete);
-            ClientSettings.SetValue("unrelated", "preserved");
             var draft = new OnboardingDraft { Step = 2, Theme = "Dark", DownloadPath = @"C:\My Downloads", Notifications = false };
             OnboardingPreferences.SaveDraft(draft);
             Assert.Equal(draft, OnboardingPreferences.Load());
@@ -31,16 +30,15 @@ public sealed class OnboardingPreferencesTests
             Assert.Throws<UnauthorizedAccessException>(() => OnboardingPreferences.Complete(draft));
             Assert.False(OnboardingPreferences.IsComplete);
             Assert.Equal(draft, OnboardingPreferences.Load());
-            Assert.Null(ClientSettings.Get<string>("ui.theme"));
+            Assert.Equal("Default", ClientSettings.Current.Ui.Theme);
 
             Directory.Delete(file);
             OnboardingPreferences.Complete(draft);
             var persisted = JsonNode.Parse(File.ReadAllText(file))!;
-            Assert.True(persisted[OnboardingPreferences.CompletedKey]!.GetValue<bool>());
-            Assert.Null(persisted[OnboardingPreferences.DraftKey]);
-            Assert.Equal("Dark", persisted["ui.theme"]!.GetValue<string>());
-            Assert.False(persisted["notifications.enabled"]!.GetValue<bool>());
-            Assert.Equal("preserved", persisted["unrelated"]!.GetValue<string>());
+            Assert.True(persisted["onboarding"]!["completed"]!.GetValue<bool>());
+            Assert.Null(persisted["onboarding"]!["draft"]);
+            Assert.Equal("Dark", persisted["ui"]!["theme"]!.GetValue<string>());
+            Assert.False(persisted["notifications"]!["enabled"]!.GetValue<bool>());
         }
         finally
         {

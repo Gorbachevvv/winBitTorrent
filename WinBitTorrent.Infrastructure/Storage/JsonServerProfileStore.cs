@@ -1,10 +1,11 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using WinBitTorrent.Core.Abstractions;
 using WinBitTorrent.Core.Models;
 
 namespace WinBitTorrent.Infrastructure.Storage;
 
-public sealed class JsonServerProfileStore : IServerProfileStore
+public sealed partial class JsonServerProfileStore : IServerProfileStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -97,7 +98,7 @@ public sealed class JsonServerProfileStore : IServerProfileStore
         }
 
         await using var stream = File.OpenRead(AppPaths.ProfilesFile);
-        var document = await JsonSerializer.DeserializeAsync<ProfileDocument>(stream, JsonOptions, cancellationToken).ConfigureAwait(false)
+        var document = await JsonSerializer.DeserializeAsync(stream, JsonServerProfileStoreJsonContext.Default.ProfileDocument, cancellationToken).ConfigureAwait(false)
             ?? ProfileDocument.CreateDefault();
 
         if (document.Profiles.All(profile => profile.Id != ServerProfile.LocalProfileId))
@@ -110,9 +111,13 @@ public sealed class JsonServerProfileStore : IServerProfileStore
         AppPaths.EnsureCreated();
         var temporary = AppPaths.ProfilesFile + ".tmp";
         await using (var stream = File.Create(temporary))
-            await JsonSerializer.SerializeAsync(stream, document, JsonOptions, cancellationToken).ConfigureAwait(false);
+            await JsonSerializer.SerializeAsync(stream, document, JsonServerProfileStoreJsonContext.Default.ProfileDocument, cancellationToken).ConfigureAwait(false);
         File.Move(temporary, AppPaths.ProfilesFile, true);
     }
+
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+    [JsonSerializable(typeof(ProfileDocument))]
+    private sealed partial class JsonServerProfileStoreJsonContext : JsonSerializerContext;
 
     private sealed class ProfileDocument
     {

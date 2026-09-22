@@ -18,8 +18,8 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <PublishTrimmed>false</PublishTrimmed>
     <AppxSymbolPackageEnabled>false</AppxSymbolPackageEnabled>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
     <DefaultItemExcludes>$(DefaultItemExcludes);WinBitTorrent.Core\**;WinBitTorrent.Infrastructure\**;WinBitTorrent.EngineHost\**;native\**;tests\**;build\**</DefaultItemExcludes>
   </PropertyGroup>
@@ -101,7 +101,9 @@
   <!-- Publish Properties -->
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug' and '$(PublishAot)' != 'true'">True</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(PublishAot)' == 'true'">False</PublishReadyToRun>
+    <PublishTrimmed Condition="'$(PublishAot)' == 'true'">true</PublishTrimmed>
+    <PublishTrimmed Condition="'$(PublishAot)' != 'true'">false</PublishTrimmed>
   </PropertyGroup>
 </Project>

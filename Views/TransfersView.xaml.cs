@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -520,57 +521,52 @@ public sealed partial class TransfersView : UserControl
 
     private void RestoreLayout()
     {
-        if (ClientSettings.GetValue("layout.sidebarWidth") is double sidebarWidth)
+        var layout = ClientSettings.Current.Layout;
+        var torrentColumns = layout.TorrentColumns.ToList();
+        if (layout.SidebarWidth is double sidebarWidth)
             _expandedSidebarWidth = Math.Clamp(sidebarWidth, SidebarMinExpandedWidth, SidebarMaxWidth);
-        SetSidebarCollapsed(ClientSettings.GetValue("layout.sidebarCollapsed") is true, save: false);
-        if (ClientSettings.GetValue("layout.detailsHeight") is double detailsHeight)
+        SetSidebarCollapsed(layout.SidebarCollapsed, save: false);
+        if (layout.DetailsHeight is double detailsHeight)
             ContentGrid.RowDefinitions[2].Height = new GridLength(Math.Max(ContentGrid.RowDefinitions[2].MinHeight, detailsHeight));
 
         // Column order is never tracked through TableViewColumn.Order (see the comment on
         // TorrentTable_ColumnReordering for why); it is instead the physical sequence of columns
         // in the underlying collection, which the saved array reproduces entry by entry.
-        if (ClientSettings.GetValue("layout.torrentColumns") is string json)
+        if (torrentColumns.Count > 0)
         {
-            try
+            var matched = new List<TableViewColumn>();
+            foreach (var state in torrentColumns)
             {
-                var states = JsonSerializer.Deserialize<List<ColumnState>>(json) ?? [];
-                var matched = new List<TableViewColumn>();
-                foreach (var state in states)
-                {
-                    // Matched by header text - stable across reorders and across a changed column
-                    // count between app versions, unlike a saved positional index. The one column
-                    // with no header (the leading status icon) always keeps its declared position,
-                    // so it never needs a saved entry to begin with.
-                    var column = TorrentTable.Columns.FirstOrDefault(candidate =>
-                        !matched.Contains(candidate) &&
-                        candidate.Header?.ToString() is { Length: > 0 } header &&
-                        string.Equals(header, state.Header, StringComparison.Ordinal));
-                    if (column is null)
-                        continue;
+                // Matched by header text - stable across reorders and across a changed column
+                // count between app versions, unlike a saved positional index. The one column
+                // with no header (the leading status icon) always keeps its declared position,
+                // so it never needs a saved entry to begin with.
+                var column = TorrentTable.Columns.FirstOrDefault(candidate =>
+                    !matched.Contains(candidate) &&
+                    candidate.Header?.ToString() is { Length: > 0 } header &&
+                    string.Equals(header, state.Header, StringComparison.Ordinal));
+                if (column is null)
+                    continue;
 
-                    matched.Add(column);
-                    if (double.IsFinite(state.Width) && state.Width > 0)
-                        column.Width = new GridLength(Math.Max(column.MinWidth ?? 0d, state.Width));
-                    column.Visibility = state.Visible ? Visibility.Visible : Visibility.Collapsed;
-                }
-
-                // Move every matched column to the front, in saved order, one at a time - and
-                // unconditionally, even when a column's position does not actually change. The
-                // remove+insert is also what makes WinUI.TableView recompute which columns are
-                // "frozen" (see RefreshColumnPlacement), which a column that starts hidden in XAML
-                // otherwise never gets right. Columns absent from the file (added by a newer build
-                // than the one that saved it) are left untouched, keeping their declared position
-                // around the ones that were restored.
-                for (var target = 0; target < matched.Count; target++)
-                {
-                    var column = matched[target];
-                    var current = TorrentTable.Columns.IndexOf(column);
-                    TorrentTable.Columns.RemoveAt(current);
-                    TorrentTable.Columns.Insert(target, column);
-                }
+                matched.Add(column);
+                if (double.IsFinite(state.Width) && state.Width > 0)
+                    column.Width = new GridLength(Math.Max(column.MinWidth ?? 0d, state.Width));
+                column.Visibility = state.Visible ? Visibility.Visible : Visibility.Collapsed;
             }
-            catch (JsonException)
+
+            // Move every matched column to the front, in saved order, one at a time - and
+            // unconditionally, even when a column's position does not actually change. The
+            // remove+insert is also what makes WinUI.TableView recompute which columns are
+            // "frozen" (see RefreshColumnPlacement), which a column that starts hidden in XAML
+            // otherwise never gets right. Columns absent from the file (added by a newer build
+            // than the one that saved it) are left untouched, keeping their declared position
+            // around the ones that were restored.
+            for (var target = 0; target < matched.Count; target++)
             {
+                var column = matched[target];
+                var current = TorrentTable.Columns.IndexOf(column);
+                TorrentTable.Columns.RemoveAt(current);
+                TorrentTable.Columns.Insert(target, column);
             }
         }
     }
@@ -579,15 +575,16 @@ public sealed partial class TransfersView : UserControl
     {
         if (!IsLoaded)
             return;
-        ClientSettings.SetValue("layout.sidebarWidth", _expandedSidebarWidth);
-        ClientSettings.SetValue("layout.sidebarCollapsed", _sidebarCollapsed);
-        ClientSettings.SetValue("layout.detailsHeight", ContentGrid.RowDefinitions[2].ActualHeight);
         // The array's own sequence *is* the saved column order - see RestoreLayout.
-        var columns = TorrentTable.Columns.Select(column => new ColumnState(
+        var columns = TorrentTable.Columns.Select(column => new TorrentColumnLayout(
             column.Header?.ToString() ?? string.Empty,
             double.IsFinite(column.ActualWidth) && column.ActualWidth > 0 ? column.ActualWidth : column.Width.Value,
             column.Visibility == Visibility.Visible)).ToList();
-        ClientSettings.SetValue("layout.torrentColumns", JsonSerializer.Serialize(columns));
+        ClientSettings.Current.Layout.SidebarWidth = _expandedSidebarWidth;
+        ClientSettings.Current.Layout.SidebarCollapsed = _sidebarCollapsed;
+        ClientSettings.Current.Layout.DetailsHeight = ContentGrid.RowDefinitions[2].ActualHeight;
+        ClientSettings.Current.Layout.TorrentColumns = columns;
+        ClientSettings.Save();
     }
 
     // WinUI.TableView's own header drag-and-drop measures the drop position among *visible*
@@ -1547,5 +1544,6 @@ public sealed partial class TransfersView : UserControl
         WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(window));
     }
 
-    private sealed record ColumnState(string Header, double Width, bool Visible);
+    [JsonSerializable(typeof(List<TorrentColumnLayout>))]
+    private sealed partial class TransfersViewJsonContext : JsonSerializerContext;
 }

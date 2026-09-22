@@ -3,15 +3,6 @@ using WinBitTorrent.Core.Models;
 
 namespace WinBitTorrent.Services;
 
-/// <summary>A single bookmarked catalog title, persisted in client settings.</summary>
-public sealed record CatalogFavorite(
-    string Id,
-    CatalogKind Kind,
-    string Title,
-    string? Year,
-    string? PosterUrl,
-    string RatingText);
-
 /// <summary>
 /// Local, account-free bookmarks for the movie/TV catalog. Stored as a JSON list in
 /// <see cref="ClientSettings"/> so favorites survive restarts without any TMDB login.
@@ -22,17 +13,7 @@ public static class CatalogFavoritesStore
 
     public static IReadOnlyList<CatalogFavorite> Load()
     {
-        var json = ClientSettings.Get<string>(Key);
-        if (string.IsNullOrWhiteSpace(json))
-            return [];
-        try
-        {
-            return JsonSerializer.Deserialize<List<CatalogFavorite>>(json) ?? [];
-        }
-        catch (JsonException)
-        {
-            return [];
-        }
+        return ClientSettings.Current.Catalog.Favorites.ToList();
     }
 
     public static bool Contains(string id, CatalogKind kind)
@@ -55,7 +36,8 @@ public static class CatalogFavoritesStore
             added = true;
         }
 
-        ClientSettings.SetValue(Key, JsonSerializer.Serialize(list));
+        ClientSettings.Current.Catalog.Favorites = list;
+        ClientSettings.Save();
         return added;
     }
 }

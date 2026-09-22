@@ -37,7 +37,7 @@ public sealed class FirstRunTests
             FlaUI.Core.Input.Keyboard.Press(FlaUI.Core.WindowsAPI.VirtualKeyShort.ESCAPE);
             Retry.WhileTrue(() => FindId(window, "FirstRunDialog") is not null, TimeSpan.FromSeconds(5));
             Assert.Null(FindId(window, "FirstRunDialog"));
-            Assert.False(ReadSettings(Path.Combine(root, "client-settings.json"))["onboarding.completed"]?.GetValue<bool>() ?? false);
+            Assert.False(ReadSettings(Path.Combine(root, "client-settings.json"))["onboarding"]?["completed"]?.GetValue<bool>() ?? false);
         }
         finally
         {
@@ -78,7 +78,7 @@ public sealed class FirstRunTests
             Button(window, "Continue").Invoke();
             Button(window, "Start downloading").Invoke();
             WaitName(window, "Use a full folder path, such as C:\\Downloads.");
-            Assert.False(ReadSettings(settingsPath)["onboarding.completed"]?.GetValue<bool>() ?? false);
+            Assert.False(ReadSettings(settingsPath)["onboarding"]?["completed"]?.GetValue<bool>() ?? false);
             Button(window, "Back").Invoke();
             Button(window, "Back").Invoke();
             var downloads = Path.Combine(root, "My downloads");
@@ -93,10 +93,10 @@ public sealed class FirstRunTests
             window = MainWindow(app, automation);
             WaitId(window, "FirstRunDialog");
             WaitName(window, "Right at home on Windows.");
-            var draft = JsonNode.Parse(ReadSettings(settingsPath)["onboarding.draft"]!.GetValue<string>())!;
-            Assert.Equal(2, draft["Step"]!.GetValue<int>());
-            Assert.Equal("Dark", draft["Theme"]!.GetValue<string>());
-            Assert.Equal(downloads, draft["DownloadPath"]!.GetValue<string>());
+            var draft = ReadSettings(settingsPath)["onboarding"]!["draft"]!;
+            Assert.Equal(2, draft["step"]!.GetValue<int>());
+            Assert.Equal("Dark", draft["theme"]!.GetValue<string>());
+            Assert.Equal(downloads, draft["downloadPath"]!.GetValue<string>());
             // Dismissal is also resumable on the next launch.
             Button(window, "Set up later").Invoke();
             Retry.WhileTrue(() => FindId(window, "FirstRunDialog") is not null, TimeSpan.FromSeconds(5));
@@ -109,9 +109,9 @@ public sealed class FirstRunTests
             Button(window, "Continue").Invoke();
             Capture(window, "05-ready");
             Button(window, "Start downloading").Invoke();
-            Retry.WhileFalse(() => ReadSettings(settingsPath)["onboarding.completed"]?.GetValue<bool>() == true, TimeSpan.FromSeconds(30));
-            Assert.True(ReadSettings(settingsPath)["onboarding.completed"]?.GetValue<bool>() == true);
-            Assert.Null(ReadSettings(settingsPath)["onboarding.draft"]);
+            Retry.WhileFalse(() => ReadSettings(settingsPath)["onboarding"]?["completed"]?.GetValue<bool>() == true, TimeSpan.FromSeconds(30));
+            Assert.True(ReadSettings(settingsPath)["onboarding"]?["completed"]?.GetValue<bool>() == true);
+            Assert.Null(ReadSettings(settingsPath)["onboarding"]!["draft"]);
             Assert.Equal("Dark", ReadSettings(settingsPath)["ui.theme"]!.GetValue<string>());
             Assert.True(Directory.Exists(downloads));
             app.Kill();

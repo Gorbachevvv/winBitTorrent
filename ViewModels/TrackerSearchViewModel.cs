@@ -143,7 +143,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         {
             HasProxyOption = true;
             TrackerProxyDescription = proxyOptions.BuiltInProxyDescription;
-            UseTrackerProxy = ClientSettings.Get($"trackers.{provider.Id}.useBuiltInProxy", false);
+            UseTrackerProxy = ClientSettings.Current.Trackers.TryGetValue(provider.Id, out var tracker) && tracker.UseBuiltInProxy;
             proxyOptions.UseBuiltInProxy = UseTrackerProxy;
         }
         else
@@ -454,7 +454,10 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         if (_activeProvider is ITrackerProxyOptions proxyOptions)
         {
             proxyOptions.UseBuiltInProxy = value;
-            ClientSettings.SetValue($"trackers.{_activeProvider.Id}.useBuiltInProxy", value);
+            if (!ClientSettings.Current.Trackers.TryGetValue(_activeProvider.Id, out var tracker))
+                ClientSettings.Current.Trackers[_activeProvider.Id] = tracker = new TrackerClientSettings();
+            tracker.UseBuiltInProxy = value;
+            ClientSettings.Save();
         }
 
         OnPropertyChanged(nameof(BrowserProxy));

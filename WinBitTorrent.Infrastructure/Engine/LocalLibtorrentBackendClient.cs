@@ -52,31 +52,31 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
     private sealed class ApplicationApi(EnginePipeClient rpc) : IApplicationApi
     {
         public Task<string> GetVersionAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<string>(EngineRpcMethods.ApplicationVersion, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationVersion, EngineRpcJsonContext.Default.String, cancellationToken: cancellationToken);
         public Task<string> GetProtocolVersionAsync(CancellationToken cancellationToken = default)
             => Task.FromResult($"EngineRPC/{EngineRpcProtocol.Version}");
         public Task<JsonObject> GetBuildInfoAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.ApplicationBuildInfo, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationBuildInfo, EngineRpcJsonContext.Default.JsonObject, cancellationToken: cancellationToken);
         public Task<JsonObject> GetProcessInfoAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.ApplicationProcessInfo, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationProcessInfo, EngineRpcJsonContext.Default.JsonObject, cancellationToken: cancellationToken);
         public Task<JsonObject> GetPreferencesAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.ApplicationGetPreferences, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationGetPreferences, EngineRpcJsonContext.Default.JsonObject, cancellationToken: cancellationToken);
         public Task SetPreferencesAsync(JsonObject preferences, CancellationToken cancellationToken = default)
             => rpc.InvokeAsync(EngineRpcMethods.ApplicationSetPreferences, preferences, cancellationToken);
         public Task<string> GetDefaultSavePathAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<string>(EngineRpcMethods.ApplicationDefaultSavePath, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationDefaultSavePath, EngineRpcJsonContext.Default.String, cancellationToken: cancellationToken);
         public Task<string> RotateApiKeyAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<string>(EngineRpcMethods.ApplicationRotateApiKey, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationRotateApiKey, EngineRpcJsonContext.Default.String, cancellationToken: cancellationToken);
         public Task DeleteApiKeyAsync(CancellationToken cancellationToken = default)
             => rpc.InvokeAsync(EngineRpcMethods.ApplicationDeleteApiKey, cancellationToken: cancellationToken);
         public Task ChangeRemoteApiPasswordAsync(string newPassword, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.ApplicationChangeRemoteApiPassword, new { newPassword }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationChangeRemoteApiPassword, new JsonObject { ["newPassword"] = newPassword }, cancellationToken);
         public Task<bool> DeleteMigrationBackupAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<bool>(EngineRpcMethods.ApplicationDeleteMigrationBackup, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationDeleteMigrationBackup, EngineRpcJsonContext.Default.Boolean, cancellationToken: cancellationToken);
         public Task<JsonArray> GetDirectoryContentAsync(string path, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonArray>(EngineRpcMethods.ApplicationDirectoryContent, new { path }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationDirectoryContent, EngineRpcJsonContext.Default.JsonArray, new JsonObject { ["path"] = path }, cancellationToken);
         public Task<JsonArray> GetCookiesAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonArray>(EngineRpcMethods.ApplicationGetCookies, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ApplicationGetCookies, EngineRpcJsonContext.Default.JsonArray, cancellationToken: cancellationToken);
         public Task SetCookiesAsync(JsonArray cookies, CancellationToken cancellationToken = default)
             => rpc.InvokeAsync(EngineRpcMethods.ApplicationSetCookies, cookies, cancellationToken);
         public Task ShutdownAsync(CancellationToken cancellationToken = default)
@@ -86,53 +86,53 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
     private sealed class SyncApi(EnginePipeClient rpc) : ISyncApi
     {
         public Task<MainDataResponse> GetMainDataAsync(int responseId, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<MainDataResponse>(EngineRpcMethods.SyncMainData, new { responseId }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.SyncMainData, InfrastructureJsonContext.Default.MainDataResponse, new JsonObject { ["responseId"] = responseId }, cancellationToken);
         public Task<JsonObject> GetTorrentPeersAsync(string hash, int responseId, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.SyncTorrentPeers, new { hash, responseId }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.SyncTorrentPeers, EngineRpcJsonContext.Default.JsonObject, new JsonObject { ["hash"] = hash, ["responseId"] = responseId }, cancellationToken);
     }
 
     private sealed class TransferApi(EnginePipeClient rpc) : ITransferApi
     {
         public Task<JsonObject> GetInfoAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.TransferInfo, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferInfo, EngineRpcJsonContext.Default.JsonObject, cancellationToken: cancellationToken);
         public Task<bool> GetAlternativeSpeedLimitsAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<bool>(EngineRpcMethods.TransferGetAlternativeLimits, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferGetAlternativeLimits, EngineRpcJsonContext.Default.Boolean, cancellationToken: cancellationToken);
         public Task SetAlternativeSpeedLimitsAsync(bool enabled, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.TransferSetAlternativeLimits, new { enabled }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferSetAlternativeLimits, new JsonObject { ["enabled"] = enabled }, cancellationToken);
         public Task<long> GetDownloadLimitAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<long>(EngineRpcMethods.TransferGetDownloadLimit, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferGetDownloadLimit, EngineRpcJsonContext.Default.Int64, cancellationToken: cancellationToken);
         public Task<long> GetUploadLimitAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<long>(EngineRpcMethods.TransferGetUploadLimit, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferGetUploadLimit, EngineRpcJsonContext.Default.Int64, cancellationToken: cancellationToken);
         public Task SetDownloadLimitAsync(long value, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.TransferSetDownloadLimit, new { value }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferSetDownloadLimit, new JsonObject { ["value"] = value }, cancellationToken);
         public Task SetUploadLimitAsync(long value, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.TransferSetUploadLimit, new { value }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferSetUploadLimit, new JsonObject { ["value"] = value }, cancellationToken);
         public Task BanPeersAsync(IEnumerable<string> peers, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.TransferBanPeers, new { peers = peers.ToArray() }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TransferBanPeers, new JsonObject { ["peers"] = ToArray(peers) }, cancellationToken);
     }
 
     private sealed class TorrentsApi(EnginePipeClient rpc) : ITorrentsApi
     {
         public Task<IReadOnlyList<TorrentInfo>> GetInfoAsync(string filter = "all", string? category = null, string? tag = null, CancellationToken cancellationToken = default)
-            => InvokeList<TorrentInfo>(rpc, EngineRpcMethods.TorrentsInfo, new { filter, category, tag }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsInfo, InfrastructureJsonContext.Default.ListTorrentInfo, new JsonObject { ["filter"] = filter, ["category"] = category, ["tag"] = tag }, cancellationToken).ContinueWith(static task => (IReadOnlyList<TorrentInfo>)task.Result, cancellationToken);
         public Task<TorrentProperties> GetPropertiesAsync(string hash, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<TorrentProperties>(EngineRpcMethods.TorrentsProperties, new { hash }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsProperties, InfrastructureJsonContext.Default.TorrentProperties, new JsonObject { ["hash"] = hash }, cancellationToken);
         public Task<IReadOnlyList<TorrentTracker>> GetTrackersAsync(string hash, CancellationToken cancellationToken = default)
-            => InvokeList<TorrentTracker>(rpc, EngineRpcMethods.TorrentsTrackers, new { hash }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsTrackers, InfrastructureJsonContext.Default.ListTorrentTracker, new JsonObject { ["hash"] = hash }, cancellationToken).ContinueWith(static task => (IReadOnlyList<TorrentTracker>)task.Result, cancellationToken);
         public Task<IReadOnlyList<string>> GetWebSeedsAsync(string hash, CancellationToken cancellationToken = default)
-            => InvokeList<string>(rpc, EngineRpcMethods.TorrentsWebSeeds, new { hash }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsWebSeeds, InfrastructureJsonContext.Default.ListString, new JsonObject { ["hash"] = hash }, cancellationToken).ContinueWith(static task => (IReadOnlyList<string>)task.Result, cancellationToken);
         public Task<IReadOnlyList<TorrentFile>> GetFilesAsync(string hash, CancellationToken cancellationToken = default)
-            => InvokeList<TorrentFile>(rpc, EngineRpcMethods.TorrentsFiles, new { hash }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsFiles, InfrastructureJsonContext.Default.ListTorrentFile, new JsonObject { ["hash"] = hash }, cancellationToken).ContinueWith(static task => (IReadOnlyList<TorrentFile>)task.Result, cancellationToken);
         public Task<IReadOnlyList<int>> GetPieceStatesAsync(string hash, CancellationToken cancellationToken = default)
-            => InvokeList<int>(rpc, EngineRpcMethods.TorrentsPieceStates, new { hash }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsPieceStates, InfrastructureJsonContext.Default.ListInt32, new JsonObject { ["hash"] = hash }, cancellationToken).ContinueWith(static task => (IReadOnlyList<int>)task.Result, cancellationToken);
         public Task<IReadOnlyList<int>> GetPieceAvailabilityAsync(string hash, CancellationToken cancellationToken = default)
-            => InvokeList<int>(rpc, EngineRpcMethods.TorrentsPieceAvailability, new { hash }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsPieceAvailability, InfrastructureJsonContext.Default.ListInt32, new JsonObject { ["hash"] = hash }, cancellationToken).ContinueWith(static task => (IReadOnlyList<int>)task.Result, cancellationToken);
         public Task AddAsync(TorrentAddRequest request, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.TorrentsAdd, request, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsAdd, JsonSerializer.SerializeToNode(request, InfrastructureJsonContext.Default.TorrentAddRequest), cancellationToken);
         public Task DeleteAsync(string hashes, bool deleteFiles, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.TorrentsDelete, new { hashes, deleteFiles }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsDelete, new JsonObject { ["hashes"] = hashes, ["deleteFiles"] = deleteFiles }, cancellationToken);
         public Task ExecuteAsync(TorrentCommand command, string hashes, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.TorrentsCommand, new { command, hashes }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsCommand, new JsonObject { ["command"] = (int)command, ["hashes"] = hashes }, cancellationToken);
         public Task SetForceStartAsync(string hashes, bool enabled, CancellationToken cancellationToken = default)
             => ActionAsync("setForceStart", new() { ["hashes"] = hashes, ["value"] = enabled ? "true" : "false" }, cancellationToken);
         public Task SetSuperSeedingAsync(string hashes, bool enabled, CancellationToken cancellationToken = default)
@@ -180,31 +180,31 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
         public Task DeleteTagsAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default)
             => ActionAsync("deleteTags", new() { ["tags"] = string.Join(',', tags) }, cancellationToken);
         private Task ActionAsync(string action, Dictionary<string, string?> parameters, CancellationToken cancellationToken)
-            => rpc.InvokeAsync(EngineRpcMethods.TorrentsAction, new { action, parameters }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsAction, new JsonObject { ["action"] = action, ["parameters"] = ToObject(parameters) }, cancellationToken);
         public Task<byte[]> ExportAsync(string hash, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<byte[]>(EngineRpcMethods.TorrentsExport, new { hash }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsExport, EngineRpcJsonContext.Default.ByteArray, new JsonObject { ["hash"] = hash }, cancellationToken);
         public Task<JsonObject> FetchMetadataAsync(string url, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.TorrentsFetchMetadata, new { url }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsFetchMetadata, EngineRpcJsonContext.Default.JsonObject, new JsonObject { ["url"] = url }, cancellationToken);
         public Task<JsonObject> ParseMetadataAsync(string torrentFilePath, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.TorrentsParseMetadata, new { torrentFilePath }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.TorrentsParseMetadata, EngineRpcJsonContext.Default.JsonObject, new JsonObject { ["torrentFilePath"] = torrentFilePath }, cancellationToken);
     }
 
     private sealed class LogApi(EnginePipeClient rpc) : ILogApi
     {
         public Task<JsonArray> GetMainAsync(long lastKnownId = -1, bool normal = true, bool info = true, bool warning = true, bool critical = true, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonArray>(EngineRpcMethods.LogsMain, new { lastKnownId, normal, info, warning, critical }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.LogsMain, EngineRpcJsonContext.Default.JsonArray, new JsonObject { ["lastKnownId"] = lastKnownId, ["normal"] = normal, ["info"] = info, ["warning"] = warning, ["critical"] = critical }, cancellationToken);
         public Task<JsonArray> GetPeersAsync(long lastKnownId = -1, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonArray>(EngineRpcMethods.LogsPeers, new { lastKnownId }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.LogsPeers, EngineRpcJsonContext.Default.JsonArray, new JsonObject { ["lastKnownId"] = lastKnownId }, cancellationToken);
     }
 
     private sealed class RssApi(EnginePipeClient rpc) : IRssApi
     {
         public Task<JsonObject> GetItemsAsync(bool withData = true, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.RssItems, new { withData }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.RssItems, EngineRpcJsonContext.Default.JsonObject, new JsonObject { ["withData"] = withData }, cancellationToken);
         public Task<JsonObject> GetRulesAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.RssRules, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.RssRules, EngineRpcJsonContext.Default.JsonObject, cancellationToken: cancellationToken);
         public Task<JsonArray> GetMatchingArticlesAsync(string ruleName, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonArray>(EngineRpcMethods.RssMatchingArticles, new { ruleName }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.RssMatchingArticles, EngineRpcJsonContext.Default.JsonArray, new JsonObject { ["ruleName"] = ruleName }, cancellationToken);
         public Task AddFeedAsync(string url, string path, CancellationToken cancellationToken = default)
             => ActionAsync("addFeed", new() { ["url"] = url, ["path"] = path }, cancellationToken);
         public Task AddFolderAsync(string path, CancellationToken cancellationToken = default)
@@ -218,19 +218,19 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
         public Task RemoveRuleAsync(string ruleName, CancellationToken cancellationToken = default)
             => ActionAsync("removeRule", new() { ["ruleName"] = ruleName }, cancellationToken);
         private Task ActionAsync(string action, Dictionary<string, string?> parameters, CancellationToken cancellationToken)
-            => rpc.InvokeAsync(EngineRpcMethods.RssAction, new { action, parameters }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.RssAction, new JsonObject { ["action"] = action, ["parameters"] = ToObject(parameters) }, cancellationToken);
     }
 
     private sealed class SearchApi(EnginePipeClient rpc) : ISearchApi
     {
         public Task<int> StartAsync(string pattern, string category = "all", string plugins = "all", CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<int>(EngineRpcMethods.SearchStart, new { pattern, category, plugins }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.SearchStart, EngineRpcJsonContext.Default.Int32, new JsonObject { ["pattern"] = pattern, ["category"] = category, ["plugins"] = plugins }, cancellationToken);
         public Task<JsonArray> GetStatusAsync(int? id = null, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonArray>(EngineRpcMethods.SearchStatus, new { id }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.SearchStatus, EngineRpcJsonContext.Default.JsonArray, new JsonObject { ["id"] = id }, cancellationToken);
         public Task<JsonObject> GetResultsAsync(int id, int limit = 500, int offset = 0, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.SearchResults, new { id, limit, offset }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.SearchResults, EngineRpcJsonContext.Default.JsonObject, new JsonObject { ["id"] = id, ["limit"] = limit, ["offset"] = offset }, cancellationToken);
         public Task<JsonArray> GetPluginsAsync(CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonArray>(EngineRpcMethods.SearchPlugins, cancellationToken: cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.SearchPlugins, EngineRpcJsonContext.Default.JsonArray, cancellationToken: cancellationToken);
         public Task InstallPluginAsync(string source, CancellationToken cancellationToken = default)
             => ActionAsync("installPlugin", new() { ["sources"] = source }, cancellationToken);
         public Task SetPluginsEnabledAsync(IEnumerable<string> names, bool enabled, CancellationToken cancellationToken = default)
@@ -242,29 +242,42 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
         public Task StopAsync(int id, CancellationToken cancellationToken = default)
             => ActionAsync("stop", new() { ["id"] = id.ToString(System.Globalization.CultureInfo.InvariantCulture) }, cancellationToken);
         private Task ActionAsync(string action, Dictionary<string, string?> parameters, CancellationToken cancellationToken)
-            => rpc.InvokeAsync(EngineRpcMethods.SearchAction, new { action, parameters }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.SearchAction, new JsonObject { ["action"] = action, ["parameters"] = ToObject(parameters) }, cancellationToken);
     }
 
     private sealed class TorrentCreatorApi(EnginePipeClient rpc) : ITorrentCreatorApi
     {
         public Task<JsonObject> AddTaskAsync(JsonObject request, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.CreatorAdd, request, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.CreatorAdd, EngineRpcJsonContext.Default.JsonObject, request, cancellationToken);
         public Task<JsonObject> GetStatusAsync(string taskId, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.CreatorStatus, new { taskId }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.CreatorStatus, EngineRpcJsonContext.Default.JsonObject, new JsonObject { ["taskId"] = taskId }, cancellationToken);
         public Task<byte[]> GetTorrentFileAsync(string taskId, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<byte[]>(EngineRpcMethods.CreatorFile, new { taskId }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.CreatorFile, EngineRpcJsonContext.Default.ByteArray, new JsonObject { ["taskId"] = taskId }, cancellationToken);
         public Task DeleteTaskAsync(string taskId, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.CreatorDelete, new { taskId }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.CreatorDelete, new JsonObject { ["taskId"] = taskId }, cancellationToken);
     }
 
     private sealed class ClientDataApi(EnginePipeClient rpc) : IClientDataApi
     {
         public Task<JsonObject> LoadAsync(string key, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync<JsonObject>(EngineRpcMethods.ClientDataLoad, new { key }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ClientDataLoad, EngineRpcJsonContext.Default.JsonObject, new JsonObject { ["key"] = key }, cancellationToken);
         public Task StoreAsync(string key, JsonNode value, CancellationToken cancellationToken = default)
-            => rpc.InvokeAsync(EngineRpcMethods.ClientDataStore, new { key, value }, cancellationToken);
+            => rpc.InvokeAsync(EngineRpcMethods.ClientDataStore, new JsonObject { ["key"] = key, ["value"] = value.DeepClone() }, cancellationToken);
     }
 
-    private static async Task<IReadOnlyList<T>> InvokeList<T>(EnginePipeClient rpc, string method, object payload, CancellationToken cancellationToken)
-        => await rpc.InvokeAsync<List<T>>(method, payload, cancellationToken).ConfigureAwait(false);
+    private static JsonArray ToArray(IEnumerable<string> values)
+    {
+        var array = new JsonArray();
+        foreach (var value in values)
+            array.Add((JsonNode?)JsonValue.Create(value));
+        return array;
+    }
+
+    private static JsonObject ToObject(IEnumerable<KeyValuePair<string, string?>> values)
+    {
+        var obj = new JsonObject();
+        foreach (var (key, value) in values)
+            obj[key] = value;
+        return obj;
+    }
 }

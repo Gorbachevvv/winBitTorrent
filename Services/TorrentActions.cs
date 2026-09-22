@@ -22,7 +22,7 @@ public static class TorrentActions
 
         try
         {
-            if (!ClientSettings.Get("ui.confirmDelete", true))
+            if (!ClientSettings.Current.Ui.ConfirmDelete)
             {
                 await viewModel.DeleteSelectedAsync(deleteFiles: false);
                 return;

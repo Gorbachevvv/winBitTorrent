@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace WinBitTorrent.Services;
 
 public sealed record OnboardingDraft
@@ -13,36 +11,33 @@ public sealed record OnboardingDraft
 
 public static class OnboardingPreferences
 {
-    public const string CompletedKey = "onboarding.completed";
-    public const string DraftKey = "onboarding.draft";
-    public static bool IsComplete => ClientSettings.Get(CompletedKey, false);
+    public static bool IsComplete => ClientSettings.Current.Onboarding.Completed;
 
     public static OnboardingDraft Load()
     {
-        try
-        {
-            if (ClientSettings.Get<string>(DraftKey) is { } json
-                && JsonSerializer.Deserialize<OnboardingDraft>(json) is { } draft)
-                return draft with { Step = Math.Clamp(draft.Step, 0, 3) };
-        }
-        catch (JsonException) { }
+        if (ClientSettings.Current.Onboarding.Draft is { } draft)
+            return draft with { Step = Math.Clamp(draft.Step, 0, 3) };
         return new OnboardingDraft
         {
-            Theme = ClientSettings.Get("ui.theme", "Default")!,
-            Notifications = ClientSettings.Get("notifications.enabled", true)
+            Theme = ClientSettings.Current.Ui.Theme,
+            Notifications = ClientSettings.Current.Notifications.Enabled
         };
     }
 
     public static void SaveDraft(OnboardingDraft draft)
-        => ClientSettings.SetValue(DraftKey, JsonSerializer.Serialize(draft));
+    {
+        ClientSettings.Current.Onboarding.Draft = draft;
+        ClientSettings.Save();
+    }
 
     // Call only after external settings have been applied and verified.
     public static void Complete(OnboardingDraft draft)
-        => ClientSettings.SetValues(new Dictionary<string, object?>
-        {
-            ["ui.theme"] = draft.Theme,
-            ["notifications.enabled"] = draft.Notifications,
-            [CompletedKey] = true,
-            [DraftKey] = null
-        });
+    {
+        var settings = ClientSettings.Current;
+        settings.Ui.Theme = draft.Theme;
+        settings.Notifications.Enabled = draft.Notifications;
+        settings.Onboarding.Completed = true;
+        settings.Onboarding.Draft = null;
+        ClientSettings.Save();
+    }
 }

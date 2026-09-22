@@ -123,7 +123,7 @@ public sealed partial class SettingsWindow : Window
         this.ConfigureOwned(980, 720, minimumWidth: 720, minimumHeight: 520);
         _main = App.Services.GetRequiredService<MainViewModel>();
         foreach (var spec in Specs.Where(static spec => spec.Local))
-            _localValues[spec.Key] = ClientSettings.GetValue(spec.Key) ?? spec.DefaultValue;
+            _localValues[spec.Key] = ReadLocalSetting(ClientSettings.Current, spec.Key) ?? spec.DefaultValue;
         Activated += SettingsWindow_Activated;
         // The window can become Activated before MainViewModel finishes connecting - e.g. the
         // user opens Settings right after launch, before the qBittorrent handshake completes.
@@ -913,18 +913,74 @@ public sealed partial class SettingsWindow : Window
         // its section.
         var candidate = new JsonObject();
         foreach (var (key, value) in captured)
-            candidate[key] = JsonValue.Create(value);
+            candidate[key] = CreatePreferenceNode(value);
         var changedKeys = PreferenceVerifier.FindMismatchedKeys(candidate, _originalPreferences).ToHashSet(StringComparer.Ordinal);
 
         foreach (var (key, value) in captured)
         {
-            _preferences[key] = JsonValue.Create(value);
+            _preferences[key] = CreatePreferenceNode(value);
             if (changedKeys.Contains(key))
-                _changedPreferences[key] = JsonValue.Create(value);
+                _changedPreferences[key] = CreatePreferenceNode(value);
             else
                 _changedPreferences.Remove(key);
         }
     }
+
+    private static JsonNode? CreatePreferenceNode(object? value)
+        => value switch
+        {
+            null => null,
+            JsonNode node => node.DeepClone(),
+            bool boolean => JsonValue.Create(boolean),
+            long number => JsonValue.Create(number),
+            int number => JsonValue.Create(number),
+            double number => JsonValue.Create(number),
+            string text => JsonValue.Create(text),
+            _ => throw new NotSupportedException($"Preference values do not support '{value.GetType().FullName}'.")
+        };
+
+    private static object? ReadLocalSetting(ClientSettingsDocument settings, string key)
+        => key switch
+        {
+            "ui.language" => settings.Ui.Language,
+            "ui.theme" => settings.Ui.Theme,
+            "ui.confirmDelete" => settings.Ui.ConfirmDelete,
+            UpdatePreferences.CheckOnStartupKey => settings.Updates.CheckOnStartup,
+            "catalog.tmdb.apiKey" => settings.Catalog.TmdbApiKey,
+            NotificationPreferences.EnabledKey => settings.Notifications.Enabled,
+            NotificationPreferences.TorrentAddedKey => settings.Notifications.TorrentAdded,
+            _ => null
+        };
+
+    private static void ApplyLocalSettings(ClientSettingsDocument settings, IReadOnlyDictionary<string, object?> values)
+    {
+        if (values.TryGetValue("ui.language", out var language)) settings.Ui.Language = AsString(language);
+        if (values.TryGetValue("ui.theme", out var theme)) settings.Ui.Theme = AsString(theme, "Default");
+        if (values.TryGetValue("ui.confirmDelete", out var confirmDelete)) settings.Ui.ConfirmDelete = AsBoolean(confirmDelete, true);
+        if (values.TryGetValue(UpdatePreferences.CheckOnStartupKey, out var checkOnStartup)) settings.Updates.CheckOnStartup = AsBoolean(checkOnStartup, true);
+        if (values.TryGetValue("catalog.tmdb.apiKey", out var apiKey)) settings.Catalog.TmdbApiKey = AsNullableString(apiKey);
+        if (values.TryGetValue(NotificationPreferences.EnabledKey, out var notifications)) settings.Notifications.Enabled = AsBoolean(notifications, true);
+        if (values.TryGetValue(NotificationPreferences.TorrentAddedKey, out var torrentAdded)) settings.Notifications.TorrentAdded = AsBoolean(torrentAdded);
+    }
+
+    private static bool AsBoolean(object? value, bool fallback = false)
+        => value switch
+        {
+            null => fallback,
+            bool boolean => boolean,
+            _ => throw new NotSupportedException($"Boolean setting values do not support '{value.GetType().FullName}'.")
+        };
+
+    private static string AsString(object? value, string fallback = "")
+        => AsNullableString(value) ?? fallback;
+
+    private static string? AsNullableString(object? value)
+        => value switch
+        {
+            null => null,
+            string text => text,
+            _ => throw new NotSupportedException($"String setting values do not support '{value.GetType().FullName}'.")
+        };
 
     private async void Save_Click(object sender, RoutedEventArgs e)
     {
@@ -962,8 +1018,9 @@ public sealed partial class SettingsWindow : Window
             }
 
             var language = _localValues.GetValueOrDefault("ui.language") as string;
-            var languageChanged = !string.Equals(language ?? string.Empty, ClientSettings.Get("ui.language", ""), StringComparison.OrdinalIgnoreCase);
-            ClientSettings.SetValues(_localValues);
+            var languageChanged = !string.Equals(language ?? string.Empty, ClientSettings.Current.Ui.Language, StringComparison.OrdinalIgnoreCase);
+            ApplyLocalSettings(ClientSettings.Current, _localValues);
+            ClientSettings.Save();
             WindowUtilities.EndThemePreview(this);
             App.ApplyLanguageOverride(language ?? string.Empty);
 

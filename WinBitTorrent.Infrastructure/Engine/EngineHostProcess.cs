@@ -155,16 +155,32 @@ public sealed class EngineHostProcess : IManagedBackendHost
     private static string FindExecutable()
     {
         var overridden = Environment.GetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH");
-        var candidates = new[]
-        {
-            overridden,
-            Path.Combine(AppContext.BaseDirectory, "EngineHost", "WinBitTorrent.EngineHost.exe"),
-            Path.Combine(AppContext.BaseDirectory, "WinBitTorrent.EngineHost.exe"),
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "WinBitTorrent.EngineHost", "bin", "Debug", "net8.0-windows10.0.19041.0", "WinBitTorrent.EngineHost.exe"))
-        };
-        return candidates.FirstOrDefault(static path => !string.IsNullOrWhiteSpace(path) && File.Exists(path))
+        return EnumerateExecutableCandidates(overridden).FirstOrDefault(IsRunnableEngineHost)
             ?? throw new FileNotFoundException("WinBitTorrent.EngineHost.exe was not found. Build the EngineHost project first.");
     }
+
+    private static IEnumerable<string?> EnumerateExecutableCandidates(string? overridden)
+    {
+        yield return overridden;
+        yield return Path.Combine(AppContext.BaseDirectory, "EngineHost", "WinBitTorrent.EngineHost.exe");
+        yield return Path.Combine(AppContext.BaseDirectory, "WinBitTorrent.EngineHost.exe");
+
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            foreach (var configuration in new[] { "Debug", "Release" })
+            {
+                yield return Path.Combine(directory.FullName, "WinBitTorrent.EngineHost", "bin", "x64", configuration, "net8.0-windows10.0.19041.0", "WinBitTorrent.EngineHost.exe");
+                yield return Path.Combine(directory.FullName, "WinBitTorrent.EngineHost", "bin", configuration, "net8.0-windows10.0.19041.0", "WinBitTorrent.EngineHost.exe");
+            }
+            directory = directory.Parent;
+        }
+    }
+
+    private static bool IsRunnableEngineHost(string? path)
+        => !string.IsNullOrWhiteSpace(path)
+            && File.Exists(path)
+            && File.Exists(Path.ChangeExtension(path, ".dll"));
 
     private void OnOutput(object sender, DataReceivedEventArgs args)
     {

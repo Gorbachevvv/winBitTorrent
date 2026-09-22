@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace WinBitTorrent.Core.EngineProtocol;
@@ -96,4 +97,12 @@ public static class EngineRpcMethods
 [JsonSerializable(typeof(EngineRpcRequest))]
 [JsonSerializable(typeof(EngineRpcResponse))]
 [JsonSerializable(typeof(EngineHello))]
+[JsonSerializable(typeof(JsonElement))]
+[JsonSerializable(typeof(JsonObject))]
+[JsonSerializable(typeof(JsonArray))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(long))]
+[JsonSerializable(typeof(byte[]))]
 public partial class EngineRpcJsonContext : JsonSerializerContext;

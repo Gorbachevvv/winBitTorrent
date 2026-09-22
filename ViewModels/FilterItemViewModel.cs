@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml.Data;
 
 namespace WinBitTorrent.ViewModels;
 
@@ -10,6 +11,7 @@ public enum TorrentFilterKind
     Tracker
 }
 
+[Bindable]
 public sealed partial class FilterItemViewModel : ObservableObject
 {
     public FilterItemViewModel(TorrentFilterKind kind, string key, string title, string glyph, int count = 0)

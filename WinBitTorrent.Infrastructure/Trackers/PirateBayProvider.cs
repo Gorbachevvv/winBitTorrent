@@ -11,7 +11,7 @@ namespace WinBitTorrent.Infrastructure.Trackers;
 
 // The Pirate Bay exposes the same public JSON API its own front-end uses (apibay.org). It needs no
 // account and returns info hashes rather than .torrent files, so results carry a magnet link.
-public sealed class PirateBayProvider : ITrackerSearchProvider, ITrackerAnonymousAccess, IDisposable
+public sealed partial class PirateBayProvider : ITrackerSearchProvider, ITrackerAnonymousAccess, IDisposable
 {
     private static readonly Uri[] ApiMirrors = [new("https://apibay.org/")];
     private static readonly Uri Site = new("https://thepiratebay.org/");
@@ -100,7 +100,7 @@ public sealed class PirateBayProvider : ITrackerSearchProvider, ITrackerAnonymou
     internal static IReadOnlyList<TrackerSearchResult> ParseResults(string json, Uri site)
     {
         var results = new List<TrackerSearchResult>();
-        foreach (var entry in JsonSerializer.Deserialize<PirateBayEntry[]>(json, JsonOptions) ?? [])
+        foreach (var entry in JsonSerializer.Deserialize(json, PirateBayJsonContext.Default.PirateBayEntryArray) ?? [])
         {
             var infoHash = entry.InfoHash?.Trim();
             if (string.IsNullOrEmpty(entry.Id) || string.IsNullOrWhiteSpace(entry.Name) ||
@@ -160,6 +160,10 @@ public sealed class PirateBayProvider : ITrackerSearchProvider, ITrackerAnonymou
     }
 
     public void Dispose() => _client.Dispose();
+
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true)]
+    [JsonSerializable(typeof(PirateBayEntry[]))]
+    private sealed partial class PirateBayJsonContext : JsonSerializerContext;
 
     // apibay returns every numeric field as a string.
     internal sealed record PirateBayEntry

@@ -11,7 +11,7 @@ namespace WinBitTorrent.Infrastructure.Updates;
 /// Checks the project's GitHub "releases" feed for a newer build and downloads its
 /// installer, following the common self-updating desktop-app pattern.
 /// </summary>
-public sealed class GitHubUpdateService : IUpdateService, IDisposable
+public sealed partial class GitHubUpdateService : IUpdateService, IDisposable
 {
     private const string Owner = "Gorbachevvv";
     private const string Repository = "winBitTorrent";
@@ -40,7 +40,7 @@ public sealed class GitHubUpdateService : IUpdateService, IDisposable
             response.EnsureSuccessStatusCode();
 
             var payload = await response.Content
-                .ReadFromJsonAsync<GitHubRelease>(cancellationToken)
+                .ReadFromJsonAsync(GitHubUpdateServiceJsonContext.Default.GitHubRelease, cancellationToken)
                 .ConfigureAwait(false);
             if (payload is null || payload.Draft || payload.Prerelease || string.IsNullOrWhiteSpace(payload.TagName))
                 return null;
@@ -134,6 +134,9 @@ public sealed class GitHubUpdateService : IUpdateService, IDisposable
     }
 
     public void Dispose() => _client.Dispose();
+
+    [JsonSerializable(typeof(GitHubRelease))]
+    private sealed partial class GitHubUpdateServiceJsonContext : JsonSerializerContext;
 
     private sealed class GitHubRelease
     {

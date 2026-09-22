@@ -495,7 +495,7 @@ public sealed partial class TrackerSearchView : UserControl
         try
         {
             var result = await _loginWebView.CoreWebView2.ExecuteScriptAsync(script);
-            return JsonSerializer.Deserialize<string>(result);
+            return JsonSerializer.Deserialize(result, AppJsonContext.Default.String);
         }
         catch
         {

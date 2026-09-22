@@ -14,25 +14,15 @@ public static class TorrentSourceFileStore
 
     public static IReadOnlyDictionary<string, string> Load()
     {
-        var json = ClientSettings.Get<string>(Key);
-        if (string.IsNullOrWhiteSpace(json))
-            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            // JsonSerializer.Deserialize builds a plain Dictionary with the default (ordinal,
-            // case-sensitive) comparer - the OrdinalIgnoreCase comparer Record/Forget use is a
-            // runtime-only property that never survives the JSON round-trip. Re-wrapping here is
-            // what makes a lookup with a differently-cased hash (e.g. qBittorrent's own lowercase
-            // report vs. this app's uppercase Convert.ToHexString) actually succeed.
-            var deserialized = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-            return deserialized is null
-                ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                : new Dictionary<string, string>(deserialized, StringComparer.OrdinalIgnoreCase);
-        }
-        catch (JsonException)
-        {
-            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        }
+        // Json deserialization builds a plain Dictionary with the default (ordinal,
+        // case-sensitive) comparer - the OrdinalIgnoreCase comparer Record/Forget use is a
+        // runtime-only property that never survives the JSON round-trip. Re-wrapping here is
+        // what makes a lookup with a differently-cased hash (e.g. qBittorrent's own lowercase
+        // report vs. this app's uppercase Convert.ToHexString) actually succeed.
+        var deserialized = ClientSettings.Current.Torrents.SourceFiles;
+        return deserialized is null
+            ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, string>(deserialized, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>Records <paramref name="path"/> under every hash the torrent is known by (v1 and/or
@@ -45,7 +35,8 @@ public static class TorrentSourceFileStore
             if (!string.IsNullOrWhiteSpace(hash))
                 map[hash] = path;
         }
-        ClientSettings.SetValue(Key, JsonSerializer.Serialize(map));
+        ClientSettings.Current.Torrents.SourceFiles = map;
+        ClientSettings.Save();
     }
 
     public static string? Find(IEnumerable<string> hashes)
@@ -68,6 +59,9 @@ public static class TorrentSourceFileStore
         foreach (var hash in hashes)
             changed |= map.Remove(hash);
         if (changed)
-            ClientSettings.SetValue(Key, JsonSerializer.Serialize(map));
+        {
+            ClientSettings.Current.Torrents.SourceFiles = map;
+            ClientSettings.Save();
+        }
     }
 }

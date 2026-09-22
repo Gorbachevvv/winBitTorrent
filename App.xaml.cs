@@ -36,7 +36,7 @@ public partial class App : Application
             args.Handled = true;
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) => WriteCrash(args.ExceptionObject as Exception);
-        ApplyLanguageOverride(ClientSettings.GetValue("ui.language") as string ?? string.Empty);
+        ApplyLanguageOverride(ClientSettings.Current.Ui.Language);
         InitializeComponent();
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.AddDebug().SetMinimumLevel(LogLevel.Information));

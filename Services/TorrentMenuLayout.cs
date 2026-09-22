@@ -27,10 +27,6 @@ public static class TorrentMenuLayout
 {
     public const string SeparatorId = "separator";
 
-    private const string VisibleKey = "ui.torrentMenu.visible";
-    private const string HiddenKey = "ui.torrentMenu.hidden";
-    private const char Delimiter = ',';
-
     /// <summary>Every command that can be placed in the menu, with the glyphs the menu draws.</summary>
     public static IReadOnlyList<TorrentMenuEntry> Catalog { get; } =
     [
@@ -81,11 +77,11 @@ public static class TorrentMenuLayout
     /// </summary>
     public static IReadOnlyList<string> LoadVisible()
     {
-        var stored = Read(VisibleKey);
+        var stored = Read(static settings => settings.Torrents.VisibleMenuItems);
         if (stored.Count == 0)
             return DefaultVisible;
 
-        var hidden = Read(HiddenKey).ToHashSet(StringComparer.Ordinal);
+        var hidden = Read(static settings => settings.Torrents.HiddenMenuItems).ToHashSet(StringComparer.Ordinal);
         foreach (var entry in Catalog)
         {
             if (!hidden.Contains(entry.Id) && !stored.Contains(entry.Id))
@@ -97,35 +93,32 @@ public static class TorrentMenuLayout
     /// <summary>The commands the user removed from the menu, in the order they were removed.</summary>
     public static IReadOnlyList<string> LoadHidden()
     {
-        if (Read(VisibleKey).Count == 0)
+        if (Read(static settings => settings.Torrents.VisibleMenuItems).Count == 0)
             return [];
         var visible = LoadVisible().ToHashSet(StringComparer.Ordinal);
-        return Read(HiddenKey).Where(id => id != SeparatorId && !visible.Contains(id)).ToList();
+        return Read(static settings => settings.Torrents.HiddenMenuItems).Where(id => id != SeparatorId && !visible.Contains(id)).ToList();
     }
 
     public static void Save(IEnumerable<string> visible, IEnumerable<string> hidden)
     {
-        ClientSettings.SetValue(VisibleKey, string.Join(Delimiter, visible));
-        ClientSettings.SetValue(HiddenKey, string.Join(Delimiter, hidden));
+        ClientSettings.Current.Torrents.VisibleMenuItems = visible.ToList();
+        ClientSettings.Current.Torrents.HiddenMenuItems = hidden.ToList();
+        ClientSettings.Save();
     }
 
     public static void Reset()
     {
-        ClientSettings.SetValue(VisibleKey, null);
-        ClientSettings.SetValue(HiddenKey, null);
+        ClientSettings.Current.Torrents.VisibleMenuItems.Clear();
+        ClientSettings.Current.Torrents.HiddenMenuItems.Clear();
+        ClientSettings.Save();
     }
 
     // Separators may repeat; every other id is kept at most once so a corrupted file cannot
     // produce the same command twice in the menu.
-    private static List<string> Read(string key)
+    private static List<string> Read(Func<ClientSettingsDocument, IReadOnlyList<string>> read)
     {
-        var stored = ClientSettings.Get<string>(key);
-        if (string.IsNullOrWhiteSpace(stored))
-            return [];
-
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        return stored
-            .Split(Delimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        return read(ClientSettings.Current)
             .Where(id => id == SeparatorId || (Find(id) is not null && seen.Add(id)))
             .ToList();
     }
