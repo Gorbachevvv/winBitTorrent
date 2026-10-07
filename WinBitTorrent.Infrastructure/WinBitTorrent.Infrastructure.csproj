@@ -12,6 +12,9 @@
     <!-- The qBittorrent process host remains source-only as an integration-test oracle. -->
     <Compile Remove="Backend\ManagedBackendHost.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(StoreBuild)' == 'true'">
+    <Compile Remove="Trackers\**;Catalog\**;Updates\**;Storage\PasswordVaultTrackerCredentialStore.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />

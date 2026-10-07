@@ -76,7 +76,9 @@ internal static class LegacyQbittorrentMigrator
 
             CopyDirectoryIfPresent(Path.Combine(legacyRoot, "config", "rss"), Path.Combine(stagingRoot, "LegacyRss", "config"));
             CopyDirectoryIfPresent(Path.Combine(legacyData, "rss"), Path.Combine(stagingRoot, "LegacyRss", "data"));
+#if !STORE_BUILD
             CopyDirectoryIfPresent(Path.Combine(legacyData, "nova3"), Path.Combine(stagingRoot, "SearchPlugins", "nova3"));
+#endif
             CopyDirectoryIfPresent(Path.Combine(legacyData, "GeoDB"), Path.Combine(stagingRoot, "GeoDB"));
 
             var expectedHashes = import["expectedHashes"]!.AsArray()
@@ -115,7 +117,9 @@ internal static class LegacyQbittorrentMigrator
             ActivateDirectory(stagingTorrents, Path.Combine(engineRoot, "torrents"));
             ActivateDirectory(stagingResume, Path.Combine(engineRoot, "resume"));
             ActivateDirectoryIfPresent(Path.Combine(stagingRoot, "LegacyRss"), Path.Combine(engineRoot, "LegacyRss"));
+#if !STORE_BUILD
             ActivateDirectoryIfPresent(Path.Combine(stagingRoot, "SearchPlugins"), Path.Combine(engineRoot, "SearchPlugins"));
+#endif
             ActivateDirectoryIfPresent(Path.Combine(stagingRoot, "GeoDB"), Path.Combine(engineRoot, "GeoDB"));
             File.Move(Path.Combine(stagingRoot, "legacy-import.json"), Path.Combine(engineRoot, "legacy-import.json"));
 

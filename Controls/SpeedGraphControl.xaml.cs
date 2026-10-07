@@ -12,7 +12,6 @@ namespace WinBitTorrent.Controls;
 
 public sealed partial class SpeedGraphControl : UserControl
 {
-    private const double MaximumHistorySeconds = 900;
     private const double LeftInset = 78;
     private const double RightInset = 14;
     private const double TopInset = 14;
@@ -23,74 +22,63 @@ public sealed partial class SpeedGraphControl : UserControl
     private static readonly Color UploadColor = Color.FromArgb(0xFF, 0xF5, 0x9E, 0x0B);
     private static readonly Color GridColor = Color.FromArgb(0xFF, 0x80, 0x80, 0x80);
 
-    private readonly Queue<SpeedSample> _samples = new();
-    private readonly DispatcherTimer _sampleTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private IReadOnlyCollection<SpeedSample> Samples => History?.Samples ?? Array.Empty<SpeedSample>();
+    private long DownloadSpeed => History?.Latest?.Download ?? 0;
+    private long UploadSpeed => History?.Latest?.Upload ?? 0;
     private double _historySeconds = 300;
     private double _axisMaximum = 1024;
     private int _axisShrinkTicks;
+    private bool _isLoaded;
+    private string _sourceId = string.Empty;
 
     public SpeedGraphControl()
     {
         InitializeComponent();
-        _sampleTimer.Tick += (_, _) => RecordSample();
         Loaded += SpeedGraphControl_Loaded;
         Unloaded += SpeedGraphControl_Unloaded;
         ActualThemeChanged += (_, _) => DrawGraph();
         UpdateSummary();
     }
 
-    public long DownloadSpeed
+    public TorrentSpeedHistory? History
     {
-        get => (long)GetValue(DownloadSpeedProperty);
-        set => SetValue(DownloadSpeedProperty, value);
+        get => (TorrentSpeedHistory?)GetValue(HistoryProperty);
+        set => SetValue(HistoryProperty, value);
     }
 
-    public static readonly DependencyProperty DownloadSpeedProperty = DependencyProperty.Register(
-        nameof(DownloadSpeed), typeof(long), typeof(SpeedGraphControl), new PropertyMetadata(0L, OnSpeedChanged));
+    public static readonly DependencyProperty HistoryProperty = DependencyProperty.Register(
+        nameof(History), typeof(object), typeof(SpeedGraphControl), new PropertyMetadata(null, OnHistoryChanged));
 
-    public long UploadSpeed
-    {
-        get => (long)GetValue(UploadSpeedProperty);
-        set => SetValue(UploadSpeedProperty, value);
-    }
-
-    public static readonly DependencyProperty UploadSpeedProperty = DependencyProperty.Register(
-        nameof(UploadSpeed), typeof(long), typeof(SpeedGraphControl), new PropertyMetadata(0L, OnSpeedChanged));
-
-    public string SourceId
-    {
-        get => (string?)GetValue(SourceIdProperty) ?? string.Empty;
-        set => SetValue(SourceIdProperty, value);
-    }
-
-    public static readonly DependencyProperty SourceIdProperty = DependencyProperty.Register(
-        nameof(SourceId), typeof(string), typeof(SpeedGraphControl), new PropertyMetadata(string.Empty, OnSourceChanged));
-
-    private static void OnSpeedChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
+    private static void OnHistoryChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
     {
         var control = (SpeedGraphControl)dependencyObject;
-        control.UpdateSummary();
-        control.DrawGraph();
-    }
-
-    private static void OnSourceChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
-    {
-        var control = (SpeedGraphControl)dependencyObject;
-        control._samples.Clear();
-        control._axisMaximum = 1024;
-        control._axisShrinkTicks = 0;
-        control.UpdateSummary();
-        control.DrawGraph();
+        if (control._isLoaded)
+        {
+            if (args.OldValue is TorrentSpeedHistory previous)
+                previous.Changed -= control.History_Changed;
+            if (args.NewValue is TorrentSpeedHistory current)
+                current.Changed += control.History_Changed;
+            control.RefreshGraph(forceAxis: true);
+        }
     }
 
     private void SpeedGraphControl_Loaded(object sender, RoutedEventArgs e)
     {
-        RecordSample();
-        _sampleTimer.Start();
+        _isLoaded = true;
+        if (History is { } history)
+            history.Changed += History_Changed;
+        RefreshGraph(forceAxis: true);
     }
 
     private void SpeedGraphControl_Unloaded(object sender, RoutedEventArgs e)
-        => _sampleTimer.Stop();
+    {
+        _isLoaded = false;
+        if (History is { } history)
+            history.Changed -= History_Changed;
+    }
+
+    private void History_Changed(object? sender, EventArgs e)
+        => RefreshGraph();
 
     private void GraphCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
         => DrawGraph();
@@ -99,38 +87,31 @@ public sealed partial class SpeedGraphControl : UserControl
     {
         if (HistoryRangeCombo.SelectedItem is ComboBoxItem { Tag: string seconds }
             && double.TryParse(seconds, out var parsed))
-            _historySeconds = Math.Clamp(parsed, 60, MaximumHistorySeconds);
+            _historySeconds = Math.Clamp(parsed, 60, TorrentSpeedHistory.MaximumHistorySeconds);
 
         UpdateAxisMaximum(force: true);
         UpdateSummary();
         DrawGraph();
     }
 
-    private void RecordSample()
+    private void RefreshGraph(bool forceAxis = false)
     {
-        var now = DateTimeOffset.UtcNow;
-        _samples.Enqueue(new SpeedSample(now, Math.Max(0, DownloadSpeed), Math.Max(0, UploadSpeed)));
-        TrimExpiredSamples(now);
-        UpdateAxisMaximum();
+        var sourceId = History?.SourceId ?? string.Empty;
+        forceAxis |= !string.Equals(_sourceId, sourceId, StringComparison.OrdinalIgnoreCase);
+        _sourceId = sourceId;
+        UpdateAxisMaximum(forceAxis);
         UpdateSummary();
-        DrawGraph(now);
-    }
-
-    private void TrimExpiredSamples(DateTimeOffset now)
-    {
-        var oldest = now.AddSeconds(-MaximumHistorySeconds);
-        while (_samples.TryPeek(out var sample) && sample.Timestamp < oldest)
-            _samples.Dequeue();
+        DrawGraph();
     }
 
     private void UpdateAxisMaximum(bool force = false)
     {
         var oldest = DateTimeOffset.UtcNow.AddSeconds(-_historySeconds);
-        var visibleSamples = _samples.Where(sample => sample.Timestamp >= oldest).ToArray();
+        var visibleSamples = Samples.Where(sample => sample.Timestamp >= oldest).ToArray();
         var largest = Math.Max(
             Math.Max(DownloadSpeed, UploadSpeed),
             visibleSamples.Length == 0 ? 0 : visibleSamples.Max(static sample => Math.Max(sample.Download, sample.Upload)));
-        var target = NiceCeiling(Math.Max(1024, largest * 1.08));
+        var target = SpeedGraphScale.GetMaximum(largest);
 
         if (force)
         {
@@ -164,7 +145,7 @@ public sealed partial class SpeedGraphControl : UserControl
         var currentDownload = Math.Max(0, DownloadSpeed);
         var currentUpload = Math.Max(0, UploadSpeed);
         var oldest = DateTimeOffset.UtcNow.AddSeconds(-_historySeconds);
-        var visibleSamples = _samples.Where(sample => sample.Timestamp >= oldest).ToArray();
+        var visibleSamples = Samples.Where(sample => sample.Timestamp >= oldest).ToArray();
         var peakDownload = visibleSamples.Length == 0 ? currentDownload : Math.Max(currentDownload, visibleSamples.Max(static sample => sample.Download));
         var peakUpload = visibleSamples.Length == 0 ? currentUpload : Math.Max(currentUpload, visibleSamples.Max(static sample => sample.Upload));
         var averageDownload = visibleSamples.Length == 0 ? currentDownload : (long)visibleSamples.Average(static sample => sample.Download);
@@ -178,7 +159,7 @@ public sealed partial class SpeedGraphControl : UserControl
         UploadAverageValue.Text = ValueFormatter.Speed(averageUpload);
     }
 
-    private void DrawGraph(DateTimeOffset? timestamp = null)
+    private void DrawGraph()
     {
         if (GraphCanvas is null)
             return;
@@ -193,9 +174,8 @@ public sealed partial class SpeedGraphControl : UserControl
 
         DrawAxes(width, height, plotWidth, plotHeight);
 
-        var now = timestamp ?? DateTimeOffset.UtcNow;
-        TrimExpiredSamples(now);
-        var visibleSamples = _samples
+        var now = DateTimeOffset.UtcNow;
+        var visibleSamples = Samples
             .Where(sample => (now - sample.Timestamp).TotalSeconds <= _historySeconds)
             .ToArray();
         if (visibleSamples.Length == 0)
@@ -350,14 +330,4 @@ public sealed partial class SpeedGraphControl : UserControl
             return string.Format(Localizer.Get("SpeedGraph_SecondsAgoFormat", "{0} sec"), Math.Round(seconds));
         return string.Format(Localizer.Get("SpeedGraph_MinutesAgoFormat", "{0} min"), Math.Round(seconds / 60));
     }
-
-    private static double NiceCeiling(double value)
-    {
-        var exponent = Math.Pow(1024, Math.Floor(Math.Log(Math.Max(1024, value), 1024)));
-        var normalized = value / exponent;
-        var nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 4 ? 4 : normalized <= 8 ? 8 : 16;
-        return nice * exponent;
-    }
-
-    private sealed record SpeedSample(DateTimeOffset Timestamp, long Download, long Upload);
 }

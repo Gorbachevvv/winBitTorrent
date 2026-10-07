@@ -83,6 +83,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public ObservableCollection<string> SelectedWebSeeds { get; } = [];
     public ObservableCollection<TorrentFile> SelectedFiles { get; } = [];
     public ObservableCollection<PeerRowViewModel> SelectedPeers { get; } = [];
+    public TorrentSpeedHistory SelectedSpeedHistory { get; } = new();
 
     [ObservableProperty]
     private string _connectionStatus = Localizer.Get("Connection_Starting", "Starting…");
@@ -180,6 +181,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             _mainData.Reset();
             _torrentLifecycle.Reset();
+            SelectedSpeedHistory.SelectSource(null, 0, 0, DateTimeOffset.UtcNow);
             _rows.Clear();
             Torrents.Clear();
             _api = await _connection.ConnectAsync(SelectedProfile, _lifetime.Token);
@@ -383,6 +385,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     partial void OnSelectedTorrentChanged(TorrentRowViewModel? value)
     {
+        SelectedSpeedHistory.SelectSource(
+            value?.Hash, value?.Model.DownloadSpeed ?? 0, value?.Model.UploadSpeed ?? 0, DateTimeOffset.UtcNow);
         OnPropertyChanged(nameof(HasSelectedTorrent));
         _detailsLifetime?.Cancel();
         _detailsLifetime?.Dispose();
@@ -458,6 +462,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         var changeSet = _mainData.Apply(response);
         _notifications.Publish(_torrentLifecycle.Observe(changeSet));
         ApplyChangeSet(changeSet);
+        if (SelectedTorrent is { } selected)
+            SelectedSpeedHistory.RecordSample(selected.Model.DownloadSpeed, selected.Model.UploadSpeed, DateTimeOffset.UtcNow);
         IsConnected = true;
         ConnectionStatus = Localizer.Get("Connection_Connected", "Connected");
         ErrorMessage = string.Empty;

@@ -146,7 +146,9 @@ internal sealed partial class EngineState : IAsyncDisposable
             var state = new EngineState(connection, NativeEngine.Open(dataRoot), dataRoot);
             await state.ImportLegacyStateAsync(CancellationToken.None).ConfigureAwait(false);
             await state.ImportLegacyRssAsync(CancellationToken.None).ConfigureAwait(false);
+#if !STORE_BUILD
             state.InitializeSearchRuntime();
+#endif
             state.InitializeGeoIp();
             var preferences = await state.LoadPreferencesAsync(CancellationToken.None).ConfigureAwait(false);
             state.InvokeNative(ApplySettingsMethod, preferences);
@@ -202,11 +204,13 @@ internal sealed partial class EngineState : IAsyncDisposable
             EngineRpcMethods.RssRules => await GetRssRulesAsync(cancellationToken).ConfigureAwait(false),
             EngineRpcMethods.RssMatchingArticles => await GetRssMatchingArticlesAsync(payload, cancellationToken).ConfigureAwait(false),
             EngineRpcMethods.RssAction => await HandleRssActionAsync(payload, cancellationToken).ConfigureAwait(false),
+#if !STORE_BUILD
             EngineRpcMethods.SearchStart => await StartSearchAsync(payload, cancellationToken).ConfigureAwait(false),
             EngineRpcMethods.SearchStatus => GetSearchStatus(payload),
             EngineRpcMethods.SearchResults => GetSearchResults(payload),
             EngineRpcMethods.SearchPlugins => await GetSearchPluginsAsync(cancellationToken).ConfigureAwait(false),
             EngineRpcMethods.SearchAction => await HandleSearchActionAsync(payload, cancellationToken).ConfigureAwait(false),
+#endif
             EngineRpcMethods.CreatorAdd => StartCreatorTask(payload),
             EngineRpcMethods.CreatorStatus => GetCreatorStatus(payload),
             EngineRpcMethods.CreatorFile => GetCreatorFile(payload),
@@ -766,7 +770,11 @@ internal sealed partial class EngineState : IAsyncDisposable
         ["queueing_enabled"] = false,
         ["max_active_downloads"] = 3,
         ["max_active_uploads"] = 3,
+#if STORE_BUILD
+        ["search_enabled"] = false,
+#else
         ["search_enabled"] = true,
+#endif
         ["python_executable_path"] = string.Empty,
         ["rss_processing_enabled"] = true,
         ["rss_refresh_interval"] = 30,

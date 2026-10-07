@@ -21,13 +21,19 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
         Torrents = new TorrentsApi(rpc);
         Logs = new LogApi(rpc);
         Rss = new RssApi(rpc);
+#if !STORE_BUILD
         Search = new SearchApi(rpc);
+#endif
         TorrentCreator = new TorrentCreatorApi(rpc);
         ClientData = new ClientDataApi(rpc);
     }
 
     public ServerProfile Profile { get; }
+#if STORE_BUILD
+    public BackendCapabilities Capabilities => BackendCapabilities.All & ~BackendCapabilities.Search;
+#else
     public BackendCapabilities Capabilities => BackendCapabilities.All;
+#endif
     public IAuthApi Auth { get; }
     public IApplicationApi Application { get; }
     public ISyncApi Sync { get; }
@@ -35,7 +41,11 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
     public ITorrentsApi Torrents { get; }
     public ILogApi Logs { get; }
     public IRssApi Rss { get; }
+#if STORE_BUILD
+    public ISearchApi Search => throw new NotSupportedException("Search is not included in the Store edition.");
+#else
     public ISearchApi Search { get; }
+#endif
     public ITorrentCreatorApi TorrentCreator { get; }
     public IClientDataApi ClientData { get; }
 
@@ -221,6 +231,7 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
             => rpc.InvokeAsync(EngineRpcMethods.RssAction, new { action, parameters }, cancellationToken);
     }
 
+#if !STORE_BUILD
     private sealed class SearchApi(EnginePipeClient rpc) : ISearchApi
     {
         public Task<int> StartAsync(string pattern, string category = "all", string plugins = "all", CancellationToken cancellationToken = default)
@@ -245,6 +256,7 @@ internal sealed class LocalLibtorrentBackendClient : ITorrentBackendClient
             => rpc.InvokeAsync(EngineRpcMethods.SearchAction, new { action, parameters }, cancellationToken);
     }
 
+#endif
     private sealed class TorrentCreatorApi(EnginePipeClient rpc) : ITorrentCreatorApi
     {
         public Task<JsonObject> AddTaskAsync(JsonObject request, CancellationToken cancellationToken = default)

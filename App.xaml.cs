@@ -15,11 +15,8 @@ public partial class App : Application
     private Window? _window;
     private AppInstance? _mainInstance;
     private IAppNotificationService? _notifications;
-    // Held for the lifetime of the process purely so the installer can see it: Inno Setup's
-    // AppMutex check (see build/installer/WinBitTorrent.iss) is what makes a silent in-app
-    // update reliably wait for/close the running instance before overwriting its files.
-    // Without it, the installer used to race the app's own async shutdown and sometimes hit a
-    // sharing violation on a locked file, which made it roll back and abort the update.
+    // Kept until the process exits. The installer's InitializeSetup waits for this mutex to
+    // disappear during an in-app update, before Inno's built-in AppMutex startup check.
     private static Mutex? _appMutex;
 
     public static IServiceProvider Services { get; private set; } = null!;
@@ -44,9 +41,11 @@ public partial class App : Application
         services.AddSingleton<IAppNotificationService, AppNotificationService>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<RssViewModel>();
+#if !STORE_BUILD
         services.AddSingleton<SearchViewModel>();
         services.AddSingleton<TrackerSearchViewModel>();
         services.AddSingleton<CatalogViewModel>();
+#endif
         services.AddSingleton<LogViewModel>();
         services.AddSingleton<MainWindow>();
         Services = services.BuildServiceProvider();
@@ -107,8 +106,17 @@ public partial class App : Application
             return;
         }
 
+        // Register before reading activation arguments, including in the secondary
+        // process Windows starts when a notification is clicked.
+        _notifications = Services.GetRequiredService<IAppNotificationService>();
+        _notifications.NotificationInvoked += OnNotificationInvoked;
+        _notifications.Initialize();
         var current = AppInstance.GetCurrent();
+#if STORE_BUILD
+        _mainInstance = AppInstance.FindOrRegisterForKey("WinBitTorrent.Store.Main");
+#else
         _mainInstance = AppInstance.FindOrRegisterForKey("WinBitTorrent.Main");
+#endif
         if (!_mainInstance.IsCurrent)
         {
             _ = RedirectActivationAndExitAsync(_mainInstance, current.GetActivatedEventArgs());
@@ -118,11 +126,16 @@ public partial class App : Application
         _appMutex = new Mutex(initiallyOwned: false, name: "WinBitTorrentAppMutex");
 
         _mainInstance.Activated += OnActivated;
-        _window = Services.GetRequiredService<MainWindow>();
+        try
+        {
+            _window = Services.GetRequiredService<MainWindow>();
+        }
+        catch (Exception exception)
+        {
+            WriteCrash(exception);
+            throw;
+        }
         _window.Closed += OnMainWindowClosed;
-        _notifications = Services.GetRequiredService<IAppNotificationService>();
-        _notifications.NotificationInvoked += OnNotificationInvoked;
-        _notifications.Initialize();
         _window.Activate();
         if (_window is MainWindow mainWindow)
         {

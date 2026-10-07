@@ -141,7 +141,9 @@ internal sealed partial class EngineState
         {
             try { await _nativeAlertBackgroundWork.ConfigureAwait(false); } catch (OperationCanceledException) { }
         }
+#if !STORE_BUILD
         await StopSearchServicesAsync().ConfigureAwait(false);
+#endif
         await StopCreatorServicesAsync().ConfigureAwait(false);
         _backgroundLifetime.Dispose();
     }

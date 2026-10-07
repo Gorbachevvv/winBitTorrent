@@ -537,14 +537,17 @@ public sealed partial class TransfersView : UserControl
                 var matched = new List<TableViewColumn>();
                 foreach (var state in states)
                 {
-                    // Matched by header text - stable across reorders and across a changed column
-                    // count between app versions, unlike a saved positional index. The one column
-                    // with no header (the leading status icon) always keeps its declared position,
-                    // so it never needs a saved entry to begin with.
+                    // Current settings use a model-property key, which is independent of both the
+                    // selected UI language and the moment WinUI applies localized headers. Header
+                    // matching remains only to migrate settings written by older versions.
                     var column = TorrentTable.Columns.FirstOrDefault(candidate =>
                         !matched.Contains(candidate) &&
-                        candidate.Header?.ToString() is { Length: > 0 } header &&
-                        string.Equals(header, state.Header, StringComparison.Ordinal));
+                        ((!string.IsNullOrWhiteSpace(state.Key) &&
+                          string.Equals(ColumnKey(candidate), state.Key, StringComparison.Ordinal)) ||
+                         (string.IsNullOrWhiteSpace(state.Key) &&
+                          (candidate.Header?.ToString() is { Length: > 0 } header &&
+                           string.Equals(header, state.Header, StringComparison.Ordinal) ||
+                           string.Equals(LocalizedColumnHeader(candidate), state.Header, StringComparison.Ordinal)))));
                     if (column is null)
                         continue;
 
@@ -577,17 +580,36 @@ public sealed partial class TransfersView : UserControl
 
     private void SaveLayout()
     {
-        if (!IsLoaded)
-            return;
         ClientSettings.SetValue("layout.sidebarWidth", _expandedSidebarWidth);
         ClientSettings.SetValue("layout.sidebarCollapsed", _sidebarCollapsed);
         ClientSettings.SetValue("layout.detailsHeight", ContentGrid.RowDefinitions[2].ActualHeight);
         // The array's own sequence *is* the saved column order - see RestoreLayout.
         var columns = TorrentTable.Columns.Select(column => new ColumnState(
+            ColumnKey(column),
             column.Header?.ToString() ?? string.Empty,
             double.IsFinite(column.ActualWidth) && column.ActualWidth > 0 ? column.ActualWidth : column.Width.Value,
             column.Visibility == Visibility.Visible)).ToList();
         ClientSettings.SetValue("layout.torrentColumns", JsonSerializer.Serialize(columns));
+    }
+
+    private static string ColumnKey(TableViewColumn column)
+        => !string.IsNullOrWhiteSpace(column.SortMemberPath)
+            ? column.SortMemberPath
+            : column is TableViewBoundColumn bound ? bound.Binding?.Path?.Path ?? string.Empty : string.Empty;
+
+    private static string LocalizedColumnHeader(TableViewColumn column)
+    {
+        var key = ColumnKey(column) switch
+        {
+            "ProgressValue" => "Progress",
+            "DownloadSpeed" => "DownSpeed",
+            "UploadSpeed" => "UpSpeed",
+            "DownloadLimit" => "DownLimit",
+            "UploadLimit" => "UpLimit",
+            var value => value
+        };
+        var fallback = column.Header?.ToString() ?? string.Empty;
+        return string.IsNullOrEmpty(key) ? fallback : Localizer.Get($"Column{key}.Header", fallback);
     }
 
     // WinUI.TableView's own header drag-and-drop measures the drop position among *visible*
@@ -1547,5 +1569,5 @@ public sealed partial class TransfersView : UserControl
         WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(window));
     }
 
-    private sealed record ColumnState(string Header, double Width, bool Visible);
+    private sealed record ColumnState(string? Key, string Header, double Width, bool Visible);
 }

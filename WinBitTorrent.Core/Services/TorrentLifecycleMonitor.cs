@@ -4,7 +4,7 @@ namespace WinBitTorrent.Core.Services;
 
 /// <summary>
 /// Converts qBittorrent's incremental main-data snapshots into one-shot lifecycle events.
-/// A full update is deliberately treated as a baseline: it commonly happens at startup or
+/// The first update is deliberately treated as a baseline: it commonly happens at startup or
 /// after reconnecting and must not replay notifications for torrents that completed earlier.
 /// </summary>
 public sealed class TorrentLifecycleMonitor
@@ -16,8 +16,10 @@ public sealed class TorrentLifecycleMonitor
     {
         // response id 0 normally produces full_update=true, but this is not guaranteed by every
         // supported qBittorrent/Web API implementation. The first response after connecting is
-        // always an inventory snapshot, never a stream of newly-added torrents.
-        if (!_isPrimed || changeSet.FullUpdate)
+        // always an inventory snapshot, never a stream of newly-added torrents. The local
+        // engine then sends full snapshots on later polls, so those must be compared with the
+        // baseline instead of resetting it; otherwise its notifications can never be emitted.
+        if (!_isPrimed)
         {
             _states.Clear();
             foreach (var torrent in changeSet.ChangedTorrents)

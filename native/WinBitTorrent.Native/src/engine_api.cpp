@@ -338,40 +338,6 @@ namespace winbittorrent
             return settings;
         }
 
-        static bool resume_files_changed_after_snapshot(
-            lt::bdecode_node const& root,
-            lt::add_torrent_params const& params)
-        {
-            if (!params.ti || bool(params.flags & lt::torrent_flags::seed_mode)) return false;
-
-            auto const pieces = root.dict_find_string_value("pieces");
-            if (!pieces.empty()
-                && std::none_of(pieces.begin(), pieces.end(), [](char value) { return value == 0; }))
-                return false;
-
-            auto const snapshot_time = std::max(
-                root.dict_find_int_value("last_download", 0),
-                root.dict_find_int_value("completed_time", 0));
-            auto const save_path = utf8_path(params.save_path);
-            auto const& files = params.ti->files();
-            for (lt::file_index_t index{ 0 }; index < files.num_files(); ++index)
-            {
-                if (files.pad_file_at(index)) continue;
-                auto const path = save_path / utf8_path(files.file_path(index));
-                std::error_code error;
-                auto const size = fs::file_size(path, error);
-                if (error || size != static_cast<std::uintmax_t>(files.file_size(index))) continue;
-                auto const modified = fs::last_write_time(path, error);
-                if (error) continue;
-                auto const modified_system = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
-                    modified - fs::file_time_type::clock::now() + std::chrono::system_clock::now());
-                auto const modified_seconds = std::chrono::system_clock::to_time_t(modified_system);
-                if (snapshot_time == 0 || modified_seconds > snapshot_time + 1)
-                    return true;
-            }
-            return false;
-        }
-
         void load_resume_files()
         {
             for (auto const& item : fs::directory_iterator(resume_root_))
@@ -411,27 +377,12 @@ namespace winbittorrent
                         params.ti = std::make_shared<lt::torrent_info>(path_text(torrent_path), error);
                     if (!error)
                     {
-                        auto const needs_recheck = resume_files_changed_after_snapshot(root, params);
-                        auto const pause_after_recheck = needs_recheck
-                            && bool(params.flags & lt::torrent_flags::paused);
-                        if (needs_recheck)
-                        {
-                            params.have_pieces.clear();
-                            params.verified_pieces.clear();
-                            params.unfinished_pieces.clear();
-                            params.flags &= ~lt::torrent_flags::paused;
-                            params.flags &= ~lt::torrent_flags::auto_managed;
-                            if (pause_after_recheck)
-                                params.flags |= lt::torrent_flags::upload_mode;
-                        }
                         auto handle = session_.add_torrent(std::move(params), error);
                         if (!error)
                         {
                             states_[primary_hash(handle.info_hashes())] = std::move(imported);
                             set_first_last(handle, state(handle).first_last);
                             global_tags_.insert(state(handle).tags.begin(), state(handle).tags.end());
-                            if (pause_after_recheck)
-                                pause_after_recheck_.insert(primary_hash(handle.info_hashes()));
                         }
                     }
                 }

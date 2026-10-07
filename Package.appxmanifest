@@ -6,18 +6,19 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-  IgnorableNamespaces="uap rescap desktop">
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  IgnorableNamespaces="uap rescap desktop com">
 
   <Identity
     Name="1aca3510-12aa-402a-9877-c71dd4cbde5e"
-    Publisher="CN=Kirill"
+    Publisher="CN=FA89AD65-0359-4EC6-A7A6-F63583A6312C"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="1aca3510-12aa-402a-9877-c71dd4cbde5e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>WinBitTorrent</DisplayName>
-    <PublisherDisplayName>Kirill</PublisherDisplayName>
+    <PublisherDisplayName>KVCH</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -43,7 +44,17 @@
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
-        <desktop:Extension Category="windows.startupTask" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
+        <desktop:Extension Category="windows.toastNotificationActivation">
+          <desktop:ToastNotificationActivation ToastActivatorCLSID="37AB1864-3E02-4633-B23B-97170F279CB0" />
+        </desktop:Extension>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="WinBitTorrent.exe" Arguments="----AppNotificationActivated:" DisplayName="WinBitTorrent">
+              <com:Class Id="37AB1864-3E02-4633-B23B-97170F279CB0" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+        <desktop:Extension Category="windows.startupTask" Executable="WinBitTorrent.exe" EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask TaskId="WinBitTorrentStartup" Enabled="false" DisplayName="WinBitTorrent" />
         </desktop:Extension>
         <uap:Extension Category="windows.fileTypeAssociation">

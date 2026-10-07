@@ -186,15 +186,24 @@ public sealed partial class MainWindow
 
         progressDialog.Hide();
 
-        // Launch the installer silently; it closes/replaces the running app and relaunches it.
+        // The installer waits for our process to exit before its AppMutex startup check.
+        // Pin the existing installation directory and keep a log for failures after shutdown.
+        var logPath = Path.Combine(Path.GetDirectoryName(installerPath)!, $"setup-{release.Version}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.log");
+        var installDirectory = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
         var startInfo = new ProcessStartInfo(installerPath)
         {
             UseShellExecute = true,
-            Arguments = "/SILENT /SUPPRESSMSGBOXES /NORESTART /FORCECLOSEAPPLICATIONS /RELAUNCH"
+            Arguments = $"/SILENT /SUPPRESSMSGBOXES /NORESTART /FORCECLOSEAPPLICATIONS /RELAUNCH /DIR=\"{installDirectory}\" /LOG=\"{logPath}\""
         };
         try
         {
-            Process.Start(startInfo);
+            using var installer = Process.Start(startInfo)
+                ?? throw new InvalidOperationException("The installer process was not created.");
+            // Do not exit if Setup immediately rejected startup (for example, a corrupt
+            // installer). The normal updater installer is still waiting for our mutex here.
+            await Task.Delay(TimeSpan.FromSeconds(1.5));
+            if (installer.HasExited && installer.ExitCode != 0)
+                throw new InvalidOperationException($"Installer exited with code {installer.ExitCode}. Log: {logPath}");
         }
         catch (Exception exception)
         {

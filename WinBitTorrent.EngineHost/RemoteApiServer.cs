@@ -150,12 +150,14 @@ internal sealed class RemoteApiServer : IAsyncDisposable
         app.MapGet("/api/v1/rss/rules", ResultRoute(async context => Json(await state.HandleAsync(EngineRpcMethods.RssRules, EngineJson.EmptyObject, context.RequestAborted).ConfigureAwait(false))));
         app.MapPost("/api/v1/rss/action", ResultRoute(async context => Json(await state.HandleAsync(EngineRpcMethods.RssAction, await ReadElementAsync(context).ConfigureAwait(false), context.RequestAborted).ConfigureAwait(false))));
 
+#if !STORE_BUILD
         app.MapPost("/api/v1/search", ResultRoute(async context => Json(await state.HandleAsync(EngineRpcMethods.SearchStart, await ReadElementAsync(context).ConfigureAwait(false), context.RequestAborted).ConfigureAwait(false))));
         app.MapGet("/api/v1/search/{id:int}", async (int id, int limit, int offset, HttpContext context) => Json(await state.HandleAsync(EngineRpcMethods.SearchResults, EngineJson.Element(new { id, limit = limit <= 0 ? 500 : limit, offset }), context.RequestAborted).ConfigureAwait(false)));
         app.MapGet("/api/v1/search/{id:int}/status", async (int id, HttpContext context) => Json(await state.HandleAsync(EngineRpcMethods.SearchStatus, EngineJson.Element(new { id }), context.RequestAborted).ConfigureAwait(false)));
         app.MapGet("/api/v1/search/plugins", ResultRoute(async context => Json(await state.HandleAsync(EngineRpcMethods.SearchPlugins, EngineJson.EmptyObject, context.RequestAborted).ConfigureAwait(false))));
         app.MapPost("/api/v1/search/action", ResultRoute(async context => Json(await state.HandleAsync(EngineRpcMethods.SearchAction, await ReadElementAsync(context).ConfigureAwait(false), context.RequestAborted).ConfigureAwait(false))));
 
+#endif
         app.MapPost("/api/v1/creator", ResultRoute(async context => Json(await state.HandleAsync(EngineRpcMethods.CreatorAdd, await ReadElementAsync(context).ConfigureAwait(false), context.RequestAborted).ConfigureAwait(false))));
         app.MapGet("/api/v1/creator/{taskId}", async (string taskId, HttpContext context) => Json(await state.HandleAsync(EngineRpcMethods.CreatorStatus, EngineJson.Element(new { taskId }), context.RequestAborted).ConfigureAwait(false)));
         app.MapGet("/api/v1/creator/{taskId}/file", async (string taskId, HttpContext context) =>

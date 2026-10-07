@@ -54,7 +54,7 @@
                 <MenuFlyoutItem x:Uid="ForceRecheck" Text="Force recheck" Command="{Binding RecheckSelectedCommand}" />
                 <MenuFlyoutItem x:Uid="Reannounce" Text="Reannounce" Command="{Binding ReannounceSelectedCommand}" />
             </MenuBarItem>
-            <MenuBarItem x:Uid="ViewMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="View">
+            <MenuBarItem x:Name="WorkspaceViewMenu" x:Uid="ViewMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="View">
                 <ToggleMenuFlyoutItem x:Uid="AlternativeSpeedLimits" Text="Alternative speed limits" IsChecked="{Binding UseAlternativeSpeedLimits, Mode=OneWay}" Click="AlternativeSpeed_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="TransfersMenu" Text="Transfers" Tag="0" Click="NavigateMenu_Click" />
@@ -63,16 +63,16 @@
                 <MenuFlyoutItem x:Uid="TrackersMenu" Text="Tracker Search" Tag="3" Click="NavigateMenu_Click" />
                 <MenuFlyoutItem x:Uid="LogMenu" Text="Execution Log" Tag="4" Click="NavigateMenu_Click" />
             </MenuBarItem>
-            <MenuBarItem x:Uid="ToolsMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Tools">
+            <MenuBarItem x:Name="WorkspaceToolsMenu" x:Uid="ToolsMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Tools">
                 <MenuFlyoutItem x:Uid="ServerProfiles" Text="Server profiles…" Icon="World" Click="Profiles_Click" />
                 <MenuFlyoutItem x:Uid="Options" Text="Options…" Icon="Setting" Click="Options_Click" />
                 <MenuFlyoutItem x:Uid="Setup_Reopen" Text="First-run setup…" Click="FirstRunSetup_Click" />
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem x:Uid="CookiesMenu" Text="Cookies…" Click="Cookies_Click" />
+                <MenuFlyoutItem x:Name="CookiesMenuItem" x:Uid="CookiesMenu" Text="Cookies…" Click="Cookies_Click" />
                 <MenuFlyoutItem x:Uid="StatisticsMenu" Text="Statistics…" Click="Statistics_Click" />
             </MenuBarItem>
-            <MenuBarItem x:Uid="HelpMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Help">
-                <MenuFlyoutItem x:Uid="CheckUpdatesMenu" Text="Check for updates…" Icon="Sync" Click="CheckForUpdates_Click" />
+            <MenuBarItem x:Name="WorkspaceHelpMenu" x:Uid="HelpMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Help">
+                <MenuFlyoutItem x:Name="CheckUpdatesMenuItem" x:Uid="CheckUpdatesMenu" Text="Check for updates…" Icon="Sync" Click="CheckForUpdates_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="DocumentationMenu" Text="WinBitTorrent documentation" Icon="Help" Click="Documentation_Click" />
                 <MenuFlyoutItem x:Uid="AboutMenu" Text="About WinBitTorrent" Icon="Help" Click="About_Click" />
@@ -200,12 +200,12 @@
             </TabViewItem>
             <TabViewItem x:Uid="SearchTab" Tag="2" Header="Search" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource SearchIcon}" CornerRadius="8" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <Grid Background="Transparent">
-                    <views:SearchView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                    <Grid x:Name="SearchViewHost" />
                 </Grid>
             </TabViewItem>
             <TabViewItem x:Uid="TrackersTab" Tag="3" Header="Trackers" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource TrackerIcon}" CornerRadius="8" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                 <Grid Background="Transparent">
-                    <views:TrackerSearchView HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                    <Grid x:Name="TrackerSearchViewHost" />
                 </Grid>
             </TabViewItem>
             <TabViewItem x:Uid="LogTab" Tag="4" Header="Execution Log" HeaderTemplate="{StaticResource WorkspaceTabHeaderTemplate}" IconSource="{StaticResource LogIcon}" CornerRadius="8" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">

@@ -42,7 +42,9 @@ public sealed partial class SettingsWindow : Window
         new("Behavior", "ui.language", "Language", SettingKind.Language, true, ""),
         new("Behavior", "ui.theme", "Application theme", SettingKind.Theme, true, "Default"),
         new("Behavior", "ui.confirmDelete", "Confirm torrent deletion", SettingKind.Boolean, true, true),
+#if !STORE_BUILD
         new("Behavior", UpdatePreferences.CheckOnStartupKey, "Check for updates when the program starts", SettingKind.Boolean, true, true),
+#endif
         new("Downloads", "save_path", "Default save path", SettingKind.Text),
         new("Downloads", "temp_path_enabled", "Keep incomplete torrents in a separate folder", SettingKind.Boolean),
         new("Downloads", "temp_path", "Incomplete torrent path", SettingKind.Text),
@@ -88,9 +90,11 @@ public sealed partial class SettingsWindow : Window
         new("BitTorrent", "queueing_enabled", "Torrent queueing", SettingKind.Boolean),
         new("BitTorrent", "max_active_downloads", "Maximum active downloads", SettingKind.Number),
         new("BitTorrent", "max_active_uploads", "Maximum active uploads", SettingKind.Number),
+#if !STORE_BUILD
         new("Search", "search_enabled", "Enable Search Engine", SettingKind.Boolean),
         new("Search", "python_executable_path", "Python executable", SettingKind.Text),
         new("Catalog", "catalog.tmdb.apiKey", "TMDB API key", SettingKind.Password, true),
+#endif
         new("RSS", "rss_processing_enabled", "Enable fetching RSS feeds", SettingKind.Boolean),
         new("RSS", "rss_refresh_interval", "Feed refresh interval (minutes)", SettingKind.Number),
         new("RSS", "rss_max_articles_per_feed", "Maximum articles per feed", SettingKind.Number),
@@ -116,6 +120,10 @@ public sealed partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+#if STORE_BUILD
+        foreach (var item in Sections.MenuItems.OfType<NavigationViewItem>().Where(item => item.Tag?.ToString() is "Search" or "Catalog").ToArray())
+            Sections.MenuItems.Remove(item);
+#endif
         Title = Localizer.Get("WindowTitle_Settings", "Settings");
         MenuEditorTitle.Text = Localizer.Get("MenuEditor_Title", "Context menu editor");
         MenuEditorReset.Content = Localizer.Get("MenuEditor_Reset", "Restore defaults");

@@ -99,6 +99,15 @@
   </PropertyGroup>
 
   <!-- Publish Properties -->
+  <ItemGroup Condition="'$(StoreBuild)' == 'true'">
+    <AppxManifest Remove="@(AppxManifest)" />
+    <AppxManifest Include="$(StoreManifestPath)" Condition="'$(StoreManifestPath)' != ''" />
+    <Content Include="$(StoreEnginePayload)\**\*" Condition="'$(StoreEnginePayload)' != ''" Link="EngineHost\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Compile Remove="Views\TrackerSearchView.xaml.cs;Views\CatalogView.xaml.cs;Views\SearchView.xaml.cs;ViewModels\TrackerSearchViewModel.cs;ViewModels\CatalogViewModel.cs;ViewModels\SearchViewModel.cs;SearchPluginsWindow.xaml.cs;CookiesWindow.xaml.cs;Services\CatalogFavoritesStore.cs;MainWindow.Updates.cs" />
+    <Page Remove="Views\TrackerSearchView.xaml;Views\CatalogView.xaml;Views\SearchView.xaml;SearchPluginsWindow.xaml;CookiesWindow.xaml" />
+    <Content Remove="Backend\Python\**;Backend\SearchPlugins\**;Assets\Trackers\**" />
+    <None Remove="Backend\Python\**;Backend\SearchPlugins\**;Assets\Trackers\**" />
+  </ItemGroup>
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>

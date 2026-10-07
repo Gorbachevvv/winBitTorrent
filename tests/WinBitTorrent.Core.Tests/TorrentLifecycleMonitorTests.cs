@@ -115,6 +115,19 @@ public sealed class TorrentLifecycleMonitorTests
     }
 
     [Fact]
+    public void LaterFullSnapshotEmitsAddedEvent()
+    {
+        var monitor = new TorrentLifecycleMonitor();
+        monitor.Observe(ChangeSet(true));
+
+        var events = monitor.Observe(ChangeSet(true, Torrent("a", "Added by local engine", .5, 50)));
+
+        var torrentEvent = Assert.Single(events);
+        Assert.Equal(TorrentLifecycleEventKind.Added, torrentEvent.Kind);
+        Assert.Equal("Added by local engine", torrentEvent.TorrentName);
+    }
+
+    [Fact]
     public void CompletionWaitsUntilMovingHasFinished()
     {
         var monitor = new TorrentLifecycleMonitor();

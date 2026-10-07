@@ -307,7 +307,7 @@
                     </tv:TableViewTemplateColumn>
                     <tv:TableViewTextColumn x:Uid="ColumnSize" Header="Size" Width="90" Binding="{Binding Size}" />
                     <tv:TableViewTextColumn x:Uid="ColumnTotalSize" Header="Total size" Width="95" Visibility="Collapsed" Binding="{Binding TotalSize}" />
-                    <tv:TableViewTemplateColumn x:Uid="ColumnProgress" Header="Progress" Width="130">
+                    <tv:TableViewTemplateColumn x:Uid="ColumnProgress" Header="Progress" Width="130" SortMemberPath="ProgressValue">
                         <tv:TableViewTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid
@@ -833,9 +833,7 @@
                 </TabViewItem>
                 <TabViewItem x:Uid="DetailsSpeed" Header="Speed" IsClosable="False" IconSource="{StaticResource DetailsSpeedIcon}">
                     <controls:SpeedGraphControl
-                        DownloadSpeed="{Binding SelectedTorrent.Model.DownloadSpeed}"
-                        SourceId="{Binding SelectedTorrent.Hash}"
-                        UploadSpeed="{Binding SelectedTorrent.Model.UploadSpeed}" />
+                        History="{Binding SelectedSpeedHistory}" />
                 </TabViewItem>
                 </TabView>
                 <Grid

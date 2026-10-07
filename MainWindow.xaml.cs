@@ -36,6 +36,19 @@ public sealed partial class MainWindow : Window
     {
         ViewModel = viewModel;
         InitializeComponent();
+#if STORE_BUILD
+        foreach (var tab in WorkspaceTabs.TabItems.OfType<TabViewItem>().Where(tab => tab.Tag?.ToString() is "2" or "3").ToArray())
+            WorkspaceTabs.TabItems.Remove(tab);
+        foreach (var item in WorkspaceViewMenu.Items.OfType<MenuFlyoutItem>().Where(item => item.Tag?.ToString() is "2" or "3").ToArray())
+            WorkspaceViewMenu.Items.Remove(item);
+        WorkspaceToolsMenu.Items.Remove(CookiesMenuItem);
+        WorkspaceHelpMenu.Items.Remove(CheckUpdatesMenuItem);
+        if (WorkspaceHelpMenu.Items.FirstOrDefault() is MenuFlyoutSeparator separator)
+            WorkspaceHelpMenu.Items.Remove(separator);
+#else
+        SearchViewHost.Children.Add(new Views.SearchView());
+        TrackerSearchViewHost.Children.Add(new Views.TrackerSearchView());
+#endif
         RootGrid.DataContext = viewModel;
         RestoreWorkspaceTabs();
 
@@ -105,18 +118,18 @@ public sealed partial class MainWindow : Window
         // process's own Environment.GetCommandLineArgs() would still be the one it was
         // originally started with (the "previous torrent" bug). Only fall back to the
         // process command line on the very first launch, where it is the correct value.
-        // Both forms include the executable path as the first token, so skip it.
         var launchArguments = (args.Data as ILaunchActivatedEventArgs)?.Arguments;
-        IEnumerable<string> tokens;
+        IEnumerable<string> payloadCandidates;
         if (!string.IsNullOrWhiteSpace(launchArguments))
-            tokens = SplitArguments(launchArguments);
+            // Launch activation contains app arguments only. The executable path exists only
+            // in Environment.GetCommandLineArgs(), so retain the first supplied argument.
+            payloadCandidates = SplitArguments(launchArguments);
         else if (isInitialLaunch)
-            tokens = Environment.GetCommandLineArgs();
+            payloadCandidates = Environment.GetCommandLineArgs().Skip(1);
         else
             return;
 
-        var payload = tokens
-            .Skip(1)
+        var payload = payloadCandidates
             .Select(NormalizeActivationArgument)
             .FirstOrDefault(value => value is not null
                 && (value.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase)
@@ -311,7 +324,12 @@ public sealed partial class MainWindow : Window
     private void CreateTorrent_Click(object sender, RoutedEventArgs e) => new CreateTorrentWindow().Activate();
     private void Profiles_Click(object sender, RoutedEventArgs e) => new ProfilesWindow().Activate();
     private void Options_Click(object sender, RoutedEventArgs e) => new SettingsWindow().Activate();
-    private void Cookies_Click(object sender, RoutedEventArgs e) => new CookiesWindow().Activate();
+    private void Cookies_Click(object sender, RoutedEventArgs e)
+    {
+#if !STORE_BUILD
+        new CookiesWindow().Activate();
+#endif
+    }
 
     private async void Statistics_Click(object sender, RoutedEventArgs e)
     {

@@ -32,13 +32,19 @@ public sealed class QbittorrentApi : ITorrentBackendClient
         Torrents = new TorrentsApi(this);
         Logs = new LogApi(this);
         Rss = new RssApi(this);
+#if !STORE_BUILD
         Search = new SearchApi(this);
+#endif
         TorrentCreator = new TorrentCreatorApi(this);
         ClientData = new ClientDataApi(this);
     }
 
     public ServerProfile Profile { get; }
+#if STORE_BUILD
+    public BackendCapabilities Capabilities => BackendCapabilities.All & ~BackendCapabilities.LocalFileSystem & ~BackendCapabilities.Search;
+#else
     public BackendCapabilities Capabilities => BackendCapabilities.All & ~BackendCapabilities.LocalFileSystem;
+#endif
     public IAuthApi Auth { get; }
     public IApplicationApi Application { get; }
     public ISyncApi Sync { get; }
@@ -46,7 +52,11 @@ public sealed class QbittorrentApi : ITorrentBackendClient
     public ITorrentsApi Torrents { get; }
     public ILogApi Logs { get; }
     public IRssApi Rss { get; }
+#if STORE_BUILD
+    public ISearchApi Search => throw new NotSupportedException("Search is not included in the Store edition.");
+#else
     public ISearchApi Search { get; }
+#endif
     public ITorrentCreatorApi TorrentCreator { get; }
     public IClientDataApi ClientData { get; }
 
@@ -533,6 +543,7 @@ public sealed class QbittorrentApi : ITorrentBackendClient
             => api.PostAsync($"api/v2/rss/{action}", parameters, cancellationToken);
     }
 
+#if !STORE_BUILD
     private sealed class SearchApi(QbittorrentApi api) : ISearchApi
     {
         public async Task<int> StartAsync(string pattern, string category = "all", string plugins = "all", CancellationToken cancellationToken = default)
@@ -574,6 +585,7 @@ public sealed class QbittorrentApi : ITorrentBackendClient
             => api.PostAsync($"api/v2/search/{action}", parameters, cancellationToken);
     }
 
+#endif
     private sealed class TorrentCreatorApi(QbittorrentApi api) : ITorrentCreatorApi
     {
         public async Task<JsonObject> AddTaskAsync(JsonObject request, CancellationToken cancellationToken = default)

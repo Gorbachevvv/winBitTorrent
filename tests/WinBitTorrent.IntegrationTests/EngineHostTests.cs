@@ -191,6 +191,12 @@ public sealed class EngineHostTests
             await host.StartAsync();
             torrent = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
             Assert.True(torrent.Downloaded >= beforeRestart);
+            await WaitUntilAsync(async () =>
+                (await host.Client.Torrents.GetInfoAsync()).Single().State != "checkingResumeData",
+                TimeSpan.FromSeconds(5));
+            torrent = Assert.Single(await host.Client.Torrents.GetInfoAsync());
+            Assert.Equal("stoppedDL", torrent.State);
+            Assert.True(torrent.Downloaded >= beforeRestart);
             await host.Client.Torrents.ExecuteAsync(TorrentCommand.Start, torrent.Hash);
             await WaitUntilAsync(() => Task.FromResult(File.Exists(Path.Combine(downloads, "payload.bin"))), TimeSpan.FromSeconds(30));
             await Task.Delay(750); // let EngineHost persist storage_moved without any UI poll
@@ -353,7 +359,7 @@ public sealed class EngineHostTests
     }
 
     [Fact]
-    public async Task RechecksFilesChangedAfterTheLastResumeSnapshot()
+    public async Task ExternalFilesRequireAnExplicitRecheck()
     {
         var engineHost = FindEngineHost();
         var dataRoot = Path.Combine(Path.GetTempPath(), "WinBitTorrent.EngineHost.ExternalData", Guid.NewGuid().ToString("N"));
@@ -383,10 +389,15 @@ public sealed class EngineHostTests
             File.SetLastWriteTimeUtc(downloadedPath, DateTime.UtcNow.AddSeconds(2));
 
             await host.StartAsync();
-            await WaitUntilAsync(async () =>
-                (await host.Client!.Torrents.GetInfoAsync()).Single().Progress >= 1,
-                TimeSpan.FromSeconds(20));
             var recovered = Assert.Single(await host.Client!.Torrents.GetInfoAsync());
+            Assert.Equal(0, recovered.Progress);
+            Assert.Equal("stoppedDL", recovered.State);
+
+            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Recheck, recovered.Hash);
+            await WaitUntilAsync(async () =>
+                (await host.Client.Torrents.GetInfoAsync()).Single().Progress >= 1,
+                TimeSpan.FromSeconds(20));
+            recovered = Assert.Single(await host.Client.Torrents.GetInfoAsync());
             Assert.Equal(content.Length, recovered.Completed);
 
             var corrupted = (byte[])content.Clone();
@@ -394,7 +405,7 @@ public sealed class EngineHostTests
             await File.WriteAllBytesAsync(downloadedPath, corrupted);
             await host.Client.Torrents.ExecuteAsync(TorrentCommand.Recheck, recovered.Hash);
             await WaitUntilAsync(async () =>
-                (await host.Client.Torrents.GetInfoAsync()).Single().Progress < 1,
+                (await host.Client.Torrents.GetInfoAsync()).Single().State == "stoppedDL",
                 TimeSpan.FromSeconds(20));
             var failedCheck = Assert.Single(await host.Client.Torrents.GetInfoAsync());
             Assert.Equal("stoppedDL", failedCheck.State);
@@ -402,7 +413,7 @@ public sealed class EngineHostTests
             await File.WriteAllBytesAsync(downloadedPath, content);
             await host.Client.Torrents.ExecuteAsync(TorrentCommand.Recheck, recovered.Hash);
             await WaitUntilAsync(async () =>
-                (await host.Client.Torrents.GetInfoAsync()).Single().Progress >= 1,
+                (await host.Client.Torrents.GetInfoAsync()).Single().State == "stoppedUP",
                 TimeSpan.FromSeconds(20));
             var successfulCheck = Assert.Single(await host.Client.Torrents.GetInfoAsync());
             Assert.Equal("stoppedUP", successfulCheck.State);

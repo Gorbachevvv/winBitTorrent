@@ -16,4 +16,7 @@
   <ItemGroup Condition="Exists('..\Engine')">
     <Content Include="..\Engine\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup Condition="'$(StoreBuild)' == 'true'">
+    <Compile Remove="EngineState.Search.cs" />
+  </ItemGroup>
 </Project>

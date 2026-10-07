@@ -71,6 +71,7 @@ _pkginfo.txt
 /build/.work/
 /build/.engine-work/
 /build/.runtime-work/
+/build/.store-work/
 
 # WebView2 browser profiles, caches and cookies
 *.exe.WebView2/
