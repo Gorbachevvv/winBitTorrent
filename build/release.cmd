@@ -10,7 +10,7 @@ rem      release.cmd -Version 1.1.0
 rem =====================================================================
 setlocal
 cd /d "%~dp0.."
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0release.ps1" %*
+pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0release.ps1" %*
 echo.
 echo Press any key to close this window . . .
 pause >nul

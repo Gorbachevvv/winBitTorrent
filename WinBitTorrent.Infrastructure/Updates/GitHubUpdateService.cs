@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using WinBitTorrent.Core.Abstractions;
 
@@ -51,7 +53,8 @@ public sealed class GitHubUpdateService : IUpdateService, IDisposable
                 return null;
             }
 
-            var installer = payload.Assets?.FirstOrDefault(IsInstallerAsset);
+            var installerName = SelectInstallerName(payload.Assets?.Select(asset => asset.Name) ?? [], RuntimeInformation.ProcessArchitecture);
+            var installer = installerName is null ? null : payload.Assets?.FirstOrDefault(asset => asset.Name == installerName);
             var releasePage = Uri.TryCreate(payload.HtmlUrl, UriKind.Absolute, out var page)
                 ? page
                 : new Uri($"https://github.com/{Owner}/{Repository}/releases");
@@ -114,9 +117,19 @@ public sealed class GitHubUpdateService : IUpdateService, IDisposable
         return targetPath;
     }
 
-    private static bool IsInstallerAsset(GitHubAsset asset)
-        => asset.Name is not null
-            && asset.Name.EndsWith("setup.exe", StringComparison.OrdinalIgnoreCase);
+    internal static string? SelectInstallerName(IEnumerable<string?> names, Architecture architecture)
+    {
+        // Older clients select the first asset ending in setup.exe, regardless of
+        // architecture. ARM64 installers use another suffix to keep those clients on x64.
+        var pattern = architecture switch
+        {
+            Architecture.Arm64 => @"^WinBitTorrent-\d+(\.\d+){1,3}-setup-arm64\.exe$",
+            Architecture.X64 => @"^WinBitTorrent-\d+(\.\d+){1,3}-setup\.exe$",
+            _ => null
+        };
+        return pattern is null ? null : names.OfType<string>().FirstOrDefault(name =>
+            Regex.IsMatch(name, pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant));
+    }
 
     private static bool TryParseVersion(string tag, out Version version)
     {

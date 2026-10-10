@@ -7,6 +7,7 @@
 ;
 ; Optional overrides (passed with /D on the ISCC command line):
 ;   /DAppVersion=1.0.0
+;   /DAppArchitecture=x64 (or arm64)
 ;   /DPayloadDir=<absolute path to the staged win-x64 payload folder>
 ;   /DOutputDir=<absolute path for the produced setup .exe>
 
@@ -14,16 +15,23 @@
   #define AppVersion "1.0.0"
 #endif
 
+#ifndef AppArchitecture
+  #define AppArchitecture "x64"
+#endif
+#if AppArchitecture != "x64" && AppArchitecture != "arm64"
+  #error Unsupported AppArchitecture
+#endif
+
 ; Folder containing the published, self-contained portable app
 ; (WinBitTorrent.exe, Backend\, Licenses\, WindowsAppSDK runtime, ...).
 ; Paths are resolved relative to this .iss file unless an absolute path
 ; is provided.
 #ifndef PayloadDir
-  #define PayloadDir "..\..\dist\WinBitTorrent-" + AppVersion + "-portable"
+  #define PayloadDir "..\..\dist\WinBitTorrent-" + AppVersion + "-" + AppArchitecture + "-portable"
 #endif
 
 #ifndef OutputDir
-  #define OutputDir "..\..\dist\WinBitTorrent-" + AppVersion + "-installer"
+  #define OutputDir "..\..\dist\WinBitTorrent-" + AppVersion + "-" + AppArchitecture + "-installer"
 #endif
 
 #define AppName "WinBitTorrent"
@@ -76,8 +84,13 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 
 ; 64-bit only, Windows 10 2004 (19041) or newer.
+#if AppArchitecture == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 MinVersion=10.0.19041
 
 Compression=lzma2/max
@@ -97,7 +110,12 @@ RestartApplications=no
 ChangesAssociations=yes
 
 OutputDir={#OutputDir}
+#if AppArchitecture == "arm64"
+; Older x64 clients select any asset ending in setup.exe, so keep ARM64 out of that match.
+OutputBaseFilename={#AppName}-{#AppVersion}-setup-arm64
+#else
 OutputBaseFilename={#AppName}-{#AppVersion}-setup
+#endif
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

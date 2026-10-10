@@ -22,6 +22,17 @@ target_link_libraries(WinBitTorrent.Native PRIVATE
 
 if(MSVC)
     target_compile_options(WinBitTorrent.Native PRIVATE /W4 /permissive- /utf-8)
+    # The worker loads this bridge in its own process and must have the matching
+    # C++ runtime beside it, even when only the WinUI app carries its own runtime.
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+    include(InstallRequiredSystemLibraries)
+    if(MSVC_CXX_ARCHITECTURE_ID STREQUAL "ARM64")
+        # The ARM64 redist also contains this x64 exception helper. Native ARM64
+        # imports VCRUNTIME140.dll and does not use VCRUNTIME140_1.dll.
+        list(FILTER CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS EXCLUDE REGEX "/vcruntime140_1\\.dll$")
+    endif()
+    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION .)
 endif()
 
 install(TARGETS WinBitTorrent.Native

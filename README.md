@@ -8,7 +8,7 @@
 
 WinBitTorrent combines a modern Windows 11 interface with its own local engine powered directly by libtorrent 2.0.13. The local path uses a protected named pipe—there is no local Web UI process, qBittorrent or Qt dependency. Remote qBittorrent profiles remain supported through Web API 2.15.1.
 
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64%20%2F%20ARM64-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![.NET](https://img.shields.io/badge/.NET%208-WinUI%203-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-2.2-0078D6)](https://learn.microsoft.com/windows/apps/windows-app-sdk/)
 [![Engine](https://img.shields.io/badge/libtorrent-2.0.13-2F67BA)](https://www.libtorrent.org/)
@@ -115,7 +115,7 @@ WinBitTorrent delegates the BitTorrent wire protocol to libtorrent and owns the 
 | Area | Technology |
 |------|------------|
 | UI framework | **WinUI 3** via the **Windows App SDK 2.2** (self-contained) |
-| Runtime | **.NET 8** (`net8.0-windows10.0.19041.0`), x64 |
+| Runtime | **.NET 8** (`net8.0-windows10.0.19041.0`), x64 / ARM64 |
 | App architecture | **MVVM** (CommunityToolkit.Mvvm) + `Microsoft.Extensions.DependencyInjection` |
 | Data grid | WinUI.TableView |
 | Torrent engine | **libtorrent 2.0.13**, Boost 1.91, OpenSSL 3.6, CPython 3.13 |
@@ -138,7 +138,7 @@ The solution is split into five layers:
 > **Requirements:** Windows 10 version 2004 (build 19041) or newer, 64-bit.
 
 1. Go to the [**Releases**](https://github.com/Gorbachevvv/winBitTorrent/releases) page.
-2. Download the latest build for `win-x64`.
+2. Download a build matching your architecture (`win-x64` or `win-arm64`, when available).
 3. Run the installer (or unzip the portable build) and launch **WinBitTorrent**.
 
 EngineHost, libtorrent and the search runtime are bundled, so there is nothing else to install.
@@ -149,7 +149,7 @@ EngineHost, libtorrent and the search runtime are bundled, so there is nothing e
 
 ### Prerequisites
 - **Visual Studio 2022** (17.10+) with the **.NET Desktop** and **Windows App SDK / WinUI** workloads, or the **.NET 8 SDK** with the Windows App SDK.
-- Windows 10/11 x64.
+- Windows 10/11 x64 or ARM64, PowerShell 7, and MSVC C++ / Windows SDK components for the target architecture.
 
 ### 1. Clone
 ```bash
@@ -166,6 +166,9 @@ Generated native and Python assets are not committed. Build the pinned libtorren
 .\build\build-engine.ps1
 ```
 
+For native ARM64, pass `-Platform arm64` to both scripts. ARM64 dependencies and
+Python are staged separately from x64; see [build/README.md](build/README.md).
+
 The source URLs, hashes and versions are pinned in [`build/build-runtime.ps1`](build/build-runtime.ps1) and [`build/runtime/vcpkg.json`](build/runtime/vcpkg.json). The old `build-backend.ps1` remains a development-only qBittorrent oracle for parity testing and is never included in release payloads.
 
 ### 3. Build & run
@@ -173,6 +176,9 @@ The source URLs, hashes and versions are pinned in [`build/build-runtime.ps1`](b
 dotnet build WinBitTorrent.csproj -c Debug -p:Platform=x64
 ```
 Or open `WinBitTorrent.slnx` in Visual Studio, set the platform to **x64**, and press **F5**.
+
+For ARM64, use `-p:Platform=ARM64` or select **ARM64** in Visual Studio.
+Package with `.\build\release.ps1 -Platform arm64 -Portable -Zip`.
 
 ### 4. Run the tests
 ```bash
