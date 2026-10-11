@@ -16,4 +16,18 @@
     <ProjectReference Include="..\..\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj" ReferenceOutputAssembly="false" />
     <Compile Include="..\..\WinBitTorrent.Infrastructure\Backend\ManagedBackendHost.cs" Link="TestOracle\ManagedBackendHost.cs" />
   </ItemGroup>
+  <Target Name="WriteEngineHostPathForTests" AfterTargets="Build">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\..\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration);Platform=$(Platform)"
+             RemoveProperties="TargetFramework;TargetFrameworks">
+      <Output TaskParameter="TargetOutputs" ItemName="_EngineHostTestTarget" />
+    </MSBuild>
+    <PropertyGroup>
+      <_EngineHostTestExecutable>@(_EngineHostTestTarget->'%(RootDir)%(Directory)WinBitTorrent.EngineHost.exe')</_EngineHostTestExecutable>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(_EngineHostTestExecutable)')"
+           Text="The EngineHost test executable is missing from '$(_EngineHostTestExecutable)'." />
+    <WriteLinesToFile File="$(TargetDir)engine-host-path.txt" Lines="$(_EngineHostTestExecutable)" Overwrite="true" />
+  </Target>
 </Project>

@@ -7,14 +7,16 @@
     <Nullable>enable</Nullable>
     <InvariantGlobalization>false</InvariantGlobalization>
     <AssemblyName>WinBitTorrent.EngineHost</AssemblyName>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and ('$(Platform)' == 'x64' or '$(Platform)' == 'ARM64')">win-$(WinBitTorrentArchitecture)</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
     <PackageReference Include="MaxMind.Db" Version="5.1.0" />
   </ItemGroup>
-  <ItemGroup Condition="Exists('..\Engine')">
-    <Content Include="..\Engine\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  <ItemGroup Condition="Exists('$(WinBitTorrentEngineRoot)')">
+    <Content Include="$(WinBitTorrentEngineRoot)\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="'$(StoreBuild)' == 'true'">
     <Compile Remove="EngineState.Search.cs" />

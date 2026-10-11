@@ -932,21 +932,11 @@ public sealed class EngineHostTests
 
     private static string FindEngineHost()
     {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            var candidate = Path.Combine(
-                directory.FullName,
-                "WinBitTorrent.EngineHost",
-                "bin",
-                "Debug",
-                "net8.0-windows10.0.19041.0",
-                "WinBitTorrent.EngineHost.exe");
-            if (File.Exists(candidate))
-                return candidate;
-            directory = directory.Parent;
-        }
-        return string.Empty;
+        var pathFile = Path.Combine(AppContext.BaseDirectory, "engine-host-path.txt");
+        var executable = File.ReadAllText(pathFile).Trim();
+        if (!File.Exists(executable))
+            throw new FileNotFoundException("The EngineHost executable recorded by the test build is missing.", executable);
+        return executable;
     }
 
     private static byte[] CreateSingleFileTorrent(string name, byte[] contents)
