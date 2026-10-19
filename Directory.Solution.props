@@ -1,0 +1,6 @@
+<Project>
+  <!-- Keep command-line solution builds on x64 when ARM64 is also available. -->
+  <PropertyGroup>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+  </PropertyGroup>
+</Project>

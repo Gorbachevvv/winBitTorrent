@@ -7,6 +7,7 @@
 ;
 ; Optional overrides (passed with /D on the ISCC command line):
 ;   /DAppVersion=1.0.0
+;   /DAppArchitecture=x64 (or arm64)
 ;   /DPayloadDir=<absolute path to the staged win-x64 payload folder>
 ;   /DOutputDir=<absolute path for the produced setup .exe>
 
@@ -14,16 +15,28 @@
   #define AppVersion "1.0.0"
 #endif
 
+#ifndef AppArchitecture
+  #define AppArchitecture "x64"
+#endif
+#if AppArchitecture != "x64" && AppArchitecture != "arm64"
+  #error Unsupported AppArchitecture
+#endif
+#if AppArchitecture == "arm64"
+  #define ArtifactSuffix "-arm64"
+#else
+  #define ArtifactSuffix ""
+#endif
+
 ; Folder containing the published, self-contained portable app
 ; (WinBitTorrent.exe, Backend\, Licenses\, WindowsAppSDK runtime, ...).
 ; Paths are resolved relative to this .iss file unless an absolute path
 ; is provided.
 #ifndef PayloadDir
-  #define PayloadDir "..\..\dist\WinBitTorrent-" + AppVersion + "-portable"
+  #define PayloadDir "..\..\dist\WinBitTorrent-" + AppVersion + ArtifactSuffix + "-portable"
 #endif
 
 #ifndef OutputDir
-  #define OutputDir "..\..\dist\WinBitTorrent-" + AppVersion + "-installer"
+  #define OutputDir "..\..\dist\WinBitTorrent-" + AppVersion + ArtifactSuffix + "-installer"
 #endif
 
 #define AppName "WinBitTorrent"
@@ -76,28 +89,32 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 
 ; 64-bit only, Windows 10 2004 (19041) or newer.
+#if AppArchitecture == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 MinVersion=10.0.19041
 
 Compression=lzma2/max
 SolidCompression=yes
 
-; The running app holds a mutex of this exact name for its whole lifetime (see App.xaml.cs).
-; Without this, a silent in-app update raced the app's own async shutdown: Setup would start
-; copying files while WinBitTorrent.exe (or a DLL it had loaded) was still locked, hit a sharing
-; violation, and roll back the whole install. With AppMutex set, Setup detects the running
-; instance itself and (combined with CloseApplications=force, requested via
-; /FORCECLOSEAPPLICATIONS on the update command line) waits for/terminates it before writing any
-; files. RestartApplications is off because the app already relaunches itself via the /RELAUNCH
-; entry in [Run] - leaving Setup's own restart on would launch it twice.
+; AppMutex is checked at STARTUP, before Restart Manager can close applications. With
+; /SUPPRESSMSGBOXES a running instance makes Setup abort immediately. InitializeSetup below
+; waits for an in-app updater's graceful shutdown BEFORE this built-in check. This also works
+; with already shipped clients, which pass /RELAUNCH without a PID or a wait helper.
+; Restart Manager remains responsible for any other processes holding installation files.
+; RestartApplications is off because /RELAUNCH already starts the updated app exactly once.
 AppMutex=WinBitTorrentAppMutex
 CloseApplications=force
 RestartApplications=no
 ChangesAssociations=yes
 
 OutputDir={#OutputDir}
-OutputBaseFilename={#AppName}-{#AppVersion}-setup
+; Keep ARM64 out of the *setup.exe match used by previously shipped x64 clients.
+OutputBaseFilename={#AppName}-{#AppVersion}-setup{#ArtifactSuffix}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -167,6 +184,7 @@ english.TaskAssociateTorrent=Use WinBitTorrent for .torrent files
 english.TaskAssociateMagnet=Use WinBitTorrent for magnet links
 english.RegisteringTorrentAssociation=Registering .torrent file association...
 english.RegisteringMagnetAssociation=Registering magnet link association...
+english.UpdateShutdownTimeout=WinBitTorrent did not finish closing. Close the application and run the installer again.
 russian.TaskShortcuts=Ярлыки:
 russian.TaskStartMenuShortcut=Создать ярлык в меню «Пуск»
 russian.TaskSystemIntegration=Интеграция с системой:
@@ -176,11 +194,42 @@ russian.TaskAssociateTorrent=Использовать WinBitTorrent для фа�
 russian.TaskAssociateMagnet=Использовать WinBitTorrent для magnet-ссылок
 russian.RegisteringTorrentAssociation=Регистрация ассоциации файлов .torrent...
 russian.RegisteringMagnetAssociation=Регистрация ассоциации magnet-ссылок...
+russian.UpdateShutdownTimeout=WinBitTorrent не завершил работу. Закройте приложение и запустите установщик ещё раз.
 
 [Code]
 // True when the in-app updater started this installer with /RELAUNCH, so the app
 // is relaunched automatically after a silent update.
 function WantsRelaunch: Boolean;
+var
+  Index: Integer;
 begin
-  Result := Pos('/RELAUNCH', UpperCase(GetCmdTail)) > 0;
+  Result := False;
+  for Index := 1 to ParamCount do
+    if CompareText(ParamStr(Index), '/RELAUNCH') = 0 then
+      Result := True;
+end;
+
+function InitializeSetup: Boolean;
+var
+  WaitedMilliseconds: Integer;
+begin
+  Result := True;
+  if not WantsRelaunch then
+    Exit;
+
+  Log('In-app update: waiting for WinBitTorrent to finish shutting down.');
+  WaitedMilliseconds := 0;
+  while CheckForMutexes('WinBitTorrentAppMutex') do
+  begin
+    if WaitedMilliseconds >= 60000 then
+    begin
+      Log('In-app update aborted: application mutex still exists after 60 seconds. No files were changed.');
+      SuppressibleMsgBox(CustomMessage('UpdateShutdownTimeout'), mbError, MB_OK, IDOK);
+      Result := False;
+      Exit;
+    end;
+    Sleep(250);
+    WaitedMilliseconds := WaitedMilliseconds + 250;
+  end;
+  Log('In-app update: application mutex released; continuing setup.');
 end;

@@ -2,5 +2,6 @@
   "configuration": "Release",
   "platform": "x64",
   "createPortableZip": false,
-  "openOutputFolder": true
+  "openOutputFolder": true,
+  "chooseBuildTarget": true
 }

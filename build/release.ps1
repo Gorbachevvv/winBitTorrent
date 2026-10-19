@@ -4,7 +4,8 @@
     One-command release builder for WinBitTorrent: portable folder + Setup.exe installer.
 
 .DESCRIPTION
-    Publishes a self-contained win-x64 build and stages it as:
+    Publishes a self-contained x64 or ARM64 build. Existing x64 paths stay the same;
+    ARM64 artifacts use an -arm64 suffix. -Platform all builds both architectures.
       dist/WinBitTorrent-<version>-portable/            (unzip-and-run folder)
       dist/WinBitTorrent-<version>-installer/*.exe       (Inno Setup installer)
     Defaults come from build/release.settings.json; every setting can be overridden
@@ -19,6 +20,9 @@
 .PARAMETER Installer
     Build only the installer (the portable payload is still staged first, since the
     installer is packed from it, but it is left in dist/ either way).
+
+.PARAMETER Platform
+    x64 (default), arm64, or all. Missing native/Python assets are built automatically.
 
 .PARAMETER Zip
     Also compress the portable folder into a .zip next to it.
@@ -49,8 +53,11 @@
 [CmdletBinding()]
 param(
     [string]$Version,
+    [ValidateSet('x64','arm64','all')]
+    [string]$Platform,
     [switch]$Portable,
     [switch]$Installer,
+    [switch]$Msix,
     [switch]$Zip,
     [switch]$NoClean,
     [switch]$SkipPublish,
@@ -60,6 +67,15 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $settingsPath = Join-Path $PSScriptRoot 'release.settings.json'
+. (Join-Path $PSScriptRoot 'architecture.ps1')
+
+function Assert-ReleaseChildPath([string] $Path, [string] $Root) {
+    $full = [IO.Path]::GetFullPath($Path)
+    $rootFull = [IO.Path]::GetFullPath($Root).TrimEnd('\') + '\'
+    if (-not $full.StartsWith($rootFull, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to mutate path outside '$Root': $full"
+    }
+}
 
 function Write-Step($message) { Write-Host "`n==> $message" -ForegroundColor Cyan }
 function Write-Info($message) { Write-Host "    $message" -ForegroundColor DarkGray }
@@ -73,6 +89,7 @@ $settings = [ordered]@{
     platform          = 'x64'
     createPortableZip = $false
     openOutputFolder  = $true
+    chooseBuildTarget = $true
 }
 if (Test-Path $settingsPath) {
     $loaded = Get-Content $settingsPath -Raw | ConvertFrom-Json
@@ -89,12 +106,51 @@ function Get-ProjectVersion {
 }
 
 $effectiveVersion = if ($Version) { $Version } else { Get-ProjectVersion }
+if ($Msix -and ($Portable -or $Installer -or $Zip -or $SkipPublish -or $NoClean)) {
+    throw '-Msix builds an isolated fresh Store package; do not combine it with portable/installer/repackaging flags.'
+}
+if (-not ($Platform -or $Msix -or $Portable -or $Installer -or $SkipPublish -or $Zip -or $NoClean) -and
+    $settings.chooseBuildTarget -and -not [Console]::IsInputRedirected) {
+    Write-Host 'WinBitTorrent - choose build target' -ForegroundColor Cyan
+    Write-Host '  1. Portable + Installer - x64 (default)'
+    Write-Host '  2. Microsoft Store (MSIX upload, reduced edition)'
+    Write-Host '  3. Portable + Installer - ARM64'
+    Write-Host '  4. Portable + Installer - x64 and ARM64'
+    $choice = Read-Host 'Target [1/2/3/4]'
+    if ($choice -eq '2') { $Msix = [switch]$true }
+    elseif ($choice -eq '3') { $Platform = 'arm64' }
+    elseif ($choice -eq '4') { $Platform = 'all' }
+    elseif ($choice -in @('', '1')) { $Platform = 'x64' }
+    else { throw 'Choose 1, 2, 3 or 4.' }
+}
+if ($Msix) {
+    if ($Platform -and $Platform -ne 'x64') { throw '-Platform applies to portable/installer builds; the Store builder uses its own settings.' }
+    $storeOpen = if ($PSBoundParameters.ContainsKey('OpenOutput')) { $OpenOutput.IsPresent } else { [bool]$settings.openOutputFolder }
+    & (Join-Path $PSScriptRoot 'store.ps1') -Version $effectiveVersion -OpenOutput:$storeOpen
+    return
+}
 $buildPortable = -not $Installer.IsPresent -or $Portable.IsPresent
 $buildInstaller = -not $Portable.IsPresent -or $Installer.IsPresent
 $makeZip = $Zip.IsPresent -or [bool]$settings.createPortableZip
 $openWhenDone = if ($PSBoundParameters.ContainsKey('OpenOutput')) { $OpenOutput.IsPresent } else { [bool]$settings.openOutputFolder }
 $configuration = $settings.configuration
-$platform = $settings.platform
+$platform = if ($Platform) { $Platform.ToLowerInvariant() } else { ([string]$settings.platform).ToLowerInvariant() }
+if ($platform -notin 'x64','arm64','all') { throw "Unsupported platform '$platform'. Use x64, arm64 or all." }
+if ($platform -eq 'all') {
+    foreach ($targetPlatform in 'x64','arm64') {
+        $arguments = @{ Version = $effectiveVersion; Platform = $targetPlatform; OpenOutput = $false }
+        foreach ($flag in 'Portable','Installer','Zip','NoClean','SkipPublish') {
+            if ((Get-Variable -Name $flag -ValueOnly).IsPresent) { $arguments[$flag] = $true }
+        }
+        & $PSCommandPath @arguments
+    }
+    if ($openWhenDone) { Start-Process explorer.exe (Join-Path $repoRoot 'dist') }
+    return
+}
+$runtimeIdentifier = "win-$platform"
+$msbuildPlatform = if ($platform -eq 'arm64') { 'ARM64' } else { 'x64' }
+$assetSuffix = if ($platform -eq 'arm64') { '\arm64' } else { '' }
+$artifactSuffix = if ($platform -eq 'arm64') { '-arm64' } else { '' }
 
 Write-Host "WinBitTorrent release builder" -ForegroundColor Yellow
 Write-Info "Version:        $effectiveVersion"
@@ -106,17 +162,30 @@ Write-Info "Zip portable:   $makeZip"
 # ---------------------------------------------------------------------------
 # 2. Sanity checks.
 # ---------------------------------------------------------------------------
-$nativeEngine = Join-Path $repoRoot 'Engine\WinBitTorrent.Native.dll'
-$pythonExe = Join-Path $repoRoot 'Backend\Python\python.exe'
-if (-not (Test-Path $nativeEngine)) { throw "Engine\WinBitTorrent.Native.dll is missing. Run build\build-engine.ps1 first." }
-if (-not (Test-Path $pythonExe)) { throw "Backend\Python\python.exe is missing. Build or restore the pinned runtime assets first." }
+$engineRoot = Join-Path $repoRoot "Engine$assetSuffix"
+$pythonRoot = Join-Path $repoRoot "Backend$assetSuffix\Python"
+$nativeEngine = Join-Path $engineRoot 'WinBitTorrent.Native.dll'
+$pythonExe = Join-Path $pythonRoot 'python.exe'
+if (-not $SkipPublish) {
+    if (-not (Test-Path -LiteralPath $pythonExe)) {
+        Write-Step "Preparing $platform runtime (first build can take a while)"
+        & (Join-Path $PSScriptRoot 'build-runtime.ps1') -Platform $platform
+    }
+    if (-not (Test-Path -LiteralPath $nativeEngine)) {
+        Write-Step "Building $platform native engine"
+        & (Join-Path $PSScriptRoot 'build-engine.ps1') -Platform $platform
+    }
+}
+if (-not (Test-Path -LiteralPath $nativeEngine)) { throw "$nativeEngine is missing. Run build\build-engine.ps1 -Platform $platform." }
+if (-not (Test-Path -LiteralPath $pythonExe)) { throw "$pythonExe is missing. Run build\build-runtime.ps1 -Platform $platform." }
+Assert-RuntimeArchitecture $engineRoot $pythonRoot $platform
 
-$publishDir = Join-Path $repoRoot 'bin\Release\net8.0-windows10.0.19041.0\win-x64\publish'
-$enginePublishDir = Join-Path $repoRoot 'WinBitTorrent.EngineHost\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish'
+$publishDir = Join-Path $repoRoot "bin\$configuration\net8.0-windows10.0.19041.0\$runtimeIdentifier\publish"
+$enginePublishDir = Join-Path $repoRoot "WinBitTorrent.EngineHost\bin\$configuration\net8.0-windows10.0.19041.0\$runtimeIdentifier\publish"
 $distRoot = Join-Path $repoRoot 'dist'
-$portableName = "WinBitTorrent-$effectiveVersion-portable"
+$portableName = "WinBitTorrent-$effectiveVersion$artifactSuffix-portable"
 $portableDir = Join-Path $distRoot $portableName
-$installerDir = Join-Path $distRoot "WinBitTorrent-$effectiveVersion-installer"
+$installerDir = Join-Path $distRoot "WinBitTorrent-$effectiveVersion$artifactSuffix-installer"
 $zipPath = Join-Path $distRoot "$portableName.zip"
 
 New-Item -ItemType Directory -Force -Path $distRoot | Out-Null
@@ -128,7 +197,7 @@ if (-not $NoClean -and -not $makeZip -and (Test-Path $zipPath)) {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Publish (self-contained win-x64).
+# 3. Publish the selected architecture as a self-contained application.
 # ---------------------------------------------------------------------------
 if ($SkipPublish) {
     if (-not (Test-Path (Join-Path $publishDir 'WinBitTorrent.exe'))) {
@@ -141,20 +210,29 @@ if ($SkipPublish) {
 }
 else {
     Write-Step "Publishing self-contained $platform build"
+    foreach ($output in $publishDir,$enginePublishDir) {
+        if (Test-Path -LiteralPath $output) {
+            Assert-ReleaseChildPath $output $repoRoot
+            Remove-Item -LiteralPath $output -Recurse -Force
+        }
+    }
     $versionParts = "$effectiveVersion.0"
-    & dotnet publish (Join-Path $repoRoot 'WinBitTorrent.csproj') `
-        -c $configuration -p:Platform=$platform -p:PublishProfile=win-$platform `
-        -p:Version=$effectiveVersion -p:AssemblyVersion=$versionParts -p:FileVersion=$versionParts
-    if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE." }
-    & dotnet publish (Join-Path $repoRoot 'WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj') `
-        -c $configuration -r win-x64 --self-contained true -o $enginePublishDir `
-        -p:Version=$effectiveVersion -p:AssemblyVersion=$versionParts -p:FileVersion=$versionParts
-    if ($LASTEXITCODE -ne 0) { throw "EngineHost publish failed with exit code $LASTEXITCODE." }
+    Invoke-BuildTool dotnet @('publish', (Join-Path $repoRoot 'WinBitTorrent.csproj'),
+        '-c', $configuration, '-r', $runtimeIdentifier, '--self-contained', 'true', '-o', $publishDir,
+        "-p:Platform=$msbuildPlatform", "-p:PublishProfile=win-$platform",
+        "-p:Version=$effectiveVersion", "-p:AssemblyVersion=$versionParts", "-p:FileVersion=$versionParts")
+    Invoke-BuildTool dotnet @('publish', (Join-Path $repoRoot 'WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj'),
+        '-c', $configuration, '-r', $runtimeIdentifier, '--self-contained', 'true', '-o', $enginePublishDir,
+        "-p:Platform=$msbuildPlatform", "-p:Version=$effectiveVersion",
+        "-p:AssemblyVersion=$versionParts", "-p:FileVersion=$versionParts")
     $engineTarget = Join-Path $publishDir 'EngineHost'
-    if (Test-Path $engineTarget) { Remove-Item $engineTarget -Recurse -Force }
+    if (Test-Path -LiteralPath $engineTarget) { Assert-ReleaseChildPath $engineTarget $publishDir; Remove-Item -LiteralPath $engineTarget -Recurse -Force }
     Copy-Item $enginePublishDir $engineTarget -Recurse
     Write-Ok "Publish complete"
 }
+Assert-NativeArchitecture (Join-Path $publishDir 'WinBitTorrent.exe') $platform
+Assert-NativeArchitecture (Join-Path $publishDir 'EngineHost\WinBitTorrent.EngineHost.exe') $platform
+Assert-RuntimeArchitecture (Join-Path $publishDir 'EngineHost') (Join-Path $publishDir 'Backend\Python') $platform
 
 $forbiddenPayload = Get-ChildItem $publishDir -Recurse -File | Where-Object {
     $_.Name -ieq 'qbittorrent-nox.exe' -or $_.Name -like 'Qt6*.dll' -or $_.Name -ieq 'qsqlite.dll'
@@ -168,13 +246,14 @@ if ($forbiddenPayload) {
 # ---------------------------------------------------------------------------
 Write-Step "Staging portable payload"
 if (-not $NoClean -and (Test-Path $portableDir)) {
-    Remove-Item $portableDir -Recurse -Force
+    Assert-ReleaseChildPath $portableDir $distRoot
+    Remove-Item -LiteralPath $portableDir -Recurse -Force
 }
 if (-not (Test-Path $portableDir)) {
     Copy-Item $publishDir $portableDir -Recurse
     $readme = @"
-WinBitTorrent $effectiveVersion (win-x64, portable)
-$('=' * ("WinBitTorrent $effectiveVersion (win-x64, portable)".Length))
+WinBitTorrent $effectiveVersion ($runtimeIdentifier, portable)
+$('=' * ("WinBitTorrent $effectiveVersion ($runtimeIdentifier, portable)".Length))
 
 A native WinUI 3 desktop BitTorrent client powered by libtorrent.
 https://github.com/Gorbachevvv/winBitTorrent
@@ -244,14 +323,15 @@ if ($buildInstaller) {
     }
 
     New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
-    & $iscc $installerScriptPath "/DAppVersion=$effectiveVersion" "/DPayloadDir=$portableDir" "/DOutputDir=$installerDir"
-    if ($LASTEXITCODE -ne 0) { throw "ISCC.exe failed with exit code $LASTEXITCODE." }
-    Write-Ok "Installer built at dist\WinBitTorrent-$effectiveVersion-installer"
+    Invoke-BuildTool $iscc @($installerScriptPath, "/DAppVersion=$effectiveVersion",
+        "/DAppArchitecture=$platform", "/DPayloadDir=$portableDir", "/DOutputDir=$installerDir")
+    Write-Ok "Installer built at $installerDir"
 }
 
 if (-not $buildPortable -and -not $Zip) {
     # Installer-only run: the staged portable folder was only a build prerequisite.
-    Remove-Item $portableDir -Recurse -Force
+    Assert-ReleaseChildPath $portableDir $distRoot
+    Remove-Item -LiteralPath $portableDir -Recurse -Force
     Write-Info "Removed intermediate portable folder (Installer-only run)"
 }
 

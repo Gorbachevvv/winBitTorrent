@@ -12,11 +12,15 @@ internal sealed partial class EngineState
 
     private void InitializeGeoIp()
     {
-        var candidates = new[]
+        var backendRoot = ResolveBackendRoot();
+        var candidates = new List<string>
         {
             Path.Combine(_dataRoot, "GeoDB"),
-            Path.Combine(ResolveBackendRoot(), "GeoDB")
+            Path.Combine(backendRoot, "GeoDB")
         };
+        // Development ARM64 assets share the architecture-independent database.
+        if (Path.GetFileName(backendRoot).Equals("arm64", StringComparison.OrdinalIgnoreCase))
+            candidates.Add(Path.GetFullPath(Path.Combine(backendRoot, "..", "GeoDB")));
         foreach (var directory in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (!Directory.Exists(directory)) continue;

@@ -8,7 +8,7 @@
 
 WinBitTorrent combines a modern Windows 11 interface with its own local engine powered directly by libtorrent 2.0.13. The local path uses a protected named pipe—there is no local Web UI process, qBittorrent or Qt dependency. Remote qBittorrent profiles remain supported through Web API 2.15.1.
 
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64%20%2F%20ARM64-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![.NET](https://img.shields.io/badge/.NET%208-WinUI%203-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-2.2-0078D6)](https://learn.microsoft.com/windows/apps/windows-app-sdk/)
 [![Engine](https://img.shields.io/badge/libtorrent-2.0.13-2F67BA)](https://www.libtorrent.org/)
@@ -138,7 +138,7 @@ The solution is split into five layers:
 > **Requirements:** Windows 10 version 2004 (build 19041) or newer, 64-bit.
 
 1. Go to the [**Releases**](https://github.com/Gorbachevvv/winBitTorrent/releases) page.
-2. Download the latest build for `win-x64`.
+2. Download the latest build for your architecture: `win-x64` or `win-arm64`.
 3. Run the installer (or unzip the portable build) and launch **WinBitTorrent**.
 
 EngineHost, libtorrent and the search runtime are bundled, so there is nothing else to install.
@@ -173,6 +173,12 @@ The source URLs, hashes and versions are pinned in [`build/build-runtime.ps1`](b
 dotnet build WinBitTorrent.csproj -c Debug -p:Platform=x64
 ```
 Or open `WinBitTorrent.slnx` in Visual Studio, set the platform to **x64**, and press **F5**.
+
+For ARM64, select **ARM64** in Visual Studio or use
+`dotnet build WinBitTorrent.slnx -p:Platform=ARM64`. The existing console release
+builder in Visual Studio offers x64, ARM64, or both architectures. From a terminal,
+run `build\release.ps1 -Platform arm64` (or `-Platform all`); missing runtime assets
+are prepared automatically. See [build tooling](build/README.md) for prerequisites.
 
 ### 4. Run the tests
 ```bash

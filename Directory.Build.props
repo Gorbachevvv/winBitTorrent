@@ -15,6 +15,14 @@
          package's satellite resources (Microsoft.UI.Xaml.dll.mui etc.) get
          copied for ~75 unused cultures on every build. -->
     <SatelliteResourceLanguages>en-US;ru-RU;be-BY</SatelliteResourceLanguages>
+    <!-- Publish profiles are imported later, so recognize the selected profile before choosing assets. -->
+    <_WinBitTorrentPublishProfileName>$([System.IO.Path]::GetFileNameWithoutExtension('$(PublishProfile)'))</_WinBitTorrentPublishProfileName>
+    <WinBitTorrentArchitecture Condition="'$(Platform)' == 'ARM64' or '$(RuntimeIdentifier)' == 'win-arm64' or '$(_WinBitTorrentPublishProfileName)' == 'win-arm64'">arm64</WinBitTorrentArchitecture>
+    <WinBitTorrentArchitecture Condition="'$(WinBitTorrentArchitecture)' == ''">x64</WinBitTorrentArchitecture>
+    <!-- Keep the existing x64 asset locations; ARM64 assets have their own staging folders. -->
+    <WinBitTorrentAssetSuffix Condition="'$(WinBitTorrentArchitecture)' == 'arm64'">\arm64</WinBitTorrentAssetSuffix>
+    <WinBitTorrentEngineRoot>$(MSBuildThisFileDirectory)Engine$(WinBitTorrentAssetSuffix)</WinBitTorrentEngineRoot>
+    <WinBitTorrentBackendRoot>$(MSBuildThisFileDirectory)Backend$(WinBitTorrentAssetSuffix)</WinBitTorrentBackendRoot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
