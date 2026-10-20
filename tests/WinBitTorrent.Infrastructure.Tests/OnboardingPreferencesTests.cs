@@ -10,6 +10,36 @@ public sealed class ClientSettingsCollection;
 public sealed class OnboardingPreferencesTests
 {
     [Fact]
+    public async Task SettingsSaveSurvivesBriefReaderLockWithoutLosingExistingValues()
+    {
+        var originalRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");
+        var root = Path.Combine(Path.GetTempPath(), "WinBitTorrent-SettingsTests", Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        var file = Path.Combine(root, "client-settings.json");
+        try
+        {
+            ClientSettings.SetValue("lock-test.existing", "preserved");
+            using var reader = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var release = Task.Run(async () =>
+            {
+                await Task.Delay(75);
+                reader.Dispose();
+            });
+            ClientSettings.SetValue("lock-test.new", "saved");
+            await release;
+            var persisted = JsonNode.Parse(File.ReadAllText(file))!;
+            Assert.Equal("preserved", persisted["lock-test.existing"]!.GetValue<string>());
+            Assert.Equal("saved", persisted["lock-test.new"]!.GetValue<string>());
+            Assert.Empty(Directory.GetFiles(root, "*.tmp"));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", originalRoot);
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
     public void DraftSurvivesFailedCompletionAndSuccessfulCompletionCommitsTogether()
     {
         var originalRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");
@@ -28,7 +58,9 @@ public sealed class OnboardingPreferencesTests
             // A destination directory forces the atomic file replacement to fail.
             File.Delete(file);
             Directory.CreateDirectory(file);
-            Assert.Throws<UnauthorizedAccessException>(() => OnboardingPreferences.Complete(draft));
+            var failure = Record.Exception(() => OnboardingPreferences.Complete(draft));
+            Assert.True(failure is IOException or UnauthorizedAccessException);
+            Assert.Empty(Directory.GetFiles(root, "*.tmp"));
             Assert.False(OnboardingPreferences.IsComplete);
             Assert.Equal(draft, OnboardingPreferences.Load());
             Assert.Null(ClientSettings.Get<string>("ui.theme"));

@@ -82,6 +82,8 @@ public sealed partial class MainWindow : Window
 
     public void ShowMainWindow()
     {
+        if (_closing)
+            return;
         ShowWindow(_windowHandle, ShowWindowCommand.Show);
         _isWindowVisible = true;
         Activate();
@@ -513,11 +515,13 @@ public sealed partial class MainWindow : Window
 
     private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
     {
-        FlushWindowPlacement();
         if (_allowClose)
             return;
 
         args.Cancel = true;
+        if (_closing)
+            return;
+        FlushWindowPlacement();
         if (_setupOpen)
         {
             _ = ExitApplicationAsync();
@@ -528,7 +532,7 @@ public sealed partial class MainWindow : Window
 
     private void AppWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
-        if (!args.DidSizeChange && !args.DidPresenterChange)
+        if (_closing || (!args.DidSizeChange && !args.DidPresenterChange))
             return;
 
         // AppWindow emits many size events while an edge is being dragged. Restarting a
@@ -540,6 +544,9 @@ public sealed partial class MainWindow : Window
 
     private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs args)
     {
+        UpdateSetupDragRegion();
+        if (_closing)
+            return;
         _windowPlacementSaveTimer.Stop();
         _windowPlacementSaveTimer.Start();
     }
@@ -666,9 +673,14 @@ public sealed partial class MainWindow : Window
         _closing = true;
         try
         {
-            _allowClose = true;
+            FlushWindowPlacement();
             _trayIcon.Dispose();
+            // Remove the UI immediately, while keeping the process and its worker job alive
+            // until the torrent state has been saved and the engine has stopped gracefully.
+            ShowWindow(_windowHandle, ShowWindowCommand.Hide);
+            _isWindowVisible = false;
             await ViewModel.ShutdownAsync();
+            _allowClose = true;
             Close();
         }
         finally

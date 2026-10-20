@@ -14,8 +14,54 @@ using WinBitTorrent.Infrastructure.Engine;
 namespace WinBitTorrent.IntegrationTests;
 
 [Collection("Backend")]
-public sealed class EngineHostTests
+public sealed class EngineHostTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(100)]
+    public async Task GracefulShutdownPreservesTorrentsWithoutRepeatedSnapshotWork(int count)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "WinBitTorrent.Shutdown", Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", FindEngineHost());
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        await using var host = new EngineHostProcess(NullLogger<EngineHostProcess>.Instance);
+        try
+        {
+            await host.StartAsync();
+            var fixtures = Path.Combine(root, "fixtures");
+            Directory.CreateDirectory(fixtures);
+            var paths = new List<string>();
+            for (var index = 0; index < count; index++)
+            {
+                var path = Path.Combine(fixtures, $"{index}.torrent");
+                await File.WriteAllBytesAsync(path, CreateSingleFileTorrent($"shutdown-{index}.bin", [(byte)index]));
+                paths.Add(path);
+            }
+            if (count > 0)
+                await host.Client!.Torrents.AddAsync(new TorrentAddRequest([], paths, SavePath: Path.Combine(root, "downloads"), StartTorrent: false));
+            using var worker = Process.GetProcessById(host.Session!.ProcessId);
+            _ = worker.Handle; // Retain the process handle so ExitCode remains readable after exit.
+            var timer = Stopwatch.StartNew();
+            await host.StopAsync();
+            output.WriteLine($"Graceful shutdown, {count} torrents: {timer.Elapsed.TotalMilliseconds:F0} ms");
+            Assert.True(worker.HasExited);
+            Assert.Equal(0, worker.ExitCode);
+            Assert.True(timer.Elapsed < TimeSpan.FromSeconds(10), $"Shutdown took {timer.Elapsed}.");
+            await host.StartAsync();
+            var restored = await host.Client!.Torrents.GetInfoAsync();
+            Assert.Equal(count, restored.Count);
+            Assert.All(restored, torrent => Assert.StartsWith("shutdown-", torrent.Name));
+            await host.StopAsync();
+        }
+        finally
+        {
+            await host.StopAsync(force: true);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", null);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", null);
+            DeleteWritableTree(root);
+        }
+    }
+
     [Fact]
     public async Task RefreshesOneThousandTorrentsWithinOneSecondWithoutBackpressureFailure()
     {
@@ -45,6 +91,7 @@ public sealed class EngineHostTests
                 var stopwatch = Stopwatch.StartNew();
                 var snapshot = await host.Client.Sync.GetMainDataAsync(0);
                 stopwatch.Stop();
+                output.WriteLine($"1,000-torrent snapshot: {stopwatch.Elapsed.TotalMilliseconds:F0} ms");
                 Assert.Equal(1000, snapshot.Torrents?.Count);
                 Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(1), $"1,000-torrent snapshot took {stopwatch.Elapsed}.");
             }

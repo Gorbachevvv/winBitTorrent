@@ -65,7 +65,12 @@ public sealed partial class TransfersView : UserControl
     private bool _rubberMoved;
     private bool _rubberAdditive;
     private Point _rubberOrigin;
+    private Point _rubberCurrent;
+    private bool _rubberFramePending;
+    private bool _applyingRubberSelection;
     private readonly HashSet<object> _rubberBaseSelection = [];
+    private readonly HashSet<object> _rubberTargetSelection = [];
+    private readonly HashSet<object> _rubberCurrentSelection = [];
 
     public TransfersView()
     {
@@ -161,6 +166,8 @@ public sealed partial class TransfersView : UserControl
 
     private void TorrentTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_applyingRubberSelection)
+            return;
         var rows = TorrentTable.SelectedItems.OfType<TorrentRowViewModel>().ToList();
         ViewModel.SetSelectedRows(rows);
     }
@@ -212,6 +219,8 @@ public sealed partial class TransfersView : UserControl
         _rubberMoved = false;
         _rubberAdditive = IsKeyDown(VirtualKey.Control) || IsKeyDown(VirtualKey.Shift);
         _rubberOrigin = e.GetCurrentPoint(SelectionOverlay).Position;
+        _rubberCurrent = _rubberOrigin;
+        _rubberFramePending = false;
         _rubberBaseSelection.Clear();
         if (_rubberAdditive)
             foreach (var item in TorrentTable.SelectedItems)
@@ -231,7 +240,23 @@ public sealed partial class TransfersView : UserControl
                 return;
             _rubberMoved = true;
             SelectionRectangle.Visibility = Visibility.Visible;
+            CompositionTarget.Rendering += RubberBand_Rendering;
         }
+
+        // Mouse input can arrive much faster than the display refresh rate. Keep the latest
+        // position instead of walking rows and updating selection for every intermediate point.
+        _rubberCurrent = current;
+        _rubberFramePending = true;
+    }
+
+    private void RubberBand_Rendering(object? sender, object e) => RenderRubberBand();
+
+    private void RenderRubberBand()
+    {
+        if (!_rubberBanding || !_rubberMoved || !_rubberFramePending)
+            return;
+        _rubberFramePending = false;
+        var current = _rubberCurrent;
 
         var marquee = new Rect(
             new Point(Math.Min(_rubberOrigin.X, current.X), Math.Min(_rubberOrigin.Y, current.Y)),
@@ -244,7 +269,14 @@ public sealed partial class TransfersView : UserControl
     }
 
     private void TorrentTable_PointerReleased(object sender, PointerRoutedEventArgs e)
-        => EndRubberBand(e.Pointer);
+    {
+        if (_rubberBanding && _rubberMoved)
+        {
+            _rubberCurrent = e.GetCurrentPoint(SelectionOverlay).Position;
+            _rubberFramePending = true;
+        }
+        EndRubberBand(e.Pointer);
+    }
 
     private void TorrentTable_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
         => EndRubberBand(null);
@@ -253,7 +285,11 @@ public sealed partial class TransfersView : UserControl
     {
         if (!_rubberBanding)
             return;
+        // Commit the final pointer position even when release beats the next rendering frame.
+        RenderRubberBand();
         _rubberBanding = false;
+        CompositionTarget.Rendering -= RubberBand_Rendering;
+        _rubberFramePending = false;
         SelectionRectangle.Visibility = Visibility.Collapsed;
         if (pointer is not null)
             TorrentTable.ReleasePointerCapture(pointer);
@@ -262,12 +298,18 @@ public sealed partial class TransfersView : UserControl
         if (!_rubberMoved && !_rubberAdditive)
             TorrentTable.SelectedItems.Clear();
         _rubberBaseSelection.Clear();
+        _rubberTargetSelection.Clear();
+        _rubberCurrentSelection.Clear();
     }
 
     private void UpdateRubberSelection(Rect marquee)
     {
-        var target = new HashSet<object>(_rubberBaseSelection);
-        foreach (var row in EnumerateRows(TorrentTable))
+        var target = _rubberTargetSelection;
+        target.Clear();
+        target.UnionWith(_rubberBaseSelection);
+        // Start at the virtualized items panel; column headers and the rest of the control
+        // template cannot contribute torrent rows to the marquee.
+        foreach (var row in EnumerateRows(TorrentTable.ItemsPanelRoot ?? (DependencyObject)TorrentTable))
         {
             if (TorrentTable.ItemFromContainer(row) is not { } item)
                 continue;
@@ -278,12 +320,31 @@ public sealed partial class TransfersView : UserControl
         }
 
         var selected = TorrentTable.SelectedItems;
-        for (var index = selected.Count - 1; index >= 0; index--)
-            if (!target.Contains(selected[index]))
-                selected.RemoveAt(index);
-        foreach (var item in target)
-            if (!selected.Contains(item))
-                selected.Add(item);
+        _rubberCurrentSelection.Clear();
+        _rubberCurrentSelection.UnionWith(selected);
+        var changed = false;
+        _applyingRubberSelection = true;
+        try
+        {
+            for (var index = selected.Count - 1; index >= 0; index--)
+                if (!target.Contains(selected[index]))
+                {
+                    selected.RemoveAt(index);
+                    changed = true;
+                }
+            foreach (var item in target)
+                if (!_rubberCurrentSelection.Contains(item))
+                {
+                    selected.Add(item);
+                    changed = true;
+                }
+        }
+        finally
+        {
+            _applyingRubberSelection = false;
+            if (changed)
+                ViewModel.SetSelectedRows(selected.OfType<TorrentRowViewModel>().ToList());
+        }
     }
 
     // Rows span the full table width, so a vertical overlap is enough to consider a row selected -
@@ -483,6 +544,7 @@ public sealed partial class TransfersView : UserControl
 
     private void TransfersView_Unloaded(object sender, RoutedEventArgs e)
     {
+        EndRubberBand(null);
         SaveLayout();
         _filesRefreshTimer.Stop();
         if (!_fileEventsAttached)

@@ -25,10 +25,16 @@ public sealed class FirstRunTests
         {
             var window = MainWindow(app, automation);
             var dialog = WaitId(window, "FirstRunDialog");
-            WaitName(window, "В вашем стиле.");
+            WaitName(window, "Выберите тему");
             WaitId(window, "SetupThemeLight").AsRadioButton().IsChecked = true;
             Capture(window, "06-russian-small");
             var next = Button(window, "Продолжить");
+            var back = Button(window, "Назад");
+            var later = Button(window, "Настроить позже");
+            Assert.True(later.BoundingRectangle.Right <= back.BoundingRectangle.Left);
+            Assert.True(back.BoundingRectangle.Right <= next.BoundingRectangle.Left);
+            Assert.Null(window.FindFirstDescendant(cf => cf.ByName("●  PEER TO PEER")));
+            Assert.Null(window.FindFirstDescendant(cf => cf.ByName("Добро пожаловать! Давайте настроим WinBitTorrent под вас.")));
             Assert.True(window.BoundingRectangle.Contains(next.BoundingRectangle));
             Assert.False(next.IsOffscreen);
             next.Invoke();
@@ -63,6 +69,9 @@ public sealed class FirstRunTests
             app = Application.Launch(start);
             var window = MainWindow(app, automation);
             WaitId(window, "FirstRunDialog");
+            WaitName(window, "Choose a theme");
+            Assert.True(Button(window, "Set up later").BoundingRectangle.Right <= Button(window, "Back").BoundingRectangle.Left);
+            Assert.True(Button(window, "Back").BoundingRectangle.Right <= Button(window, "Continue").BoundingRectangle.Left);
             WaitId(window, "SetupThemeDark").AsRadioButton().IsChecked = true;
             Capture(window, "01-appearance-dark");
             WaitId(window, "SetupThemeLight").AsRadioButton().IsChecked = true;
@@ -92,7 +101,7 @@ public sealed class FirstRunTests
             app = Application.Launch(start);
             window = MainWindow(app, automation);
             WaitId(window, "FirstRunDialog");
-            WaitName(window, "Right at home on Windows.");
+            WaitName(window, "Set up Windows integration");
             var draft = JsonNode.Parse(ReadSettings(settingsPath)["onboarding.draft"]!.GetValue<string>())!;
             Assert.Equal(2, draft["Step"]!.GetValue<int>());
             Assert.Equal("Dark", draft["Theme"]!.GetValue<string>());
@@ -105,7 +114,7 @@ public sealed class FirstRunTests
             app.Dispose();
             app = Application.Launch(start);
             window = MainWindow(app, automation);
-            WaitName(window, "Right at home on Windows.");
+            WaitName(window, "Set up Windows integration");
             Button(window, "Continue").Invoke();
             Capture(window, "05-ready");
             Button(window, "Start downloading").Invoke();

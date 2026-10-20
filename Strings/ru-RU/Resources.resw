@@ -858,14 +858,10 @@
   <data name="SetupText_Later" xml:space="preserve"><value>Настроить позже</value></data>
   <data name="SetupText_Back" xml:space="preserve"><value>Назад</value></data>
   <data name="SetupText_AccessibleTitle" xml:space="preserve"><value>Добро пожаловать в WinBitTorrent</value></data>
-  <data name="SetupText_TitleAppearance" xml:space="preserve"><value>В вашем стиле.</value></data>
-  <data name="SetupText_TitleDownloads" xml:space="preserve"><value>Всё на своём месте.</value></data>
-  <data name="SetupText_TitleWindows" xml:space="preserve"><value>В ритме вашей Windows.</value></data>
-  <data name="SetupText_TitleReady" xml:space="preserve"><value>Можно начинать.</value></data>
-  <data name="SetupText_DescAppearance" xml:space="preserve"><value>Добро пожаловать! Давайте настроим WinBitTorrent под вас.</value></data>
-  <data name="SetupText_DescDownloads" xml:space="preserve"><value>Выберите папку для загрузок и настройте уведомления.</value></data>
-  <data name="SetupText_DescWindows" xml:space="preserve"><value>Пара настроек, чтобы каждый день было удобнее.</value></data>
-  <data name="SetupText_DescReady" xml:space="preserve"><value>Проверьте выбранные параметры — и переходите к загрузкам.</value></data>
+  <data name="SetupText_TitleAppearance" xml:space="preserve"><value>Выберите тему</value></data>
+  <data name="SetupText_TitleDownloads" xml:space="preserve"><value>Настройте загрузки</value></data>
+  <data name="SetupText_TitleWindows" xml:space="preserve"><value>Настройте интеграцию с Windows</value></data>
+  <data name="SetupText_TitleReady" xml:space="preserve"><value>Проверьте настройки</value></data>
   <data name="SetupText_StepFormat" xml:space="preserve"><value>ПЕРВЫЙ ЗАПУСК  /  {0} ИЗ 4</value></data>
   <data name="SetupText_Finish" xml:space="preserve"><value>Начать работу</value></data>
   <data name="SetupText_Next" xml:space="preserve"><value>Продолжить</value></data>

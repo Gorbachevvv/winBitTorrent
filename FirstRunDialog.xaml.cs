@@ -31,6 +31,7 @@ public sealed partial class FirstRunDialog : ContentDialog
         _previewTheme = previewTheme;
         _draft = OnboardingPreferences.Load();
         InitializeComponent();
+        ActualThemeChanged += (_, _) => UpdateSidebarSelection();
         CloseButtonText = L("Later", "Set up later");
         SecondaryButtonText = L("Back", "Back");
         AutomationProperties.SetName(this, L("AccessibleTitle", "Welcome to WinBitTorrent"));
@@ -45,6 +46,7 @@ public sealed partial class FirstRunDialog : ContentDialog
         RenderStep();
         Opened += (_, _) =>
         {
+            ConfigureDialogChrome();
             ResizeToRoot();
             XamlRoot.Changed += Root_Changed;
             Heading.Focus(FocusState.Programmatic);
@@ -59,23 +61,60 @@ public sealed partial class FirstRunDialog : ContentDialog
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
-        // WinUI shares ContentDialogPadding between body and native command bar.
-        // Bleed the artwork to the body's edges while retaining padded native buttons,
-        // keyboard navigation, focus trapping and the standard dialog dismissal behavior.
-        if (GetTemplateChild("ContentScrollViewer") is ScrollViewer { Content: Grid body })
-            body.Padding = new Thickness(0);
+        ConfigureDialogChrome();
+    }
+
+    private void ConfigureDialogChrome()
+    {
+        // Keep WinUI's native commands, default action and dismissal behavior. The body
+        // has no outer inset; only the command bar retains padding below the artwork.
+        if (GetTemplateChild("CommandSpace") is Grid commands)
+        {
+            commands.Padding = new Thickness(24, 20, 24, 20);
+            commands.Margin = new Thickness(0);
+            // The left action uses the remaining space; navigation stays grouped on the right.
+            commands.ColumnDefinitions.Clear();
+            commands.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            commands.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10) });
+            commands.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            commands.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10) });
+            commands.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            commands.ColumnSpacing = 0;
+        }
+        if (GetTemplateChild("PrimaryButton") is Button next)
+        {
+            Grid.SetColumn(next, 4);
+            next.Margin = new Thickness(5, 0, 0, 0);
+            next.MinWidth = 156;
+            next.TabIndex = 2;
+        }
+        if (GetTemplateChild("SecondaryButton") is Button back)
+        {
+            Grid.SetColumn(back, 2);
+            back.Margin = new Thickness(0, 0, 5, 0);
+            back.MinWidth = 136;
+            back.TabIndex = 1;
+        }
+        if (GetTemplateChild("CloseButton") is Button later)
+        {
+            Grid.SetColumn(later, 0);
+            later.Margin = new Thickness(0);
+            later.MinWidth = 146;
+            later.HorizontalAlignment = HorizontalAlignment.Left;
+            later.TabIndex = 0;
+        }
     }
 
     private void Root_Changed(XamlRoot sender, XamlRootChangedEventArgs args) => ResizeToRoot();
 
     private void ResizeToRoot()
     {
-        Layout.Width = Math.Min(808, Math.Max(300, XamlRoot.Size.Width - 48));
-        Layout.Height = Math.Min(484, Math.Max(220, XamlRoot.Size.Height - 160));
-        var compact = Layout.Width < 700;
+        Layout.Width = Math.Min(856, Math.Max(300, XamlRoot.Size.Width - 48));
+        // Move 20 DIPs from the page into the gap above the commands, keeping total height.
+        Layout.Height = Math.Min(488, Math.Max(200, XamlRoot.Size.Height - 156));
+        var compact = Layout.Width < 748;
         Sidebar.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
-        SidebarNote.Visibility = Layout.Height < 440 ? Visibility.Collapsed : Visibility.Visible;
-        Layout.ColumnDefinitions[0].Width = new GridLength(compact ? 0 : 208);
+        Layout.ColumnDefinitions[0].Width = new GridLength(compact ? 0 : 216);
     }
 
     private async Task InitializeAsync(Task backendReady)
@@ -148,23 +187,29 @@ public sealed partial class FirstRunDialog : ContentDialog
     private void RenderStep(bool resetScroll = true)
     {
         FrameworkElement[] pages = [AppearancePage, DownloadsPage, WindowsPage, ReadyPage];
-        Button[] steps = [Step0, Step1, Step2, Step3];
-        string[] titles = [L("TitleAppearance", "A little more you."), L("TitleDownloads", "Room for what's next."), L("TitleWindows", "Right at home on Windows."), L("TitleReady", "You're almost there.")];
-        string[] descriptions = [L("DescAppearance", "Welcome! Let's make WinBitTorrent feel like yours."), L("DescDownloads", "Choose where your downloads land and how we keep you updated."), L("DescWindows", "A few thoughtful shortcuts for your everyday workflow."), L("DescReady", "Review your choices. Your next download is just a click away.")];
+        string[] titles = [L("TitleAppearance", "Choose a theme"), L("TitleDownloads", "Set up downloads"), L("TitleWindows", "Set up Windows integration"), L("TitleReady", "Review your settings")];
         for (var index = 0; index < pages.Length; index++)
         {
             pages[index].Visibility = index == _draft.Step ? Visibility.Visible : Visibility.Collapsed;
-            steps[index].Background = new SolidColorBrush(index == _draft.Step ? ColorHelper.FromArgb(40, 255, 255, 255) : Colors.Transparent);
-            steps[index].Foreground = new SolidColorBrush(Colors.White);
         }
+        UpdateSidebarSelection();
         Heading.Text = titles[_draft.Step];
-        Description.Text = descriptions[_draft.Step];
         StepCaption.Text = string.Format(L("StepFormat", "GET STARTED  /  {0} OF 4"), _draft.Step + 1);
         StepProgress.Value = _draft.Step + 1;
         IsSecondaryButtonEnabled = _draft.Step > 0;
         PrimaryButtonText = _draft.Step == 3 ? L("Finish", "Start downloading") : L("Next", "Continue");
         if (resetScroll) PageScroll.ChangeView(null, 0, null);
         RenderSummary();
+    }
+
+    private void UpdateSidebarSelection()
+    {
+        Button[] steps = [Step0, Step1, Step2, Step3];
+        var selected = ActualTheme == ElementTheme.Light
+            ? ColorHelper.FromArgb(16, 0, 0, 0)
+            : ColorHelper.FromArgb(40, 255, 255, 255);
+        for (var index = 0; index < steps.Length; index++)
+            steps[index].Background = new SolidColorBrush(index == _draft.Step ? selected : Colors.Transparent);
     }
 
     private string ThemeName => _draft.Theme switch { "Light" => L("LightLabel", "Light"), "Dark" => L("DarkLabel", "Dark"), _ => L("SystemLabel", "System") };

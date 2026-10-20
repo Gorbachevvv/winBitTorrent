@@ -76,7 +76,9 @@ internal sealed class EnginePipeServer : IAsyncDisposable
             }
             else if (request.Method == EngineRpcMethods.Shutdown)
             {
-                await _state.FlushAsync(cancellationToken).ConfigureAwait(false);
+                // Acknowledge the stop request. EngineHostApplication then closes the remote
+                // API and disposes EngineState, which stops background work and saves once.
+                // The parent waits for process exit before treating shutdown as complete.
                 response = Success(request.Id, new { });
                 await WriteAsync(stream, response, cancellationToken).ConfigureAwait(false);
                 _lifetime.Cancel();

@@ -66,9 +66,42 @@ public static class ClientSettings
 
     private static void Save(JsonObject values)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        var temporary = FilePath + ".tmp";
-        File.WriteAllText(temporary, values.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
-        File.Move(temporary, FilePath, true);
+        var destination = FilePath;
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        var temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temporary, values.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            for (var attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    if (File.Exists(destination))
+                        File.Replace(temporary, destination, null);
+                    else
+                        File.Move(temporary, destination);
+                    return;
+                }
+                catch (Exception exception) when (attempt < 5
+                    && IsTemporaryReplacementFailure(exception, destination))
+                {
+                    // Readers/file watchers can briefly hold the destination without delete
+                    // sharing. Retry the atomic replacement; never truncate the live file.
+                    Thread.Sleep(20 * (attempt + 1));
+                }
+            }
+        }
+        finally
+        {
+            try { File.Delete(temporary); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
     }
+
+    private static bool IsTemporaryReplacementFailure(Exception exception, string destination)
+        => exception is IOException or UnauthorizedAccessException
+            && (exception.HResult & 0xffff) is 5 or 32 or 33
+            && !Directory.Exists(destination)
+            && (!File.Exists(destination) || (File.GetAttributes(destination) & FileAttributes.ReadOnly) == 0);
 }

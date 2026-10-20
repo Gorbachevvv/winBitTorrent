@@ -858,14 +858,10 @@
   <data name="SetupText_Later" xml:space="preserve"><value>Set up later</value></data>
   <data name="SetupText_Back" xml:space="preserve"><value>Back</value></data>
   <data name="SetupText_AccessibleTitle" xml:space="preserve"><value>Welcome to WinBitTorrent</value></data>
-  <data name="SetupText_TitleAppearance" xml:space="preserve"><value>A little more you.</value></data>
-  <data name="SetupText_TitleDownloads" xml:space="preserve"><value>Room for what's next.</value></data>
-  <data name="SetupText_TitleWindows" xml:space="preserve"><value>Right at home on Windows.</value></data>
-  <data name="SetupText_TitleReady" xml:space="preserve"><value>You're almost there.</value></data>
-  <data name="SetupText_DescAppearance" xml:space="preserve"><value>Welcome! Let's make WinBitTorrent feel like yours.</value></data>
-  <data name="SetupText_DescDownloads" xml:space="preserve"><value>Choose where your downloads land and how we keep you updated.</value></data>
-  <data name="SetupText_DescWindows" xml:space="preserve"><value>A few thoughtful shortcuts for your everyday workflow.</value></data>
-  <data name="SetupText_DescReady" xml:space="preserve"><value>Review your choices. Your next download is just a click away.</value></data>
+  <data name="SetupText_TitleAppearance" xml:space="preserve"><value>Choose a theme</value></data>
+  <data name="SetupText_TitleDownloads" xml:space="preserve"><value>Set up downloads</value></data>
+  <data name="SetupText_TitleWindows" xml:space="preserve"><value>Set up Windows integration</value></data>
+  <data name="SetupText_TitleReady" xml:space="preserve"><value>Review your settings</value></data>
   <data name="SetupText_StepFormat" xml:space="preserve"><value>GET STARTED  /  {0} OF 4</value></data>
   <data name="SetupText_Finish" xml:space="preserve"><value>Start downloading</value></data>
   <data name="SetupText_Next" xml:space="preserve"><value>Continue</value></data>

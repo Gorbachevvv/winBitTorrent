@@ -682,7 +682,11 @@ namespace winbittorrent
 
         json::object torrent(lt::torrent_handle const& handle) const
         {
-            auto const status = handle.status();
+            return torrent(handle, handle.status());
+        }
+
+        json::object torrent(lt::torrent_handle const& handle, lt::torrent_status const& status) const
+        {
             auto const info = status.torrent_file.lock();
             auto const& extra = state(handle);
             auto const total = status.total_wanted > 0 ? status.total_wanted : status.total;
@@ -745,7 +749,7 @@ namespace winbittorrent
                     || (filter == "stalled" && name.starts_with("stalled"))
                     || (filter == "errored" && bool(status.errc));
                 if (include && (category.empty() || category == extra.category) && (tag.empty() || extra.tags.contains(tag)))
-                    result.push_back(torrent(handle));
+                    result.push_back(torrent(handle, status));
             }
             return result;
         }
@@ -761,6 +765,12 @@ namespace winbittorrent
                 all_down += status.all_time_download;
                 all_up += status.all_time_upload;
             }
+            return server_state(down, up, all_down, all_up);
+        }
+
+        json::object server_state(std::int64_t down, std::int64_t up,
+            std::int64_t all_down, std::int64_t all_up) const
+        {
             std::error_code error;
             auto const disk = fs::space(root_, error);
             return {
@@ -776,8 +786,18 @@ namespace winbittorrent
         json::object main_data(json::object const& payload) const
         {
             json::object torrent_map;
+            std::int64_t down = 0, up = 0, all_down = 0, all_up = 0;
             for (auto const& handle : session_.get_torrents())
-                torrent_map[primary_hash(handle.info_hashes())] = torrent(handle);
+            {
+                // Reuse the same status for the row and aggregate counters. Each status()
+                // call synchronizes with libtorrent's network thread.
+                auto const status = handle.status();
+                torrent_map[primary_hash(status.info_hashes)] = torrent(handle, status);
+                down += status.download_payload_rate;
+                up += status.upload_payload_rate;
+                all_down += status.all_time_download;
+                all_up += status.all_time_upload;
+            }
             json::object category_map;
             for (auto const& [name, paths] : categories_)
                 category_map[name] = { { "name", name }, { "savePath", paths.first }, { "downloadPath", paths.second } };
@@ -786,7 +806,7 @@ namespace winbittorrent
             return {
                 { "rid", integer(payload, "responseId") + 1 }, { "full_update", true },
                 { "torrents", std::move(torrent_map) }, { "categories", std::move(category_map) },
-                { "tags", std::move(tags) }, { "server_state", server_state() }
+                { "tags", std::move(tags) }, { "server_state", server_state(down, up, all_down, all_up) }
             };
         }
 
