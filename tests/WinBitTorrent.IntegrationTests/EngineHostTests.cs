@@ -17,6 +17,33 @@ namespace WinBitTorrent.IntegrationTests;
 public sealed class EngineHostTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     [Fact]
+    public async Task DevelopmentWorkerFindsSearchRuntimeWithoutCreatingLegacyProfile()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "WinBitTorrent.RuntimeLayout", Guid.NewGuid().ToString("N"));
+        var previousHost = Environment.GetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH");
+        var previousRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");
+        var previousBackend = Environment.GetEnvironmentVariable("WINBITTORRENT_BACKEND_ROOT");
+        Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", FindEngineHost());
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        Environment.SetEnvironmentVariable("WINBITTORRENT_BACKEND_ROOT", null);
+        await using var host = new EngineHostProcess(NullLogger<EngineHostProcess>.Instance);
+        try
+        {
+            await host.StartAsync();
+            Assert.True(File.Exists(Path.Combine(root, "Engine", "SearchPlugins", "nova3", "nova2.py")));
+            Assert.False(Directory.Exists(Path.Combine(root, "Backend")));
+        }
+        finally
+        {
+            await host.StopAsync(force: true);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", previousHost);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", previousRoot);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_BACKEND_ROOT", previousBackend);
+            DeleteWritableTree(root);
+        }
+    }
+
+    [Fact]
     public async Task CategoryAndTagLifecyclePreservesNamesPathsAndAssignmentsAcrossRestart()
     {
         var root = Path.Combine(Path.GetTempPath(), "WinBitTorrent.Taxonomy", Guid.NewGuid().ToString("N"));

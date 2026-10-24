@@ -29,7 +29,7 @@ registration; the user chooses default handlers in Windows Settings.
 ## Validation
 
 ```powershell
-dotnet build WinBitTorrent.csproj -p:Platform=x64
+dotnet build src/WinBitTorrent/WinBitTorrent.csproj -p:Platform=x64
 dotnet test tests/WinBitTorrent.Infrastructure.Tests/WinBitTorrent.Infrastructure.Tests.csproj
 $env:WINBITTORRENT_UI_TESTS = '1'
 dotnet test tests/WinBitTorrent.UiTests/WinBitTorrent.UiTests.csproj --filter FullyQualifiedName~FirstRunTests

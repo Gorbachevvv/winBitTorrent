@@ -61,7 +61,8 @@ function Compile-FixtureInstaller([string]$script, [string]$name, [string]$versi
     $script = [regex]::Replace($script, '(?m)^AppId=.*$', 'AppId=' + $fixtureId)
     $script = $script.Replace('WinBitTorrentAppMutex', $mutexName)
     $script = $script.Replace('..\..\LICENSE', (Join-Path $repoRoot 'LICENSE'))
-    $script = $script.Replace('..\..\Assets\WinBitTorrent.ico', (Join-Path $repoRoot 'Assets\WinBitTorrent.ico'))
+    $script = $script.Replace('..\..\Assets\WinBitTorrent.ico', (Join-Path $repoRoot 'src\WinBitTorrent\Assets\WinBitTorrent.ico'))
+    $script = $script.Replace('..\..\src\WinBitTorrent\Assets\WinBitTorrent.ico', (Join-Path $repoRoot 'src\WinBitTorrent\Assets\WinBitTorrent.ico'))
     $script = $script.Replace('assets\WizardImageFile_WinBitTorrent.png', (Join-Path $PSScriptRoot 'installer\assets\WizardImageFile_WinBitTorrent.png'))
     $output = Join-Path $TestRoot $name
     $scriptPath = Join-Path $TestRoot ($name + '.iss')

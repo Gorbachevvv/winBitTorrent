@@ -12,9 +12,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5"><PrivateAssets>all</PrivateAssets></PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj" ReferenceOutputAssembly="false" />
-    <Compile Include="..\..\WinBitTorrent.Infrastructure\Backend\ManagedBackendHost.cs" Link="TestOracle\ManagedBackendHost.cs" />
+    <ProjectReference Include="..\..\src\WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj" ReferenceOutputAssembly="false" />
+    <Compile Include="..\compatibility\qbittorrent\ManagedBackendHost.cs" Link="TestOracle\ManagedBackendHost.cs" />
   </ItemGroup>
   <Target Name="WriteEngineHostPathForTests" AfterTargets="Build">
     <ItemGroup>

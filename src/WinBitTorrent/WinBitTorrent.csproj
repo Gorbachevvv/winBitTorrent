@@ -23,7 +23,6 @@
     <PublishTrimmed>false</PublishTrimmed>
     <AppxSymbolPackageEnabled>false</AppxSymbolPackageEnabled>
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
-    <DefaultItemExcludes>$(DefaultItemExcludes);WinBitTorrent.Core\**;WinBitTorrent.Infrastructure\**;WinBitTorrent.EngineHost\**;native\**;tests\**;build\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,14 +43,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
-    <ProjectReference Include="WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
+    <ProjectReference Include="..\WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
+    <ProjectReference Include="..\WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
     <!-- Build/restore the separate worker without treating its executable as a managed assembly reference. -->
-    <ProjectReference Include="WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="Platform=$(Platform)" Condition="'$(Configuration)' == 'Debug'" />
+    <ProjectReference Include="..\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="Platform=$(Platform)" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
   <Target Name="CopyEngineHostForDevelopment" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-    <MSBuild Projects="$(MSBuildProjectDirectory)\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj"
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj"
              Targets="GetTargetPath"
              Properties="Configuration=$(Configuration);Platform=$(Platform)">
       <Output TaskParameter="TargetOutputs" ItemName="_EngineHostDevelopmentTarget" />
@@ -79,9 +78,9 @@
   <ItemGroup>
     <Content Include="$(WinBitTorrentBackendRoot)\Python\**\*" Link="Backend\Python\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="'$(StoreBuild)' != 'true'" />
     <Content Include="$(WinBitTorrentBackendRoot)\SearchPlugins\**\*" Exclude="$(WinBitTorrentBackendRoot)\SearchPlugins\**\__pycache__\**" Link="Backend\SearchPlugins\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Condition="'$(StoreBuild)' != 'true'" />
-    <Content Include="Backend\GeoDB\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(WinBitTorrentRuntimeRoot)\Backend\GeoDB\**\*" Link="Backend\GeoDB\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="$(WinBitTorrentBackendRoot)\Licenses\libtorrent-COPYING.txt;$(WinBitTorrentBackendRoot)\Licenses\openssl-copyright.txt" Link="Backend\Licenses\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="Licenses\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(WinBitTorrentRepositoryRoot)docs\legal\**\*" Link="Licenses\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!--

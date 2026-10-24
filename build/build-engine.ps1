@@ -17,7 +17,7 @@ $scriptRoot = if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) { Split-Path -Par
 $projectRoot = Split-Path $scriptRoot -Parent
 $Platform = $Platform.ToLowerInvariant()
 if ([string]::IsNullOrWhiteSpace($WorkRoot)) { $WorkRoot = Join-Path $scriptRoot ".engine-work\$Platform" }
-if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path $projectRoot 'Engine' }
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path $projectRoot 'artifacts\runtime\Engine' }
 if ($Platform -eq 'arm64') {
     if (-not $PSBoundParameters.ContainsKey('OutputRoot')) { $OutputRoot = Join-Path $OutputRoot 'arm64' }
 }

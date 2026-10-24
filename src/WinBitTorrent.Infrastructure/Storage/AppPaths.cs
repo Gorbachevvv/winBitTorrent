@@ -12,21 +12,12 @@ public static class AppPaths
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DataFolder);
 
     public static string ProfilesFile => Path.Combine(Root, "profiles.json");
-    public static string BackendRoot => Path.Combine(Root, "Backend");
-    public static string BackendProfile => Path.Combine(BackendRoot, "Profile");
-    public static string BackendProfileBase => Path.Combine(BackendProfile, "qBittorrent");
-    public static string BackendConfig => Path.Combine(BackendProfileBase, "config", "qBittorrent.ini");
-    public static string BackendData => Path.Combine(BackendProfileBase, "data");
-    public static string BackendState => Path.Combine(BackendRoot, "host.json");
     public static string EngineRoot => Path.Combine(Root, "Engine");
     public static string Logs => Path.Combine(Root, "Logs");
 
     public static void EnsureCreated()
     {
         Directory.CreateDirectory(Root);
-        Directory.CreateDirectory(BackendRoot);
-        Directory.CreateDirectory(BackendProfile);
-        Directory.CreateDirectory(BackendProfileBase);
         Directory.CreateDirectory(EngineRoot);
         Directory.CreateDirectory(Logs);
     }

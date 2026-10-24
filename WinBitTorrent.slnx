@@ -3,19 +3,42 @@
     <Platform Name="x64" />
     <Platform Name="ARM64" />
   </Configurations>
-  <Project Path="WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
-  <Project Path="WinBitTorrent.Infrastructure\WinBitTorrent.Infrastructure.csproj" />
-  <Project Path="WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|ARM64" Project="ARM64" />
-  </Project>
-  <Project Path="tests\WinBitTorrent.Core.Tests\WinBitTorrent.Core.Tests.csproj" />
-  <Project Path="tests\WinBitTorrent.Infrastructure.Tests\WinBitTorrent.Infrastructure.Tests.csproj" />
-  <Project Path="tests\WinBitTorrent.IntegrationTests\WinBitTorrent.IntegrationTests.csproj" />
-  <Project Path="tests\WinBitTorrent.UiTests\WinBitTorrent.UiTests.csproj" />
-  <Project Path="WinBitTorrent.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Deploy />
-  </Project>
+  <Folder Name="/src/">
+    <Project Path="src/WinBitTorrent/WinBitTorrent.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Deploy />
+    </Project>
+    <Project Path="src/WinBitTorrent.Core/WinBitTorrent.Core.csproj" />
+    <Project Path="src/WinBitTorrent.Infrastructure/WinBitTorrent.Infrastructure.csproj" />
+    <Project Path="src/WinBitTorrent.EngineHost/WinBitTorrent.EngineHost.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WinBitTorrent.Core.Tests/WinBitTorrent.Core.Tests.csproj" />
+    <Project Path="tests/WinBitTorrent.Infrastructure.Tests/WinBitTorrent.Infrastructure.Tests.csproj" />
+    <Project Path="tests/WinBitTorrent.IntegrationTests/WinBitTorrent.IntegrationTests.csproj" />
+    <Project Path="tests/WinBitTorrent.UiTests/WinBitTorrent.UiTests.csproj" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="build/README.md" />
+    <File Path="build/release.cmd" />
+    <File Path="build/release.ps1" />
+    <File Path="build/release.settings.json" />
+    <File Path="build/build-runtime.ps1" />
+    <File Path="build/build-engine.ps1" />
+    <File Path="build/release-msix.cmd" />
+  </Folder>
+  <Folder Name="/native/">
+    <File Path="native/WinBitTorrent.Native/CMakeLists.txt" />
+    <File Path="native/WinBitTorrent.Native/src/native_api.cpp" />
+    <File Path="native/WinBitTorrent.Native/src/engine_api.hpp" />
+    <File Path="native/WinBitTorrent.Native/src/engine_api.cpp" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="README.md" />
+    <File Path="docs/repository-layout.md" />
+  </Folder>
 </Solution>

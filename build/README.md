@@ -77,8 +77,8 @@ Windows PowerShell 5.1 remains supported. For a dedicated ARM64 entry append
 ### Prerequisites
 
 - Build the pinned runtime with `build-runtime.ps1`, then the native libtorrent
-  bridge with `build-engine.ps1`. The resulting `Engine\WinBitTorrent.Native.dll`
-  and `Backend\Python\python.exe` are required by the release builder.
+  bridge with `build-engine.ps1`. The resulting `artifacts/runtime/Engine/WinBitTorrent.Native.dll`
+  and `artifacts/runtime/Backend/Python/python.exe` are required by the release builder.
 - For ARM64 cross-compilation on an x64 PC, install the MSVC C++ ARM64/ARM64EC
   build tools and Windows SDK in Visual Studio Installer. Native dependencies are
   built with the ARM64 toolchain; an ARM64 device is needed only to run the result.
@@ -95,7 +95,7 @@ build\build-engine.ps1 -Platform arm64
 dotnet build WinBitTorrent.slnx -p:Platform=ARM64
 ```
 
-ARM64 assets live in `Engine/arm64` and `Backend/arm64`. Its native caches use
+ARM64 assets live in `artifacts/runtime/Engine/arm64` and `artifacts/runtime/Backend/arm64`. Its native caches use
 `build/.runtime-work/arm64` and `build/.engine-work/arm64`; x64 retains the existing
 asset locations. Custom runtime caches can be passed as `-WorkRoot` to the runtime
 builder and `-RuntimeWorkRoot` to the engine builder. Do not share caches between
@@ -126,7 +126,7 @@ x64 clients ignore the new ARM64 suffix and keep selecting the x64 installer.
   CPython and the Nova-compatible search runtime. It does not stage qBittorrent
   or Qt binaries.
 - `build-engine.ps1` — builds `WinBitTorrent.Native.dll` and copies its runtime
-  dependencies into `Engine\`.
-- `build-backend.ps1` — development-only legacy qBittorrent oracle used for
+  dependencies into `artifacts/runtime/Engine/`.
+- `../tests/compatibility/qbittorrent/build.ps1` — development-only legacy qBittorrent oracle used for
   compatibility testing; its output is forbidden in public packages.
 - `installer/WinBitTorrent.iss` — Inno Setup script (driven by `release.ps1`).

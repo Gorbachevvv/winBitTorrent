@@ -9,10 +9,6 @@
     <InternalsVisibleTo Include="WinBitTorrent.IntegrationTests" />
     <ProjectReference Include="..\WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- The qBittorrent process host remains source-only as an integration-test oracle. -->
-    <Compile Remove="Backend\ManagedBackendHost.cs" />
-  </ItemGroup>
   <ItemGroup Condition="'$(StoreBuild)' == 'true'">
     <Compile Remove="Trackers\**;Catalog\**;Updates\**;Storage\PasswordVaultTrackerCredentialStore.cs" />
   </ItemGroup>

@@ -139,7 +139,7 @@ public sealed class BackendFactAttribute : FactAttribute
     public BackendFactAttribute()
     {
         if (FindBackend() is null)
-            Skip = "Build Backend/qbittorrent-nox.exe with build/build-backend.ps1 to run native integration tests.";
+            Skip = "Run tests/compatibility/qbittorrent/build.ps1 to enable optional qBittorrent compatibility tests.";
     }
 
     public static string? FindBackend()
@@ -149,7 +149,7 @@ public sealed class BackendFactAttribute : FactAttribute
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            var candidate = Path.Combine(directory.FullName, "Backend", "qbittorrent-nox.exe");
+            var candidate = Path.Combine(directory.FullName, "artifacts", "compatibility", "qbittorrent", "qbittorrent-nox.exe");
             if (File.Exists(candidate)) return candidate;
             directory = directory.Parent;
         }

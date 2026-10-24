@@ -9,6 +9,8 @@
     <AssemblyMetadata Include="Distribution" Value="MicrosoftStore" />
   </ItemGroup>
   <PropertyGroup>
+    <WinBitTorrentRepositoryRoot>$(MSBuildThisFileDirectory)</WinBitTorrentRepositoryRoot>
+    <WinBitTorrentRuntimeRoot>$(WinBitTorrentRepositoryRoot)artifacts\runtime</WinBitTorrentRuntimeRoot>
     <Version>2.0.1</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <!-- The app only ships en-US, ru-RU and be-BY; without this, every NuGet
@@ -19,10 +21,10 @@
     <_WinBitTorrentPublishProfileName>$([System.IO.Path]::GetFileNameWithoutExtension('$(PublishProfile)'))</_WinBitTorrentPublishProfileName>
     <WinBitTorrentArchitecture Condition="'$(Platform)' == 'ARM64' or '$(RuntimeIdentifier)' == 'win-arm64' or '$(_WinBitTorrentPublishProfileName)' == 'win-arm64'">arm64</WinBitTorrentArchitecture>
     <WinBitTorrentArchitecture Condition="'$(WinBitTorrentArchitecture)' == ''">x64</WinBitTorrentArchitecture>
-    <!-- Keep the existing x64 asset locations; ARM64 assets have their own staging folders. -->
+    <!-- Stage generated payloads outside the source tree, separately for each architecture. -->
     <WinBitTorrentAssetSuffix Condition="'$(WinBitTorrentArchitecture)' == 'arm64'">\arm64</WinBitTorrentAssetSuffix>
-    <WinBitTorrentEngineRoot>$(MSBuildThisFileDirectory)Engine$(WinBitTorrentAssetSuffix)</WinBitTorrentEngineRoot>
-    <WinBitTorrentBackendRoot>$(MSBuildThisFileDirectory)Backend$(WinBitTorrentAssetSuffix)</WinBitTorrentBackendRoot>
+    <WinBitTorrentEngineRoot>$(WinBitTorrentRuntimeRoot)\Engine$(WinBitTorrentAssetSuffix)</WinBitTorrentEngineRoot>
+    <WinBitTorrentBackendRoot>$(WinBitTorrentRuntimeRoot)\Backend$(WinBitTorrentAssetSuffix)</WinBitTorrentBackendRoot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

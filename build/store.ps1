@@ -34,7 +34,7 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer
 if (-not (Test-Path -LiteralPath $vswhere)) { throw 'Visual Studio with MSIX packaging tools is required.' }
 $msbuild = & $vswhere -latest -products '*' -find 'MSBuild/**/Bin/MSBuild.exe' | Select-Object -First 1
 if (-not $msbuild) { throw 'Visual Studio MSBuild was not found.' }
-if (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'Engine\WinBitTorrent.Native.dll'))) {
+if (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'artifacts\runtime\Engine\WinBitTorrent.Native.dll'))) {
     throw 'Run build/build-engine.ps1 first. The native torrent engine is required.'
 }
 
@@ -56,7 +56,7 @@ Remove-GeneratedDirectory $output
 New-Item -ItemType Directory -Path $work, $output -Force | Out-Null
 $engine = Join-Path $work 'EngineHost'
 $manifestPath = Join-Path $work 'Package.appxmanifest'
-[xml]$manifest = Get-Content -LiteralPath (Join-Path $repoRoot 'Package.appxmanifest')
+[xml]$manifest = Get-Content -LiteralPath (Join-Path $repoRoot 'src\WinBitTorrent\Package.appxmanifest')
 $manifest.Package.Identity.Name = [string]$identity.identityName
 $manifest.Package.Identity.Publisher = [string]$identity.publisher
 $manifest.Package.Identity.Version = $packageVersion
@@ -68,12 +68,12 @@ foreach ($attribute in $manifest.SelectNodes('//@Executable')) {
 $manifest.Save($manifestPath)
 
 Write-Host "Building Microsoft Store edition $packageVersion ($($identity.identityName))" -ForegroundColor Cyan
-& dotnet publish (Join-Path $repoRoot 'WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj') `
+& dotnet publish (Join-Path $repoRoot 'src\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj') `
     -c Release -r win-x64 --self-contained true -p:StoreBuild=true `
     "-p:Version=$packageVersion" "-p:AssemblyVersion=$packageVersion" "-p:FileVersion=$packageVersion" -o $engine -v:minimal
 if ($LASTEXITCODE -ne 0) { throw "Store engine build failed ($LASTEXITCODE)." }
 
-& $msbuild (Join-Path $repoRoot 'WinBitTorrent.csproj') /restore /t:Rebuild /nologo /v:minimal `
+& $msbuild (Join-Path $repoRoot 'src\WinBitTorrent\WinBitTorrent.csproj') /restore /t:Rebuild /nologo /v:minimal `
     /p:Configuration=Release /p:Platform=x64 /p:StoreBuild=true /p:WindowsPackageType=MSIX `
     /p:SelfContained=true /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=StoreUpload `
     /p:AppxPackageSigningEnabled=false /p:AppxBundle=Never `

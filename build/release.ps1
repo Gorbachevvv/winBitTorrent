@@ -162,8 +162,8 @@ Write-Info "Zip portable:   $makeZip"
 # ---------------------------------------------------------------------------
 # 2. Sanity checks.
 # ---------------------------------------------------------------------------
-$engineRoot = Join-Path $repoRoot "Engine$assetSuffix"
-$pythonRoot = Join-Path $repoRoot "Backend$assetSuffix\Python"
+$engineRoot = Join-Path $repoRoot "artifacts\runtime\Engine$assetSuffix"
+$pythonRoot = Join-Path $repoRoot "artifacts\runtime\Backend$assetSuffix\Python"
 $nativeEngine = Join-Path $engineRoot 'WinBitTorrent.Native.dll'
 $pythonExe = Join-Path $pythonRoot 'python.exe'
 if (-not $SkipPublish) {
@@ -180,8 +180,8 @@ if (-not (Test-Path -LiteralPath $nativeEngine)) { throw "$nativeEngine is missi
 if (-not (Test-Path -LiteralPath $pythonExe)) { throw "$pythonExe is missing. Run build\build-runtime.ps1 -Platform $platform." }
 Assert-RuntimeArchitecture $engineRoot $pythonRoot $platform
 
-$publishDir = Join-Path $repoRoot "bin\$configuration\net8.0-windows10.0.19041.0\$runtimeIdentifier\publish"
-$enginePublishDir = Join-Path $repoRoot "WinBitTorrent.EngineHost\bin\$configuration\net8.0-windows10.0.19041.0\$runtimeIdentifier\publish"
+$publishDir = Join-Path $repoRoot "src\WinBitTorrent\bin\$configuration\net8.0-windows10.0.19041.0\$runtimeIdentifier\publish"
+$enginePublishDir = Join-Path $repoRoot "src\WinBitTorrent.EngineHost\bin\$configuration\net8.0-windows10.0.19041.0\$runtimeIdentifier\publish"
 $distRoot = Join-Path $repoRoot 'dist'
 $portableName = "WinBitTorrent-$effectiveVersion$artifactSuffix-portable"
 $portableDir = Join-Path $distRoot $portableName
@@ -217,11 +217,11 @@ else {
         }
     }
     $versionParts = "$effectiveVersion.0"
-    Invoke-BuildTool dotnet @('publish', (Join-Path $repoRoot 'WinBitTorrent.csproj'),
+    Invoke-BuildTool dotnet @('publish', (Join-Path $repoRoot 'src\WinBitTorrent\WinBitTorrent.csproj'),
         '-c', $configuration, '-r', $runtimeIdentifier, '--self-contained', 'true', '-o', $publishDir,
         "-p:Platform=$msbuildPlatform", "-p:PublishProfile=win-$platform",
         "-p:Version=$effectiveVersion", "-p:AssemblyVersion=$versionParts", "-p:FileVersion=$versionParts")
-    Invoke-BuildTool dotnet @('publish', (Join-Path $repoRoot 'WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj'),
+    Invoke-BuildTool dotnet @('publish', (Join-Path $repoRoot 'src\WinBitTorrent.EngineHost\WinBitTorrent.EngineHost.csproj'),
         '-c', $configuration, '-r', $runtimeIdentifier, '--self-contained', 'true', '-o', $enginePublishDir,
         "-p:Platform=$msbuildPlatform", "-p:Version=$effectiveVersion",
         "-p:AssemblyVersion=$versionParts", "-p:FileVersion=$versionParts")

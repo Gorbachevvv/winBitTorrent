@@ -12,6 +12,23 @@ using WinBitTorrent.Infrastructure.Storage;
 
 namespace WinBitTorrent.Infrastructure.Backend;
 
+// Test-only paths for the optional qBittorrent oracle.
+internal static class LegacyBackendPaths
+{
+    public static string BackendRoot => Path.Combine(AppPaths.Root, "Backend");
+    public static string BackendProfile => Path.Combine(BackendRoot, "Profile");
+    private static string ProfileBase => Path.Combine(BackendProfile, "qBittorrent");
+    public static string BackendConfig => Path.Combine(ProfileBase, "config", "qBittorrent.ini");
+    public static string BackendData => Path.Combine(ProfileBase, "data");
+    public static string BackendState => Path.Combine(BackendRoot, "host.json");
+
+    public static void EnsureCreated()
+    {
+        AppPaths.EnsureCreated();
+        Directory.CreateDirectory(Path.GetDirectoryName(BackendConfig)!);
+    }
+}
+
 public sealed partial class ManagedBackendHost : IManagedBackendHost
 {
     public const string RequiredQbittorrentVersion = "v5.2.3";
@@ -49,7 +66,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
                 return Session;
 
             _stopping = false;
-            AppPaths.EnsureCreated();
+            LegacyBackendPaths.EnsureCreated();
 
             var executable = FindBackendExecutable();
             var backendDirectory = Path.GetDirectoryName(executable)!;
@@ -73,7 +90,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
                 StandardOutputEncoding = Encoding.UTF8,
                 StandardErrorEncoding = Encoding.UTF8
             };
-            startInfo.ArgumentList.Add($"--profile={AppPaths.BackendProfile}");
+            startInfo.ArgumentList.Add($"--profile={LegacyBackendPaths.BackendProfile}");
             startInfo.ArgumentList.Add($"--webui-port={port}");
             startInfo.ArgumentList.Add("--confirm-legal-notice");
 
@@ -335,13 +352,18 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
         {
             overridden,
             Path.Combine(AppContext.BaseDirectory, "Backend", "qbittorrent-nox.exe"),
-            Path.Combine(AppContext.BaseDirectory, "qbittorrent-nox.exe"),
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Backend", "qbittorrent-nox.exe"))
+            Path.Combine(AppContext.BaseDirectory, "qbittorrent-nox.exe")
         };
 
-        return candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path))
-            ?? throw new FileNotFoundException(
-                "The native Windows qbittorrent-nox.exe is not packaged. Run build\build-backend.ps1 before launching WinBitTorrent.",
+        if (candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path)) is { } executable)
+            return executable;
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            var candidate = Path.Combine(directory.FullName, "artifacts", "compatibility", "qbittorrent", "qbittorrent-nox.exe");
+            if (File.Exists(candidate)) return candidate;
+        }
+        throw new FileNotFoundException(
+                "The optional qbittorrent-nox.exe oracle is missing. Run tests/compatibility/qbittorrent/build.ps1.",
                 candidates[0]);
     }
 
@@ -366,7 +388,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
         if (!Directory.Exists(bundledRoot) && !Directory.Exists(bundledEngines))
             return;
 
-        var novaData = Path.Combine(AppPaths.BackendData, "nova3");
+        var novaData = Path.Combine(LegacyBackendPaths.BackendData, "nova3");
         var engineData = Path.Combine(novaData, "engines");
         Directory.CreateDirectory(novaData);
         Directory.CreateDirectory(engineData);
@@ -398,7 +420,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
         // path" because that folder never existed, so every peer's country came back as "N/A".
         // Create the folder (so qBittorrent can download the database into it) and seed a bundled
         // copy when one ships with the app, for offline / network-restricted environments.
-        var geoDbDirectory = Path.Combine(AppPaths.BackendData, "GeoDB");
+        var geoDbDirectory = Path.Combine(LegacyBackendPaths.BackendData, "GeoDB");
         Directory.CreateDirectory(geoDbDirectory);
 
         const string databaseFileName = "dbip-country-lite.mmdb";
@@ -410,12 +432,12 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
 
     private static async Task<int> GetOrCreatePortAsync(CancellationToken cancellationToken)
     {
-        AppPaths.EnsureCreated();
-        if (File.Exists(AppPaths.BackendState))
+        LegacyBackendPaths.EnsureCreated();
+        if (File.Exists(LegacyBackendPaths.BackendState))
         {
             try
             {
-                await using var existing = File.OpenRead(AppPaths.BackendState);
+                await using var existing = File.OpenRead(LegacyBackendPaths.BackendState);
                 var state = await JsonSerializer.DeserializeAsync<HostState>(existing, cancellationToken: cancellationToken).ConfigureAwait(false);
                 if (state is { Port: > 0 } && IsPortAvailable(state.Port))
                     return state.Port;
@@ -430,7 +452,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
 
-        await using var created = File.Create(AppPaths.BackendState);
+        await using var created = File.Create(LegacyBackendPaths.BackendState);
         await JsonSerializer.SerializeAsync(created, new HostState(port), cancellationToken: cancellationToken).ConfigureAwait(false);
         return port;
     }
@@ -452,8 +474,8 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
 
     private static void EnsureSecureConfiguration(int port)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(AppPaths.BackendConfig)!);
-        var editor = IniDocument.Load(AppPaths.BackendConfig);
+        Directory.CreateDirectory(Path.GetDirectoryName(LegacyBackendPaths.BackendConfig)!);
+        var editor = IniDocument.Load(LegacyBackendPaths.BackendConfig);
         editor.Set("LegalNotice", "Accepted", "true");
         editor.Set("Preferences", "WebUI\\Enabled", "true");
         editor.Set("Preferences", "WebUI\\Address", "127.0.0.1");
@@ -463,7 +485,7 @@ public sealed partial class ManagedBackendHost : IManagedBackendHost
         // Peer country resolution (Peers tab flags/country column). Default is on, but set it
         // explicitly so qBittorrent loads/downloads its IP geolocation database.
         editor.Set("Preferences", "Connection\\ResolvePeerCountries", "true");
-        editor.Save(AppPaths.BackendConfig);
+        editor.Save(LegacyBackendPaths.BackendConfig);
     }
 
     public async ValueTask DisposeAsync()

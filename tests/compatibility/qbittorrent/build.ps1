@@ -10,8 +10,9 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $scriptRoot = if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { $PSScriptRoot }
-if ([string]::IsNullOrWhiteSpace($WorkRoot)) { $WorkRoot = Join-Path $scriptRoot '.work' }
-if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path (Split-Path $scriptRoot -Parent) 'Backend' }
+$projectRoot = [IO.Path]::GetFullPath((Join-Path $scriptRoot '..\..\..'))
+if ([string]::IsNullOrWhiteSpace($WorkRoot)) { $WorkRoot = Join-Path $projectRoot 'build\.legacy-work' }
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path $projectRoot 'artifacts\compatibility\qbittorrent' }
 
 $versions = [ordered]@{
     QBittorrent = '5.2.3'
@@ -32,7 +33,7 @@ $sources = Join-Path $WorkRoot 'sources'
 $builds = Join-Path $WorkRoot 'build'
 $installed = Join-Path $WorkRoot 'vcpkg_installed'
 $stage = Join-Path $WorkRoot 'stage'
-$projectRoot = Split-Path $scriptRoot -Parent
+
 
 function Assert-ChildPath([string] $Path, [string] $Root) {
     $full = [IO.Path]::GetFullPath($Path)
@@ -98,7 +99,7 @@ function Initialize-LibtorrentSource([string] $Archive, [string] $Path, [string]
 }
 
 if ($Clean -and (Test-Path -LiteralPath $WorkRoot)) {
-    Assert-ChildPath $WorkRoot $scriptRoot
+    Assert-ChildPath $WorkRoot $projectRoot
     Remove-Item -LiteralPath $WorkRoot -Recurse -Force
 }
 
@@ -218,7 +219,7 @@ foreach ($runtimeRoot in @((Join-Path $tripletRoot 'bin'), (Join-Path $libtorren
 }
 foreach ($required in $requiredRuntimeDlls) {
     if (-not (Test-Path -LiteralPath (Join-Path $OutputRoot $required))) {
-        throw "Expected runtime dependency '$required' was not found in the vcpkg triplet output. The allowlist in build-backend.ps1 may be stale."
+        throw "Expected runtime dependency '$required' was not found in the vcpkg triplet output. The allowlist in this oracle build script may be stale."
     }
 }
 # Only the sqlite driver is ever loaded (qBittorrent has no Postgres/MySQL support); the psql
@@ -254,7 +255,7 @@ foreach ($package in 'boost','openssl','qtbase','qttools','zlib') {
     $copyright = Join-Path $tripletRoot "share\$package\copyright"
     if (Test-Path -LiteralPath $copyright) { Copy-Item -LiteralPath $copyright -Destination (Join-Path $licenseOutput "$package-copyright.txt") }
 }
-Copy-Item -LiteralPath (Join-Path $scriptRoot 'SOURCE-OFFER.txt') -Destination $licenseOutput
+Copy-Item -LiteralPath (Join-Path $projectRoot 'build\SOURCE-OFFER.txt') -Destination $licenseOutput
 $versions | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $OutputRoot 'versions.json') -Encoding utf8
 
 $header = [IO.File]::ReadAllBytes((Join-Path $OutputRoot 'qbittorrent-nox.exe'))[0..1]

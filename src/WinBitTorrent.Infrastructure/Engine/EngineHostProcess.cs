@@ -159,11 +159,26 @@ public sealed class EngineHostProcess : IManagedBackendHost
         {
             overridden,
             Path.Combine(AppContext.BaseDirectory, "EngineHost", "WinBitTorrent.EngineHost.exe"),
-            Path.Combine(AppContext.BaseDirectory, "WinBitTorrent.EngineHost.exe"),
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "WinBitTorrent.EngineHost", "bin", "Debug", "net8.0-windows10.0.19041.0", "WinBitTorrent.EngineHost.exe"))
+            Path.Combine(AppContext.BaseDirectory, "WinBitTorrent.EngineHost.exe")
         };
-        return candidates.FirstOrDefault(static path => !string.IsNullOrWhiteSpace(path) && File.Exists(path))
-            ?? throw new FileNotFoundException("WinBitTorrent.EngineHost.exe was not found. Build the EngineHost project first.");
+        if (candidates.FirstOrDefault(static path => !string.IsNullOrWhiteSpace(path) && File.Exists(path)) is { } executable)
+            return executable;
+
+        // Development fallback is anchored to the solution, independent of output depth.
+        var architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture
+            == System.Runtime.InteropServices.Architecture.Arm64 ? "arm64" : "x64";
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            if (!File.Exists(Path.Combine(directory.FullName, "WinBitTorrent.slnx")))
+                continue;
+            var bin = Path.Combine(directory.FullName, "src", "WinBitTorrent.EngineHost", "bin");
+            foreach (var platform in new[] { architecture == "arm64" ? "ARM64" : "x64", "" })
+            {
+                var candidate = Path.Combine(bin, platform, "Debug", "net8.0-windows10.0.19041.0", "win-" + architecture, "WinBitTorrent.EngineHost.exe");
+                if (File.Exists(candidate)) return candidate;
+            }
+        }
+        throw new FileNotFoundException("WinBitTorrent.EngineHost.exe was not found. Build the EngineHost project first.");
     }
 
     private void OnOutput(object sender, DataReceivedEventArgs args)

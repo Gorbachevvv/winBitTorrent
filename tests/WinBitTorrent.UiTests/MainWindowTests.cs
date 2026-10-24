@@ -131,7 +131,7 @@ public sealed class UiFactAttribute : FactAttribute
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            var bin = Path.Combine(directory.FullName, "bin", "x64", "Debug", "net8.0-windows10.0.19041.0", "win-x64", "WinBitTorrent.exe");
+            var bin = Path.Combine(directory.FullName, "src", "WinBitTorrent", "bin", "x64", "Debug", "net8.0-windows10.0.19041.0", "win-x64", "WinBitTorrent.exe");
             if (File.Exists(bin)) return bin;
             directory = directory.Parent;
         }

@@ -14,5 +14,5 @@ Foundation License.
 This offer is valid for at least three years after the last binary distribution
 of this WinBitTorrent release. A complete source archive can also be produced by
 running the build script; downloaded, hash-verified source archives remain under
-build/.runtime-work/downloads. WinBitTorrent.Native is built from the source under
+build/.runtime-work/<architecture>/downloads. WinBitTorrent.Native is built from the source under
 native/WinBitTorrent.Native in this repository.

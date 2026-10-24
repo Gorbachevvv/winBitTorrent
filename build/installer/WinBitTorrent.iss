@@ -63,7 +63,7 @@ AllowNoIcons=yes
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 LicenseFile=..\..\LICENSE
-SetupIconFile=..\..\Assets\WinBitTorrent.ico
+SetupIconFile=..\..\src\WinBitTorrent\Assets\WinBitTorrent.ico
 
 ; Use Inno Setup's native WinUI-like styling. The dynamic mode reads the
 ; Windows app-theme preference at startup and styles every built-in control,

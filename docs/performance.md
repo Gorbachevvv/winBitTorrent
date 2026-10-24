@@ -35,10 +35,10 @@ This work does not claim to eliminate that native/network shutdown delay.
 dotnet test tests/WinBitTorrent.Core.Tests
 dotnet test tests/WinBitTorrent.Infrastructure.Tests
 dotnet test tests/WinBitTorrent.IntegrationTests --filter FullyQualifiedName~EngineHostTests
-dotnet build WinBitTorrent.csproj -c Debug -p:Platform=x64
+dotnet build src/WinBitTorrent/WinBitTorrent.csproj -c Debug -p:Platform=x64
 $env:WINBITTORRENT_UI_TESTS = '1'
 dotnet test tests/WinBitTorrent.UiTests --filter FullyQualifiedName~TorrentRefreshSelectionTests
-dotnet build WinBitTorrent.csproj -c Debug -p:Platform=ARM64
+dotnet build src/WinBitTorrent/WinBitTorrent.csproj -c Debug -p:Platform=ARM64
 ```
 
 The integration checks include hermetic downloads, restart/resume with SQLite and legacy

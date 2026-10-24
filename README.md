@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="winBitTorrent_logo%201.png" alt="WinBitTorrent logo" width="140" />
+<img src="docs/images/logo.png" alt="WinBitTorrent logo" width="140" />
 
 # [WinBitTorrent](https://winbittorrent.github.io/)
 
@@ -24,11 +24,11 @@ WinBitTorrent combines a modern Windows 11 interface with its own local engine p
 
 **Dark theme**
 
-<img src="README/winBitTorrent_Screenshot_dark.png" alt="WinBitTorrent — dark theme" width="900" />
+<img src="docs/images/winBitTorrent_Screenshot_dark.png" alt="WinBitTorrent — dark theme" width="900" />
 
 **Light theme**
 
-<img src="README/winBitTorrent_Screenshot_white.png" alt="WinBitTorrent — light theme" width="900" />
+<img src="docs/images/winBitTorrent_Screenshot_white.png" alt="WinBitTorrent — light theme" width="900" />
 
 </div>
 
@@ -166,11 +166,11 @@ Generated native and Python assets are not committed. Build the pinned libtorren
 .\build\build-engine.ps1
 ```
 
-The source URLs, hashes and versions are pinned in [`build/build-runtime.ps1`](build/build-runtime.ps1) and [`build/runtime/vcpkg.json`](build/runtime/vcpkg.json). The old `build-backend.ps1` remains a development-only qBittorrent oracle for parity testing and is never included in release payloads.
+The source URLs, hashes and versions are pinned in [`build/build-runtime.ps1`](build/build-runtime.ps1) and [`build/runtime/vcpkg.json`](build/runtime/vcpkg.json). Generated payloads live under `artifacts/runtime/`. The optional qBittorrent parity-test oracle is isolated in [`tests/compatibility/qbittorrent/`](tests/compatibility/qbittorrent/README.md) and is never included in release payloads.
 
 ### 3. Build & run
 ```bash
-dotnet build WinBitTorrent.csproj -c Debug -p:Platform=x64
+dotnet build src/WinBitTorrent/WinBitTorrent.csproj -c Debug -p:Platform=x64
 ```
 Or open `WinBitTorrent.slnx` in Visual Studio, set the platform to **x64**, and press **F5**.
 
@@ -184,7 +184,7 @@ are prepared automatically. See [build tooling](build/README.md) for prerequisit
 ```bash
 dotnet test
 ```
-The solution includes unit tests (`WinBitTorrent.Core.Tests`, `WinBitTorrent.Infrastructure.Tests`), integration tests against the managed backend (`WinBitTorrent.IntegrationTests`), and FlaUI-driven UI tests (`WinBitTorrent.UiTests`).
+The solution includes unit tests (`WinBitTorrent.Core.Tests`, `WinBitTorrent.Infrastructure.Tests`), integration tests against EngineHost (`WinBitTorrent.IntegrationTests`), and FlaUI-driven UI tests (`WinBitTorrent.UiTests`). See [repository layout](docs/repository-layout.md) for source locations and build entry points.
 
 ---
 
@@ -242,7 +242,7 @@ Release packages bundle libtorrent, Boost, OpenSSL and CPython. They do **not** 
 
 ## Third-party notices & source offer
 
-WinBitTorrent stands on the shoulders of excellent open-source projects. Full notices are in [`Licenses/THIRD-PARTY-NOTICES.txt`](Licenses/THIRD-PARTY-NOTICES.txt), and reproducible source information for the bundled native runtime is in [`build/SOURCE-OFFER.txt`](build/SOURCE-OFFER.txt).
+WinBitTorrent stands on the shoulders of excellent open-source projects. Full notices are in [`docs/legal/THIRD-PARTY-NOTICES.txt`](docs/legal/THIRD-PARTY-NOTICES.txt), and reproducible source information for the bundled native runtime is in [`build/SOURCE-OFFER.txt`](build/SOURCE-OFFER.txt).
 
 | Component | Version | License |
 |-----------|---------|---------|
