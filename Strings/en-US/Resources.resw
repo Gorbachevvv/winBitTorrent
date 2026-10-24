@@ -20,7 +20,7 @@
   <data name="Reannounce.Text" xml:space="preserve"><value>Reannounce</value></data>
   <data name="ServerProfiles.Text" xml:space="preserve"><value>Server profiles…</value></data>
   <data name="Options.Text" xml:space="preserve"><value>Options…</value></data>
-  <data name="FilterTorrents.PlaceholderText" xml:space="preserve"><value>Filter torrents</value></data>
+  <data name="FilterTorrents.PlaceholderText" xml:space="preserve"><value>Search by name</value></data>
   <data name="TransfersTab.Header" xml:space="preserve"><value>Transfers</value></data>
   <data name="RssTab.Header" xml:space="preserve"><value>RSS Reader</value></data>
   <data name="SearchTab.Header" xml:space="preserve"><value>Search</value></data>

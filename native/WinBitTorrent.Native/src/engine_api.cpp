@@ -89,13 +89,13 @@ namespace
         return fallback;
     }
 
-    std::vector<std::string> split(std::string const& value)
+    std::vector<std::string> split(std::string const& value, std::string_view separators = "|,\n")
     {
         std::vector<std::string> result;
         std::string current;
         for (char character : value)
         {
-            if (character == '|' || character == ',' || character == '\n')
+            if (separators.find(character) != std::string_view::npos)
             {
                 if (!current.empty()) result.push_back(std::move(current));
                 current.clear();
@@ -1024,7 +1024,7 @@ namespace winbittorrent
             extra.complete_path = text(payload, "savePath", handle.status().save_path);
             extra.first_last = boolean(payload, "firstLastPiecePriority");
             extra.automatic_tmm = boolean(payload, "automaticTorrentManagement") || auto_tmm_enabled_;
-            for (auto const& tag : split(text(payload, "tags"))) { extra.tags.insert(tag); global_tags_.insert(tag); }
+            for (auto const& tag : split(text(payload, "tags"), ",")) { extra.tags.insert(tag); global_tags_.insert(tag); }
             if (payload.contains("uploadLimit") && !payload.at("uploadLimit").is_null()) handle.set_upload_limit(static_cast<int>(integer(payload, "uploadLimit")));
             if (payload.contains("downloadLimit") && !payload.at("downloadLimit").is_null()) handle.set_download_limit(static_cast<int>(integer(payload, "downloadLimit")));
             set_first_last(handle, extra.first_last);
@@ -1105,22 +1105,43 @@ namespace winbittorrent
             auto const parameters = string_parameters(payload);
             if (name == "createCategory" || name == "editCategory")
             {
-                categories_[text(parameters, "category")] = { text(parameters, "savePath"), text(parameters, "downloadPath") };
+                auto const category = text(parameters, "category");
+                if (category.find_first_not_of(" \t\r\n") == std::string::npos
+                    || category.find_first_of("\r\n") != std::string::npos)
+                    throw std::runtime_error("Invalid category name.");
+                auto existing = categories_.find(category);
+                if (name == "createCategory")
+                {
+                    if (existing != categories_.end()) throw std::runtime_error("Category already exists.");
+                    categories_[category] = { text(parameters, "savePath"), text(parameters, "downloadPath") };
+                }
+                else
+                {
+                    // Old/imported torrents may carry a category without a separate definition.
+                    if (existing == categories_.end())
+                    {
+                        if (std::none_of(states_.begin(), states_.end(), [&](auto const& item) { return item.second.category == category; }))
+                            throw std::runtime_error("Category does not exist.");
+                        existing = categories_.try_emplace(category).first;
+                    }
+                    existing->second.first = text(parameters, "savePath");
+                    if (parameters.contains("downloadPath")) existing->second.second = text(parameters, "downloadPath");
+                }
                 return;
             }
             if (name == "removeCategories")
             {
-                for (auto const& value : split(text(parameters, "categories")))
+                for (auto const& value : split(text(parameters, "categories"), "\n"))
                 {
                     categories_.erase(value);
                     for (auto& [_, extra] : states_) if (extra.category == value) extra.category.clear();
                 }
                 return;
             }
-            if (name == "createTags") { for (auto const& value : split(text(parameters, "tags"))) global_tags_.insert(value); return; }
+            if (name == "createTags") { for (auto const& value : split(text(parameters, "tags"), ",")) global_tags_.insert(value); return; }
             if (name == "deleteTags")
             {
-                for (auto const& value : split(text(parameters, "tags")))
+                for (auto const& value : split(text(parameters, "tags"), ","))
                 {
                     global_tags_.erase(value);
                     for (auto& [_, extra] : states_) extra.tags.erase(value);
@@ -1168,8 +1189,8 @@ namespace winbittorrent
                         extra.download_path = download_path;
                     }
                 }
-                else if (name == "addTags") for (auto const& value : split(text(parameters, "tags"))) { extra.tags.insert(value); global_tags_.insert(value); }
-                else if (name == "removeTags") for (auto const& value : split(text(parameters, "tags"))) extra.tags.erase(value);
+                else if (name == "addTags") for (auto const& value : split(text(parameters, "tags"), ",")) { extra.tags.insert(value); global_tags_.insert(value); }
+                else if (name == "removeTags") for (auto const& value : split(text(parameters, "tags"), ",")) extra.tags.erase(value);
                 else if (name == "setLocation")
                 {
                     extra.pending_location = text(parameters, "location");
@@ -1309,7 +1330,7 @@ namespace winbittorrent
                         extra.queue_position = static_cast<int>(integer(item, "queuePosition", -1));
                         extra.needs_recheck = needs_recheck || loaded_from_metadata_fallback;
                         extra.tags.clear();
-                        for (auto const& tag : split(text(item, "tags"))) extra.tags.insert(tag);
+                        for (auto const& tag : split(text(item, "tags"), ",")) extra.tags.insert(tag);
                         if (extra.queue_position >= 0)
                             handle.queue_position_set(lt::queue_position_t{ extra.queue_position });
                     }

@@ -20,7 +20,7 @@
   <data name="Reannounce.Text" xml:space="preserve"><value>Абнавіць анонс</value></data>
   <data name="ServerProfiles.Text" xml:space="preserve"><value>Профілі сервераў…</value></data>
   <data name="Options.Text" xml:space="preserve"><value>Налады…</value></data>
-  <data name="FilterTorrents.PlaceholderText" xml:space="preserve"><value>Фільтр торэнтаў</value></data>
+  <data name="FilterTorrents.PlaceholderText" xml:space="preserve"><value>Пошук па назве</value></data>
   <data name="TransfersTab.Header" xml:space="preserve"><value>Перадачы</value></data>
   <data name="RssTab.Header" xml:space="preserve"><value>RSS-стужка</value></data>
   <data name="SearchTab.Header" xml:space="preserve"><value>Пошук</value></data>

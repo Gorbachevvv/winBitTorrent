@@ -71,6 +71,11 @@ public sealed partial class TransfersView : UserControl
     private readonly HashSet<object> _rubberBaseSelection = [];
     private readonly HashSet<object> _rubberTargetSelection = [];
     private readonly HashSet<object> _rubberCurrentSelection = [];
+    private FilterItemViewModel? _categoryContextTarget;
+    private FilterItemViewModel? _tagContextTarget;
+    private bool _categoryPointerContext;
+    private bool _tagPointerContext;
+    private bool _taxonomyActionInProgress;
 
     public TransfersView()
     {
@@ -87,6 +92,8 @@ public sealed partial class TransfersView : UserControl
         TorrentTable.AddHandler(PointerMovedEvent, new PointerEventHandler(TorrentTable_PointerMoved), true);
         TorrentTable.AddHandler(PointerReleasedEvent, new PointerEventHandler(TorrentTable_PointerReleased), true);
         TorrentTable.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(TorrentTable_PointerCaptureLost), true);
+        CategoriesList.AddHandler(RightTappedEvent, new RightTappedEventHandler(SidebarFilter_RightTapped), true);
+        TagsList.AddHandler(RightTappedEvent, new RightTappedEventHandler(SidebarFilter_RightTapped), true);
         Loaded += TransfersView_Loaded;
         Unloaded += TransfersView_Unloaded;
     }
@@ -156,12 +163,6 @@ public sealed partial class TransfersView : UserControl
         Storyboard.SetTarget(animation, target);
         Storyboard.SetTargetProperty(animation, property);
         return animation;
-    }
-
-    private void FilterList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is ListView { SelectedItem: FilterItemViewModel filter })
-            ViewModel.SelectFilter(filter);
     }
 
     private void TorrentTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -532,7 +533,6 @@ public sealed partial class TransfersView : UserControl
 
     private void TransfersView_Loaded(object sender, RoutedEventArgs e)
     {
-        StatusList.SelectedIndex = 0;
         if (!_fileEventsAttached)
         {
             ViewModel.SelectedFiles.CollectionChanged += SelectedFiles_CollectionChanged;
@@ -906,7 +906,59 @@ public sealed partial class TransfersView : UserControl
         }
     }
 
+    private void SidebarFilter_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        var list = (ListView)sender;
+        FilterItemViewModel? target = null;
+        for (var node = e.OriginalSource as DependencyObject; node is not null && node != list; node = VisualTreeHelper.GetParent(node))
+            if (node is FrameworkElement { DataContext: FilterItemViewModel item })
+            {
+                target = item;
+                break;
+            }
+        if (list == CategoriesList)
+        {
+            _categoryContextTarget = target;
+            _categoryPointerContext = true;
+        }
+        else
+        {
+            _tagContextTarget = target;
+            _tagPointerContext = true;
+        }
+        if (target is not null) list.SelectedItem = target;
+    }
+
+    private void CategoryContextMenu_Opening(object sender, object e)
+    {
+        NewSidebarCategoryMenuItem.IsEnabled = ViewModel.Api is not null;
+        if (!_categoryPointerContext) _categoryContextTarget = CategoriesList.SelectedItem as FilterItemViewModel;
+        _categoryPointerContext = false;
+        var editable = ViewModel.Api is not null && _categoryContextTarget is { IsAll: false } category
+            && !string.IsNullOrWhiteSpace(category.Key);
+        EditSidebarCategoryMenuItem.IsEnabled = DeleteSidebarCategoryMenuItem.IsEnabled = editable;
+    }
+
+    private void TagContextMenu_Opening(object sender, object e)
+    {
+        CreateSidebarTagsMenuItem.IsEnabled = ViewModel.Api is not null;
+        if (!_tagPointerContext) _tagContextTarget = TagsList.SelectedItem as FilterItemViewModel;
+        _tagPointerContext = false;
+        DeleteSidebarTagMenuItem.IsEnabled = ViewModel.Api is not null && _tagContextTarget is { IsAll: false };
+    }
+
+    private async Task ExecuteTaxonomyActionAsync(Func<Task> action)
+    {
+        if (_taxonomyActionInProgress) return;
+        _taxonomyActionInProgress = true;
+        try { await ExecuteMenuActionAsync(action); }
+        finally { _taxonomyActionInProgress = false; }
+    }
+
     private async void CreateCategory_Click(object sender, RoutedEventArgs e)
+        => await ExecuteTaxonomyActionAsync(CreateCategoryAsync);
+
+    private async Task CreateCategoryAsync()
     {
         if (ViewModel.Api is null)
             return;
@@ -915,45 +967,59 @@ public sealed partial class TransfersView : UserControl
         var panel = new StackPanel { Spacing = 12 }; panel.Children.Add(name); panel.Children.Add(path);
         if (await ShowFormAsync(Localizer.Get("Dialog_NewCategory", "New category"), panel) != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(name.Text))
             return;
-        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.CreateCategoryAsync(name.Text.Trim(), path.Text.Trim()));
+        await ViewModel.UpdateCategoriesAndTagsAsync(api => api.CreateCategoryAsync(name.Text.Trim(), path.Text.Trim()));
     }
 
     private async void EditCategory_Click(object sender, RoutedEventArgs e)
+        => await ExecuteTaxonomyActionAsync(EditCategoryAsync);
+
+    private async Task EditCategoryAsync()
     {
-        if (ViewModel.Api is null || CategoriesList.SelectedItem is not FilterItemViewModel category || category.Key == "Uncategorized")
+        if (ViewModel.Api is null || _categoryContextTarget is not { IsAll: false } category || string.IsNullOrWhiteSpace(category.Key))
             return;
-        var path = await PromptAsync(Localizer.Get("Dialog_EditCategory", "Edit category"), Localizer.Get("Dialog_DefaultSavePath", "Default save path"));
+        var currentPath = ViewModel.Categories.TryGetValue(category.Key, out var current) ? current.SavePath : string.Empty;
+        var path = await PromptAsync(Localizer.Get("Dialog_EditCategory", "Edit category") + " — " + category.Title,
+            Localizer.Get("Dialog_DefaultSavePath", "Default save path"), currentPath);
         if (path is null)
             return;
-        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.EditCategoryAsync(category.Key, path.Trim()));
+        await ViewModel.UpdateCategoriesAndTagsAsync(api => api.EditCategoryAsync(category.Key, path.Trim()));
     }
 
     private async void DeleteCategory_Click(object sender, RoutedEventArgs e)
+        => await ExecuteTaxonomyActionAsync(DeleteCategoryAsync);
+
+    private async Task DeleteCategoryAsync()
     {
-        if (ViewModel.Api is null || CategoriesList.SelectedItem is not FilterItemViewModel category || category.Key == "Uncategorized")
+        if (ViewModel.Api is null || _categoryContextTarget is not { IsAll: false } category || string.IsNullOrWhiteSpace(category.Key))
             return;
         if (!await ConfirmAsync(Localizer.Get("Dialog_DeleteCategory", "Delete category?"), string.Format(Localizer.Get("Dialog_DeleteCategoryMessage", "The torrents in “{0}” will become uncategorized."), category.Title)))
             return;
-        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.RemoveCategoriesAsync([category.Key]));
+        await ViewModel.UpdateCategoriesAndTagsAsync(api => api.RemoveCategoriesAsync([category.Key]));
     }
 
     private async void CreateTags_Click(object sender, RoutedEventArgs e)
+        => await ExecuteTaxonomyActionAsync(CreateTagsAsync);
+
+    private async Task CreateTagsAsync()
     {
         if (ViewModel.Api is null)
             return;
         var tags = await PromptAsync(Localizer.Get("Dialog_CreateTags", "Create tags"), Localizer.Get("Dialog_CommaSeparatedTags", "Comma-separated tag names"));
         if (string.IsNullOrWhiteSpace(tags))
             return;
-        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.CreateTagsAsync(tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
+        await ViewModel.UpdateCategoriesAndTagsAsync(api => api.CreateTagsAsync(tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
     }
 
     private async void DeleteTag_Click(object sender, RoutedEventArgs e)
+        => await ExecuteTaxonomyActionAsync(DeleteTagAsync);
+
+    private async Task DeleteTagAsync()
     {
-        if (ViewModel.Api is null || TagsList.SelectedItem is not FilterItemViewModel tag)
+        if (ViewModel.Api is null || _tagContextTarget is not { IsAll: false } tag)
             return;
         if (!await ConfirmAsync(Localizer.Get("Dialog_DeleteTag", "Delete tag?"), string.Format(Localizer.Get("Dialog_DeleteTagMessage", "Remove “{0}” from all torrents?"), tag.Title)))
             return;
-        await ExecuteMenuActionAsync(() => ViewModel.Api.Torrents.DeleteTagsAsync([tag.Key]));
+        await ViewModel.UpdateCategoriesAndTagsAsync(api => api.DeleteTagsAsync([tag.Key]));
     }
 
     private async void Tags_Click(object sender, RoutedEventArgs e)
@@ -1574,6 +1640,7 @@ public sealed partial class TransfersView : UserControl
     private async Task<ContentDialogResult> ShowFormAsync(string title, object content)
     {
         var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = title, Content = content, PrimaryButtonText = Localizer.Get("Common_Apply", "Apply"), CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"), DefaultButton = ContentDialogButton.Primary };
+        AutomationProperties.SetAutomationId(dialog, "TransferActionDialog");
         return await dialog.ShowAsync();
     }
 
@@ -1586,6 +1653,7 @@ public sealed partial class TransfersView : UserControl
     private async Task<bool> ConfirmAsync(string title, string message)
     {
         var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = title, Content = message, PrimaryButtonText = Localizer.Get("Common_Confirm", "Confirm"), CloseButtonText = Localizer.Get("Common_Cancel", "Cancel"), DefaultButton = ContentDialogButton.Close };
+        AutomationProperties.SetAutomationId(dialog, "TransferConfirmationDialog");
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 

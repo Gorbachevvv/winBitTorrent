@@ -475,21 +475,28 @@ public sealed partial class MainWindow : Window
         if (!string.IsNullOrEmpty(backend))
             description += $"\n{string.Format(Localizer.Get("Dialog_AboutConnectedBackend", "Connected backend: {0}"), backend)}";
 
-        var links = new StackPanel { Spacing = 2 };
-        links.Children.Add(new HyperlinkButton
+        Button CreateLinkButton(string label, string glyph, Uri uri)
         {
-            NavigateUri = HomepageUri,
-            Content = Localizer.Get("Dialog_AboutHomepage", "Homepage"),
-            Padding = new Thickness(0)
-        });
-        links.Children.Add(new HyperlinkButton
-        {
-            NavigateUri = RepositoryUri,
-            Content = Localizer.Get("Dialog_AboutRepository", "GitHub repository"),
-            Padding = new Thickness(0)
-        });
+            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+            content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 16 });
+            content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
+            var button = new Button
+            {
+                Content = content,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Padding = new Thickness(12, 8, 12, 8)
+            };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, label);
+            button.Click += async (_, _) => await Launcher.LaunchUriAsync(uri);
+            return button;
+        }
 
-        var body = new StackPanel { Spacing = 14, Width = 340 };
+        var links = new StackPanel { Spacing = 8 };
+        links.Children.Add(CreateLinkButton(Localizer.Get("Dialog_AboutHomepage", "Homepage"), "\uE80F", HomepageUri));
+        links.Children.Add(CreateLinkButton(Localizer.Get("Dialog_AboutRepository", "GitHub repository"), "\uE71B", RepositoryUri));
+
+        var body = new StackPanel { Spacing = 14, Width = 340, Margin = new Thickness(0, 8, 0, 8) };
         body.Children.Add(header);
         body.Children.Add(new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap });
         body.Children.Add(links);
@@ -504,10 +511,13 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             XamlRoot = RootGrid.XamlRoot,
-            Title = "WinBitTorrent",
             Content = body,
             CloseButtonText = Localizer.Get("Common_Close", "Close")
         };
+        // The standard dialog shares this padding between its content and footer.
+        // Keep the footer compact and restore breathing room on the body itself.
+        dialog.Resources["ContentDialogPadding"] = new Thickness(24, 12, 24, 12);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(dialog, "WinBitTorrent");
         await dialog.ShowAsync();
     }
 

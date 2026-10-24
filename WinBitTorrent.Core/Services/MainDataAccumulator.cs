@@ -5,8 +5,8 @@ namespace WinBitTorrent.Core.Services;
 public sealed class MainDataAccumulator
 {
     private readonly Dictionary<string, TorrentInfo> _torrents = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, TorrentCategory> _categories = new(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _tags = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TorrentCategory> _categories = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _tags = new(StringComparer.Ordinal);
 
     public int ResponseId { get; private set; }
     public IReadOnlyDictionary<string, TorrentInfo> Torrents => _torrents;

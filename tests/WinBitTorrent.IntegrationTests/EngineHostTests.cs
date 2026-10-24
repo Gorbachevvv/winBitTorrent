@@ -16,6 +16,82 @@ namespace WinBitTorrent.IntegrationTests;
 [Collection("Backend")]
 public sealed class EngineHostTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    [Fact]
+    public async Task CategoryAndTagLifecyclePreservesNamesPathsAndAssignmentsAcrossRestart()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "WinBitTorrent.Taxonomy", Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", FindEngineHost());
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        await using var host = new EngineHostProcess(NullLogger<EngineHostProcess>.Instance);
+        const string category = "Films, series | archive";
+        const string pipeTag = "topic|one";
+        var incomplete = Path.Combine(root, "Incomplete");
+        try
+        {
+            await host.StartAsync();
+            var api = host.Client!;
+            await api.Torrents.CreateCategoryAsync(category, Path.Combine(root, "Original"));
+            await api.Torrents.CreateCategoryAsync("Keep", "");
+            await api.Torrents.CreateTagsAsync([pipeTag, "keep", "unused"]);
+            var torrentPath = Path.Combine(root, "fixture.torrent");
+            await File.WriteAllBytesAsync(torrentPath, CreateSingleFileTorrent("taxonomy.bin", "taxonomy"u8.ToArray()));
+            await api.Torrents.AddAsync(new TorrentAddRequest([], [torrentPath], SavePath: Path.Combine(root, "Downloads"),
+                StartTorrent: false, Category: category, Tags: pipeTag + ", keep"));
+            var torrent = Assert.Single(await api.Torrents.GetInfoAsync());
+            Assert.Equal(category, torrent.Category);
+            Assert.Contains(pipeTag, torrent.Tags);
+            await api.Torrents.SetCategoryAsync(torrent.Hash, "Keep");
+            Assert.Equal("Keep", Assert.Single(await api.Torrents.GetInfoAsync()).Category);
+            await api.Torrents.SetCategoryAsync(torrent.Hash, category);
+            await api.Torrents.AddTagsAsync(torrent.Hash, "transient");
+            await api.Torrents.RemoveTagsAsync(torrent.Hash, "transient");
+            Assert.DoesNotContain("transient", Assert.Single(await api.Torrents.GetInfoAsync()).Tags);
+            await host.StopAsync();
+
+            // Simulate a saved incomplete-download path that the two-argument edit API must retain.
+            await using (var database = new SqliteConnection($"Data Source={Path.Combine(root, "Engine", "engine.db")};Pooling=False"))
+            {
+                await database.OpenAsync();
+                await using var command = database.CreateCommand();
+                command.CommandText = "UPDATE categories SET download_path=$path WHERE name=$name";
+                command.Parameters.AddWithValue("$path", incomplete);
+                command.Parameters.AddWithValue("$name", category);
+                Assert.Equal(1, await command.ExecuteNonQueryAsync());
+            }
+            await host.StartAsync();
+            api = host.Client!;
+            var editedPath = Path.Combine(root, "Edited");
+            await api.Torrents.EditCategoryAsync(category, editedPath);
+            var snapshot = await api.Sync.GetMainDataAsync(0);
+            Assert.Equal(editedPath, snapshot.Categories![category].SavePath);
+            Assert.Equal(incomplete, snapshot.Categories[category].DownloadPath);
+            Assert.Contains("unused", snapshot.Tags!);
+            await Assert.ThrowsAsync<LocalEngineException>(() => api.Torrents.CreateCategoryAsync(category, "overwrite"));
+            Assert.Equal(editedPath, (await api.Sync.GetMainDataAsync(0)).Categories![category].SavePath);
+            await api.Torrents.DeleteTagsAsync([pipeTag, "unused", "transient"]);
+            await api.Torrents.RemoveCategoriesAsync([category, "Keep"]);
+            torrent = Assert.Single(await api.Torrents.GetInfoAsync());
+            Assert.Empty(torrent.Category);
+            Assert.Equal("keep", torrent.Tags);
+            await host.StopAsync();
+            await host.StartAsync();
+            snapshot = await host.Client!.Sync.GetMainDataAsync(0);
+            Assert.DoesNotContain(category, snapshot.Categories!.Keys);
+            Assert.DoesNotContain("Keep", snapshot.Categories.Keys);
+            Assert.DoesNotContain(pipeTag, snapshot.Tags!);
+            Assert.Contains("keep", snapshot.Tags!);
+            Assert.Equal("keep", Assert.Single(await host.Client.Torrents.GetInfoAsync()).Tags);
+            await host.StopAsync();
+        }
+        finally
+        {
+            await host.StopAsync(force: true);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_ENGINE_HOST_PATH", null);
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", null);
+            DeleteWritableTree(root);
+        }
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(100)]

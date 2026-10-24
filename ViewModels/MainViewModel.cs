@@ -67,7 +67,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             new(TorrentFilterKind.Status, "stalled", Localizer.Get("Filter_Stalled", "Stalled"), "\uE7BA"),
             new(TorrentFilterKind.Status, "errored", Localizer.Get("Filter_Errored", "Errored"), "\uEA39")
         ];
-        SelectedFilter = StatusFilters[0];
+        RebuildFilters();
+        SelectedStatusFilter = StatusFilters[0];
     }
 
     /// <summary>All categories currently known to the server, keyed by name (not just ones with torrents assigned).</summary>
@@ -104,7 +105,19 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private string _searchText = string.Empty;
 
     [ObservableProperty]
-    private FilterItemViewModel? _selectedFilter;
+    private FilterItemViewModel? _selectedStatusFilter;
+
+    [ObservableProperty]
+    private FilterItemViewModel? _selectedCategoryFilter;
+
+    [ObservableProperty]
+    private FilterItemViewModel? _selectedTagFilter;
+
+    [ObservableProperty]
+    private FilterItemViewModel? _selectedTrackerFilter;
+
+    private bool _rebuildingFilters;
+    private readonly SemaphoreSlim _refreshGate = new(1, 1);
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartSelectedCommand))]
@@ -334,6 +347,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public Task RemoveTagsSelectedAsync(string tags)
         => ExecuteSelectedMutationAsync((api, hashes, token) => api.RemoveTagsAsync(hashes, tags, token));
 
+    public async Task UpdateCategoriesAndTagsAsync(Func<ITorrentsApi, Task> mutation)
+    {
+        EnsureApi();
+        await mutation(_api!.Torrents);
+        await RefreshNowAsync();
+    }
+
     public Task SetLocationSelectedAsync(string location)
         => ExecuteSelectedMutationAsync((api, hashes, token) => api.SetLocationAsync(hashes, location, token));
 
@@ -371,10 +391,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         UseAlternativeSpeedLimits = !UseAlternativeSpeedLimits;
     }
 
-    public void SelectFilter(FilterItemViewModel? filter)
+    partial void OnSelectedStatusFilterChanged(FilterItemViewModel? value) => SidebarFilterChanged();
+    partial void OnSelectedCategoryFilterChanged(FilterItemViewModel? value) => SidebarFilterChanged();
+    partial void OnSelectedTagFilterChanged(FilterItemViewModel? value) => SidebarFilterChanged();
+    partial void OnSelectedTrackerFilterChanged(FilterItemViewModel? value) => SidebarFilterChanged();
+
+    private void SidebarFilterChanged()
     {
-        SelectedFilter = filter ?? StatusFilters[0];
-        RebuildVisibleRows();
+        if (!_rebuildingFilters) RebuildVisibleRows();
     }
 
     public void SetSelectedRows(IReadOnlyList<TorrentRowViewModel> rows)
@@ -455,18 +479,23 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     private async Task RefreshNowAsync()
     {
-        if (_api is null)
-            return;
+        await _refreshGate.WaitAsync(_lifetime?.Token ?? default);
+        try
+        {
+            if (_api is null)
+                return;
 
-        var response = await _api.Sync.GetMainDataAsync(_mainData.ResponseId, _lifetime?.Token ?? default);
-        var changeSet = _mainData.Apply(response);
-        _notifications.Publish(_torrentLifecycle.Observe(changeSet));
-        ApplyChangeSet(changeSet);
-        if (SelectedTorrent is { } selected)
-            SelectedSpeedHistory.RecordSample(selected.Model.DownloadSpeed, selected.Model.UploadSpeed, DateTimeOffset.UtcNow);
-        IsConnected = true;
-        ConnectionStatus = Localizer.Get("Connection_Connected", "Connected");
-        ErrorMessage = string.Empty;
+            var response = await _api.Sync.GetMainDataAsync(_mainData.ResponseId, _lifetime?.Token ?? default);
+            var changeSet = _mainData.Apply(response);
+            _notifications.Publish(_torrentLifecycle.Observe(changeSet));
+            ApplyChangeSet(changeSet);
+            if (SelectedTorrent is { } selected)
+                SelectedSpeedHistory.RecordSample(selected.Model.DownloadSpeed, selected.Model.UploadSpeed, DateTimeOffset.UtcNow);
+            IsConnected = true;
+            ConnectionStatus = Localizer.Get("Connection_Connected", "Connected");
+            ErrorMessage = string.Empty;
+        }
+        finally { _refreshGate.Release(); }
     }
 
     private void ApplyChangeSet(MainDataChangeSet changeSet)
@@ -514,49 +543,80 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     // A NUL key can never collide with a real qBittorrent category name (categories can't
     // contain one), so it's safe as a sentinel for the pinned "All" entry qBittorrent itself
     // shows above the per-category list, counting every torrent regardless of category.
-    private const string AllCategoriesKey = "\0";
+    private const string AllFiltersKey = FilterItemViewModel.AllKey;
 
     private void RebuildFilters()
     {
-        foreach (var filter in StatusFilters)
-            filter.Count = _rows.Values.Count(row => MatchesStatus(row, filter.Key));
+        var categoryKey = SelectedCategoryFilter?.Key;
+        var tagKey = SelectedTagFilter?.Key;
+        var trackerKey = SelectedTrackerFilter?.Key;
+        _rebuildingFilters = true;
+        try
+        {
+            foreach (var filter in StatusFilters)
+                filter.Count = _rows.Values.Count(row => MatchesStatus(row, filter.Key));
 
-        if (CategoryFilters.Count == 0 || CategoryFilters[0].Key != AllCategoriesKey)
-            CategoryFilters.Insert(0, new FilterItemViewModel(TorrentFilterKind.Category, AllCategoriesKey, Localizer.Get("Filter_All", "All"), "\uE71D"));
-        CategoryFilters[0].Count = _rows.Count;
+            EnsureAllFilter(CategoryFilters, TorrentFilterKind.Category, "\uE71D");
+            EnsureAllFilter(TagFilters, TorrentFilterKind.Tag, "\uE8EC");
+            EnsureAllFilter(TrackerFilters, TorrentFilterKind.Tracker, "\uE774");
 
-        ReplaceFilters(
-            CategoryFilters,
-            _rows.Values.GroupBy(static row => string.IsNullOrWhiteSpace(row.Model.Category) ? "Uncategorized" : row.Model.Category),
-            TorrentFilterKind.Category,
-            "\uE8B7",
-            offset: 1);
+            ReplaceFilters(
+                CategoryFilters,
+                _rows.Values.GroupBy(static row => string.IsNullOrWhiteSpace(row.Model.Category) ? "" : row.Model.Category, StringComparer.Ordinal),
+                TorrentFilterKind.Category,
+                "\uE8B7",
+                offset: 1, knownKeys: _mainData.Categories.Keys.Append(""));
 
-        var tags = _rows.Values
-            .SelectMany(static row => row.Model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .GroupBy(static value => value, StringComparer.OrdinalIgnoreCase);
-        ReplaceFilters(TagFilters, tags, TorrentFilterKind.Tag, "\uE8EC");
+            var tags = _rows.Values
+                .SelectMany(static row => row.Model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .GroupBy(static value => value, StringComparer.Ordinal);
+            ReplaceFilters(TagFilters, tags, TorrentFilterKind.Tag, "\uE8EC", offset: 1, knownKeys: _mainData.Tags);
 
-        var trackers = _rows.Values
-            .Select(static row => TrackerHost(row.Model.Tracker))
-            .Where(static value => !string.IsNullOrWhiteSpace(value))
-            .GroupBy(static value => value, StringComparer.OrdinalIgnoreCase);
-        ReplaceFilters(TrackerFilters, trackers, TorrentFilterKind.Tracker, "\uE774");
+            var trackers = _rows.Values
+                .Select(static row => TrackerHost(row.Model.Tracker))
+                .Where(static value => !string.IsNullOrWhiteSpace(value))
+                .GroupBy(static value => value, StringComparer.OrdinalIgnoreCase);
+            ReplaceFilters(TrackerFilters, trackers, TorrentFilterKind.Tracker, "\uE774", offset: 1);
+
+            // Collection updates may clear a ListView selection. Restore by key, or reset only
+            // the affected group when its selected category/tag/tracker no longer exists.
+            SelectedCategoryFilter = FindFilter(CategoryFilters, categoryKey);
+            SelectedTagFilter = FindFilter(TagFilters, tagKey);
+            SelectedTrackerFilter = FindFilter(TrackerFilters, trackerKey);
+        }
+        finally { _rebuildingFilters = false; }
     }
+
+    private void EnsureAllFilter(ObservableCollection<FilterItemViewModel> filters, TorrentFilterKind kind, string glyph)
+    {
+        if (filters.Count == 0 || filters[0].Key != AllFiltersKey)
+            filters.Insert(0, new FilterItemViewModel(kind, AllFiltersKey, Localizer.Get("Filter_All", "All"), glyph));
+        filters[0].Count = _rows.Count;
+    }
+
+    private static FilterItemViewModel FindFilter(ObservableCollection<FilterItemViewModel> filters, string? key)
+        => filters.FirstOrDefault(filter => FilterKeyComparer(filter.Kind).Equals(filter.Key, key)) ?? filters[0];
+
+    private static StringComparer FilterKeyComparer(TorrentFilterKind kind)
+        => kind == TorrentFilterKind.Tracker ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
     // offset lets a caller keep pinned entries at the front of destination (e.g. the "All"
     // category above the per-category list) untouched by this method's own inserts/removals.
-    private static void ReplaceFilters<T>(ObservableCollection<FilterItemViewModel> destination, IEnumerable<IGrouping<string, T>> groups, TorrentFilterKind kind, string glyph, int offset = 0)
+    private static void ReplaceFilters<T>(ObservableCollection<FilterItemViewModel> destination, IEnumerable<IGrouping<string, T>> groups, TorrentFilterKind kind, string glyph, int offset = 0, IEnumerable<string>? knownKeys = null)
     {
-        var desired = groups
-            .OrderBy(static group => group.Key, StringComparer.CurrentCultureIgnoreCase)
-            .Select(group => new
+        var comparer = FilterKeyComparer(kind);
+        var counts = groups.ToDictionary(group => group.Key, group => group.Count(), comparer);
+        var desired = counts.Keys.Concat(knownKeys ?? [])
+            .Distinct(comparer)
+            .OrderBy(static key => key, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(static key => key, StringComparer.Ordinal)
+            .Select(key => new
             {
-                group.Key,
-                Title = kind == TorrentFilterKind.Category && group.Key == "Uncategorized"
+                Key = key,
+                Title = kind == TorrentFilterKind.Category && key.Length == 0
                     ? Localizer.Get("Filter_Uncategorized", "Uncategorized")
-                    : group.Key,
-                Count = group.Count()
+                    : key,
+                Count = counts.GetValueOrDefault(key)
             })
             .ToList();
 
@@ -583,17 +643,17 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private static int IndexOfFilter(ObservableCollection<FilterItemViewModel> filters, string key, int startIndex)
     {
         for (var index = startIndex; index < filters.Count; index++)
-            if (filters[index].Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+            if (FilterKeyComparer(filters[index].Kind).Equals(filters[index].Key, key))
                 return index;
         return -1;
     }
 
     private void RebuildVisibleRows()
     {
-        var filter = SelectedFilter;
         var desired = _rows.Values
-            .Where(row => Matches(row, filter))
-            .Where(row => TorrentFilters.MatchesText(row.Model, SearchText))
+            .Where(row => TorrentFilters.Matches(row.Model,
+                SelectedStatusFilter?.Key ?? "all", FilterKey(SelectedCategoryFilter),
+                FilterKey(SelectedTagFilter), FilterKey(SelectedTrackerFilter), SearchText))
             .OrderBy(static row => row.QueuePosition < 0 ? int.MaxValue : row.QueuePosition)
             .ThenBy(static row => row.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -616,28 +676,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             Torrents.RemoveAt(Torrents.Count - 1);
     }
 
-    private static bool Matches(TorrentRowViewModel row, FilterItemViewModel? filter)
-    {
-        if (filter is null)
-            return true;
-        return filter.Kind switch
-        {
-            TorrentFilterKind.Status => MatchesStatus(row, filter.Key),
-            TorrentFilterKind.Category when filter.Key == AllCategoriesKey => true,
-            TorrentFilterKind.Category => (string.IsNullOrWhiteSpace(row.Model.Category) ? "Uncategorized" : row.Model.Category)
-                .Equals(filter.Key, StringComparison.OrdinalIgnoreCase),
-            TorrentFilterKind.Tag => row.Model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Contains(filter.Key, StringComparer.OrdinalIgnoreCase),
-            TorrentFilterKind.Tracker => TrackerHost(row.Model.Tracker).Equals(filter.Key, StringComparison.OrdinalIgnoreCase),
-            _ => true
-        };
-    }
+    private static string? FilterKey(FilterItemViewModel? filter) => filter is null || filter.IsAll ? null : filter.Key;
 
     private static bool MatchesStatus(TorrentRowViewModel row, string status)
         => TorrentFilters.MatchesStatus(row.Model, status);
 
     private static string TrackerHost(string value)
-        => Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri.Host : value;
+        => TorrentFilters.TrackerHost(value);
 
     private async Task LoadSelectedDetailsAsync(TorrentRowViewModel? selected, CancellationToken cancellationToken)
     {

@@ -66,8 +66,8 @@
                         <ListView
                             x:Name="StatusList"
                             Style="{StaticResource SidebarListViewStyle}"
-                            ItemsSource="{Binding StatusFilters}"
-                            SelectionChanged="FilterList_SelectionChanged">
+                            ItemsSource="{Binding StatusFilters}" SelectedItem="{Binding SelectedStatusFilter, Mode=TwoWay}"
+                           >
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid MinHeight="32" Padding="2,0">
@@ -85,8 +85,14 @@
                         </ListView>
                     </Expander>
                     <Expander x:Uid="CategoriesFilter" Padding="4,4,4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" Header="Categories" IsExpanded="True">
-                        <ListView x:Name="CategoriesList" Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding CategoryFilters}" SelectionChanged="FilterList_SelectionChanged">
-                            <ListView.ContextFlyout><MenuFlyout><MenuFlyoutItem x:Uid="NewCategory" Text="New category…" Click="CreateCategory_Click" /><MenuFlyoutItem x:Uid="EditCategory" Text="Edit category…" Click="EditCategory_Click" /><MenuFlyoutItem x:Uid="DeleteCategory" Text="Delete category" Click="DeleteCategory_Click" /></MenuFlyout></ListView.ContextFlyout>
+                        <ListView x:Name="CategoriesList" Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding CategoryFilters}" SelectedItem="{Binding SelectedCategoryFilter, Mode=TwoWay}">
+                            <ListView.ContextFlyout>
+                                <MenuFlyout Opening="CategoryContextMenu_Opening">
+                                    <MenuFlyoutItem x:Name="NewSidebarCategoryMenuItem" x:Uid="NewCategory" Text="New category…" Click="CreateCategory_Click" />
+                                    <MenuFlyoutItem x:Name="EditSidebarCategoryMenuItem" x:Uid="EditCategory" Text="Edit category…" Click="EditCategory_Click" />
+                                    <MenuFlyoutItem x:Name="DeleteSidebarCategoryMenuItem" x:Uid="DeleteCategory" Text="Delete category" Click="DeleteCategory_Click" />
+                                </MenuFlyout>
+                            </ListView.ContextFlyout>
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid MinHeight="32" Padding="2,0">
@@ -100,8 +106,13 @@
                         </ListView>
                     </Expander>
                     <Expander x:Uid="TagsFilter" Padding="4,4,4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" Header="Tags" IsExpanded="True">
-                        <ListView x:Name="TagsList" Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding TagFilters}" SelectionChanged="FilterList_SelectionChanged">
-                            <ListView.ContextFlyout><MenuFlyout><MenuFlyoutItem x:Uid="CreateTags" Text="Create tags…" Click="CreateTags_Click" /><MenuFlyoutItem x:Uid="DeleteTag" Text="Delete tag" Click="DeleteTag_Click" /></MenuFlyout></ListView.ContextFlyout>
+                        <ListView x:Name="TagsList" Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding TagFilters}" SelectedItem="{Binding SelectedTagFilter, Mode=TwoWay}">
+                            <ListView.ContextFlyout>
+                                <MenuFlyout Opening="TagContextMenu_Opening">
+                                    <MenuFlyoutItem x:Name="CreateSidebarTagsMenuItem" x:Uid="CreateTags" Text="Create tags…" Click="CreateTags_Click" />
+                                    <MenuFlyoutItem x:Name="DeleteSidebarTagMenuItem" x:Uid="DeleteTag" Text="Delete tag" Click="DeleteTag_Click" />
+                                </MenuFlyout>
+                            </ListView.ContextFlyout>
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid MinHeight="32" Padding="2,0">
@@ -115,7 +126,7 @@
                         </ListView>
                     </Expander>
                     <Expander x:Uid="TrackersFilter" Padding="4,4,4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" Header="Trackers" IsExpanded="True">
-                        <ListView Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding TrackerFilters}" SelectionChanged="FilterList_SelectionChanged">
+                        <ListView x:Name="SidebarTrackersList" Style="{StaticResource SidebarListViewStyle}" ItemsSource="{Binding TrackerFilters}" SelectedItem="{Binding SelectedTrackerFilter, Mode=TwoWay}">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid MinHeight="32" Padding="2,0">

@@ -17,7 +17,7 @@ internal sealed class EnginePipeClient : IAsyncDisposable
     private readonly Task _reader;
     private long _nextId;
 
-    private EnginePipeClient(NamedPipeClientStream pipe)
+    internal EnginePipeClient(NamedPipeClientStream pipe)
     {
         _pipe = pipe;
         _reader = ReadLoopAsync();
@@ -110,9 +110,13 @@ internal sealed class EnginePipeClient : IAsyncDisposable
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await _pipe.WriteAsync(length, cancellationToken).ConfigureAwait(false);
-            await _pipe.WriteAsync(payload, cancellationToken).ConfigureAwait(false);
-            await _pipe.FlushAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            // Once a frame starts, only closing the connection may interrupt it.
+            // Cancelling a UI request between its header and payload corrupts the
+            // byte stream for every subsequent request on this shared pipe.
+            await _pipe.WriteAsync(length, _lifetime.Token).ConfigureAwait(false);
+            await _pipe.WriteAsync(payload, _lifetime.Token).ConfigureAwait(false);
+            await _pipe.FlushAsync(_lifetime.Token).ConfigureAwait(false);
         }
         finally
         {

@@ -158,7 +158,156 @@ public sealed class TorrentRefreshSelectionTests(Xunit.Abstractions.ITestOutputH
         }
     }
 
+    [UiFact]
+    public void SidebarAllEntriesPreserveOtherGroupsAndNameSearchWorks()
+    {
+        var previousRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");
+        var root = Path.Combine(Path.GetTempPath(), $"WinBitTorrent-UiFilters-{Guid.NewGuid():N}");
+        SeedLegacyTorrent(root);
+        File.WriteAllText(Path.Combine(root, "client-settings.json"), """{"onboarding.completed":true,"ui.language":"en-US","updates.checkOnStartup":false}""");
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        using var app = Application.Launch(UiFactAttribute.FindExecutable()!);
+        using var automation = new UIA3Automation();
+        try
+        {
+            var window = Retry.WhileNull(() => app.GetMainWindow(automation), TimeSpan.FromSeconds(20)).Result!;
+            Assert.NotNull(window);
+            Assert.NotNull(Retry.WhileNull(() => FindSelectableTorrent(window, TorrentName), TimeSpan.FromSeconds(20)).Result);
+            var statuses = window.FindFirstDescendant(cf => cf.ByAutomationId("StatusList"))!;
+            FindSelectableTorrent(statuses, "Completed")!.Patterns.SelectionItem.Pattern.Select();
+            Assert.True(Retry.WhileFalse(() => FindSelectableTorrent(window, TorrentName) is null, TimeSpan.FromSeconds(5)).Success);
+            foreach (var id in new[] { "TagsList", "SidebarTrackersList", "CategoriesList" })
+            {
+                var list = window.FindFirstDescendant(cf => cf.ByAutomationId(id));
+                Assert.NotNull(list);
+                var all = FindSelectableTorrent(list!, "All");
+                Assert.NotNull(all);
+                all!.Patterns.SelectionItem.Pattern.Select();
+                Assert.Null(FindSelectableTorrent(window, TorrentName));
+            }
+            FindSelectableTorrent(statuses, "All")!.Patterns.SelectionItem.Pattern.Select();
+            Assert.NotNull(Retry.WhileNull(() => FindSelectableTorrent(window, TorrentName), TimeSpan.FromSeconds(5)).Result);
+            var search = window.FindFirstDescendant(cf => cf.ByAutomationId("TorrentNameSearch"))!.AsTextBox();
+            search.Text = "does-not-exist";
+            Assert.True(Retry.WhileFalse(() => FindSelectableTorrent(window, TorrentName) is null, TimeSpan.FromSeconds(5)).Success);
+            search.Text = "REGRESSION";
+            Assert.NotNull(Retry.WhileNull(() => FindSelectableTorrent(window, TorrentName), TimeSpan.FromSeconds(5)).Result);
+            Thread.Sleep(1500);
+            Assert.NotNull(FindSelectableTorrent(window, TorrentName));
+        }
+        finally
+        {
+            if (!app.HasExited) app.Kill();
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", previousRoot);
+            try
+            {
+                foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+                    File.SetAttributes(file, FileAttributes.Normal);
+                Directory.Delete(root, true);
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
     private const string TorrentName = "selection-regression.bin";
+
+    [UiFact]
+    public void CategoryAndTagContextMenusOperateOnRightClickedItem()
+    {
+        var previousRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");
+        var root = Path.Combine(Path.GetTempPath(), $"WinBitTorrent-UiTaxonomy-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        File.WriteAllText(Path.Combine(root, "client-settings.json"), """{"onboarding.completed":true,"ui.language":"en-US","window.main.maximized":false,"window.main.widthDip":1200,"window.main.heightDip":1000,"updates.checkOnStartup":false}""");
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        using var app = Application.Launch(UiFactAttribute.FindExecutable()!);
+        using var automation = new UIA3Automation();
+        try
+        {
+            var window = Retry.WhileNull(() => app.GetMainWindow(automation), TimeSpan.FromSeconds(20)).Result!;
+            Assert.NotNull(window);
+            AutomationElement List(string id) => window.FindFirstDescendant(cf => cf.ByAutomationId(id))!;
+            AutomationElement Row(string id, string name) => Retry.WhileNull(() => FindSelectableTorrent(List(id), name), TimeSpan.FromSeconds(10)).Result!;
+            AutomationElement? VisibleDialog(string id) => window.FindAllDescendants(cf => cf.ByAutomationId(id)).FirstOrDefault(element => !element.IsOffscreen);
+            AutomationElement Dialog(string id) => Retry.WhileNull(() => VisibleDialog(id), TimeSpan.FromSeconds(5)).Result
+                ?? throw new InvalidOperationException($"Dialog did not appear: {id}");
+            void Command(string id, string name, string command)
+            {
+                window.SetForeground();
+                var row = Row(id, name);
+                Assert.NotNull(row);
+                if (row.Patterns.ScrollItem.IsSupported) row.Patterns.ScrollItem.Pattern.ScrollIntoView();
+                var bounds = row.BoundingRectangle;
+                output.WriteLine($"Context target {id}/{name}: {bounds}");
+                MovePointer(bounds.Left + 60, bounds.Top + bounds.Height / 2);
+                Mouse.Click(MouseButton.Right);
+                // WinUI flyouts can live in a separate UIA popup tree. Use their native
+                // keyboard navigation after the real right-click instead of tree searches.
+                Thread.Sleep(150);
+                void Key(VirtualKeyShort key) { Keyboard.Press(key); Keyboard.Release(key); }
+                Key(VirtualKeyShort.HOME);
+                var down = command == "Delete category" ? 2 : command is "Edit category…" or "Delete tag" ? 1 : 0;
+                for (var index = 0; index < down; index++) Key(VirtualKeyShort.DOWN);
+                Key(VirtualKeyShort.RETURN);
+            }
+            void Apply(AutomationElement dialog, string button = "Apply")
+            {
+                var id = dialog.AutomationId;
+                var action = Retry.WhileNull(() => FindByAnyName(dialog, button), TimeSpan.FromSeconds(5)).Result;
+                Assert.NotNull(action);
+                action!.Patterns.Invoke.Pattern.Invoke();
+                Assert.True(Retry.WhileTrue(() => VisibleDialog(id) is not null, TimeSpan.FromSeconds(5)).Success);
+            }
+            // Wait for the local connection before enabling category/tag operations.
+            Assert.NotNull(Retry.WhileNull(() => FindByAnyName(window, "Connected"), TimeSpan.FromSeconds(20)).Result);
+            const string categories = "CategoriesList", tags = "TagsList";
+            foreach (var name in new[] { "Keep", "keep", "Films, series | archive" })
+            {
+                Command(categories, "All", "New category…");
+                var dialog = Dialog("TransferActionDialog");
+                var edits = dialog.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Edit));
+                edits[0].AsTextBox().Text = name;
+                edits[1].AsTextBox().Text = Path.Combine(root, name == "Keep" ? "Keep" : "Original");
+                Apply(dialog);
+                Assert.NotNull(Row(categories, name));
+            }
+            Row(categories, "Keep").Patterns.SelectionItem.Pattern.Select();
+            Command(categories, "Films, series | archive", "Edit category…");
+            var editDialog = Dialog("TransferActionDialog");
+            var pathBox = editDialog.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Edit))!.AsTextBox();
+            Assert.Equal(Path.Combine(root, "Original"), pathBox.Text);
+            pathBox.Text = Path.Combine(root, "Edited");
+            Apply(editDialog);
+            Command(categories, "Films, series | archive", "Edit category…");
+            editDialog = Dialog("TransferActionDialog");
+            Assert.Equal(Path.Combine(root, "Edited"), editDialog.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Edit))!.AsTextBox().Text);
+            Apply(editDialog, "Cancel");
+            Row(categories, "Keep").Patterns.SelectionItem.Pattern.Select();
+            Command(categories, "Films, series | archive", "Delete category");
+            Apply(Dialog("TransferConfirmationDialog"), "Confirm");
+            Assert.True(Retry.WhileFalse(() => FindSelectableTorrent(List(categories), "Films, series | archive") is null, TimeSpan.FromSeconds(5)).Success);
+            Assert.NotNull(Row(categories, "Keep"));
+            Assert.NotNull(Row(categories, "keep"));
+
+            Command(tags, "All", "Create tags…");
+            var tagDialog = Dialog("TransferActionDialog");
+            tagDialog.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Edit))!.AsTextBox().Text = "keep-tag, Keep-tag, topic|one";
+            Apply(tagDialog);
+            Assert.NotNull(Row(tags, "topic|one"));
+            Row(tags, "keep-tag").Patterns.SelectionItem.Pattern.Select();
+            Command(tags, "topic|one", "Delete tag");
+            Apply(Dialog("TransferConfirmationDialog"), "Confirm");
+            Assert.True(Retry.WhileFalse(() => FindSelectableTorrent(List(tags), "topic|one") is null, TimeSpan.FromSeconds(5)).Success);
+            Assert.NotNull(Row(tags, "keep-tag"));
+            Assert.NotNull(Row(tags, "Keep-tag"));
+        }
+        finally
+        {
+            if (!app.HasExited) app.Kill();
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", previousRoot);
+            try { Directory.Delete(root, true); } catch (IOException) { }
+        }
+    }
 
     private static void MovePointer(int x, int y)
     {

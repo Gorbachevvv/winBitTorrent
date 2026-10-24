@@ -12,6 +12,7 @@ public enum TorrentFilterKind
 
 public sealed partial class FilterItemViewModel : ObservableObject
 {
+    public const string AllKey = "\0";
     public FilterItemViewModel(TorrentFilterKind kind, string key, string title, string glyph, int count = 0)
     {
         Kind = kind;
@@ -25,6 +26,7 @@ public sealed partial class FilterItemViewModel : ObservableObject
     public string Key { get; }
     public string Title { get; }
     public string Glyph { get; }
+    public bool IsAll => Key == AllKey || (Kind == TorrentFilterKind.Status && Key == "all");
 
     [ObservableProperty]
     private int _count;

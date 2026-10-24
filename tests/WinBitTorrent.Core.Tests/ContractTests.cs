@@ -64,12 +64,44 @@ public sealed class ContractTests
         => Assert.Equal(expected, TorrentFilters.MatchesStatus(new TorrentInfo { State = state }, filter));
 
     [Fact]
-    public void TextFilterCoversNameCategoryAndTags()
+    public void TextSearchMatchesOnlyTheTorrentName()
     {
         var torrent = new TorrentInfo { Name = "Ubuntu ISO", Category = "Linux", Tags = "daily, trusted" };
         Assert.True(TorrentFilters.MatchesText(torrent, "ubuntu"));
-        Assert.True(TorrentFilters.MatchesText(torrent, "linux"));
-        Assert.True(TorrentFilters.MatchesText(torrent, "trusted"));
+        Assert.True(TorrentFilters.MatchesText(torrent, " UBUNTU "));
+        Assert.False(TorrentFilters.MatchesText(torrent, "linux"));
+        Assert.False(TorrentFilters.MatchesText(torrent, "trusted"));
         Assert.False(TorrentFilters.MatchesText(torrent, "movie"));
+    }
+
+    [Fact]
+    public void SidebarFiltersCombineAndAllResetsOnlyItsOwnGroup()
+    {
+        TorrentInfo[] torrents =
+        [
+            new() { Name = "Ubuntu ISO", State = "downloading", Category = "Linux", Tags = "daily, trusted", Tracker = "https://Tracker.Example.org/announce" },
+            new() { Name = "Ubuntu archive", State = "stoppedDL", Category = "Linux", Tags = "trusted", Tracker = "udp://tracker.example.org:80/announce" },
+            new() { Name = "Other ISO", State = "downloading", Category = "Other", Tags = "daily", Tracker = "https://other.example.org/announce" }
+        ];
+        Assert.Single(torrents, t => TorrentFilters.Matches(t, "downloading", "Linux", "trusted", "tracker.example.org", "ubuntu"));
+        Assert.DoesNotContain(torrents, t => TorrentFilters.Matches(t, "downloading", "Other", "trusted"));
+        // All categories still respects the selected tag; all statuses still respects category.
+        Assert.Single(torrents, t => TorrentFilters.Matches(t, "downloading", tag: "trusted"));
+        Assert.Equal(2, torrents.Count(t => TorrentFilters.Matches(t, category: "Linux", tracker: "tracker.example.org")));
+        Assert.Single(torrents, t => TorrentFilters.Matches(t, "downloading", "Linux"));
+        Assert.Equal(3, torrents.Count(t => TorrentFilters.Matches(t)));
+    }
+
+    [Fact]
+    public void UncategorizedAndTagMatchingDoNotCollideWithRealNames()
+    {
+        var torrent = new TorrentInfo { Name = "Example", Category = "Uncategorized", Tags = "trusted-extra, daily" };
+        Assert.False(TorrentFilters.Matches(torrent, category: ""));
+        Assert.True(TorrentFilters.Matches(torrent, category: "Uncategorized", tag: "daily"));
+        Assert.False(TorrentFilters.Matches(torrent, category: "uncategorized"));
+        Assert.False(TorrentFilters.Matches(torrent, tag: "DAILY"));
+        Assert.False(TorrentFilters.Matches(torrent, tag: "trusted"));
+        torrent.Category = " ";
+        Assert.True(TorrentFilters.Matches(torrent, category: ""));
     }
 }

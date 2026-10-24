@@ -26,7 +26,18 @@ public static class TorrentFilters
 
     public static bool MatchesText(TorrentInfo torrent, string? text)
         => string.IsNullOrWhiteSpace(text)
-            || torrent.Name.Contains(text, StringComparison.CurrentCultureIgnoreCase)
-            || torrent.Tags.Contains(text, StringComparison.CurrentCultureIgnoreCase)
-            || torrent.Category.Contains(text, StringComparison.CurrentCultureIgnoreCase);
+            || torrent.Name.Contains(text.Trim(), StringComparison.CurrentCultureIgnoreCase);
+
+    public static bool Matches(TorrentInfo torrent, string status = "all", string? category = null,
+        string? tag = null, string? tracker = null, string? text = null)
+        => MatchesStatus(torrent, status)
+            && (category is null || (string.IsNullOrWhiteSpace(torrent.Category) ? "" : torrent.Category)
+                .Equals(category, StringComparison.Ordinal))
+            && (tag is null || torrent.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Contains(tag, StringComparer.Ordinal))
+            && (tracker is null || TrackerHost(torrent.Tracker).Equals(tracker, StringComparison.OrdinalIgnoreCase))
+            && MatchesText(torrent, text);
+
+    public static string TrackerHost(string value)
+        => Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri) ? uri.Host : value.Trim();
 }

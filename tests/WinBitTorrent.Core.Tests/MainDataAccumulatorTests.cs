@@ -7,6 +7,27 @@ namespace WinBitTorrent.Core.Tests;
 public sealed class MainDataAccumulatorTests
 {
     [Fact]
+    public void CategoryAndTagNamesRemainDistinctWhenOnlyCaseDiffers()
+    {
+        var accumulator = new MainDataAccumulator();
+        accumulator.Apply(new MainDataResponse
+        {
+            FullUpdate = true,
+            Categories = new()
+            {
+                ["Work"] = new TorrentCategory { Name = "Work", SavePath = "upper" },
+                ["work"] = new TorrentCategory { Name = "work", SavePath = "lower" }
+            },
+            Tags = ["Work", "work"]
+        });
+        Assert.Equal(2, accumulator.Categories.Count);
+        Assert.Equal(2, accumulator.Tags.Count);
+        accumulator.Apply(new MainDataResponse { CategoriesRemoved = ["work"], TagsRemoved = ["work"] });
+        Assert.Equal("upper", Assert.Single(accumulator.Categories).Value.SavePath);
+        Assert.Equal("Work", Assert.Single(accumulator.Tags));
+    }
+
+    [Fact]
     public void AppliesFullAndIncrementalRidUpdates()
     {
         var accumulator = new MainDataAccumulator();

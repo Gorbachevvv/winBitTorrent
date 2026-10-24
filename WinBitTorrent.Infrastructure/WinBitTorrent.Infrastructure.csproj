@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="WinBitTorrent.IntegrationTests" />
     <ProjectReference Include="..\WinBitTorrent.Core\WinBitTorrent.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

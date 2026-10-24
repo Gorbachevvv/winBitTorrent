@@ -47,6 +47,11 @@ internal sealed class EnginePipeServer : IAsyncDisposable
                 // A desktop client may disappear without a graceful disconnect. Keep the
                 // engine alive for the parent process to reconnect and recover its UI state.
             }
+            catch (JsonException)
+            {
+                // A malformed frame invalidates this connection, not the engine state.
+                // Close it and allow the desktop client to reconnect.
+            }
             finally
             {
                 await _pipe.DisposeAsync().ConfigureAwait(false);
