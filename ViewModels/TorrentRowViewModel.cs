@@ -11,8 +11,13 @@ namespace WinBitTorrent.ViewModels;
 public sealed class TorrentRowViewModel : ObservableObject
 {
     private TorrentInfo _model;
+    private RowSnapshot _snapshot;
 
-    public TorrentRowViewModel(TorrentInfo model) => _model = model;
+    public TorrentRowViewModel(TorrentInfo model)
+    {
+        _model = model;
+        _snapshot = new RowSnapshot(model);
+    }
 
     // Table rows fall back to ToString() for their automation name, so without this a screen reader
     // announces the bare type name instead of the torrent.
@@ -72,8 +77,234 @@ public sealed class TorrentRowViewModel : ObservableObject
 
     public void Update(TorrentInfo model)
     {
+        var previous = _snapshot;
         _model = model;
-        OnPropertyChanged(string.Empty);
+        _snapshot = new RowSnapshot(model);
+        // The accumulator patches TorrentInfo in place for remote profiles, so compare
+        // with captured scalar values rather than the previous model reference.
+        if (previous.Hash != _snapshot.Hash)
+        {
+            OnPropertyChanged(nameof(Hash));
+        }
+        if (previous.QueuePosition != _snapshot.QueuePosition)
+        {
+            OnPropertyChanged(nameof(QueuePosition));
+        }
+        if (previous.Name != _snapshot.Name)
+        {
+            OnPropertyChanged(nameof(Name));
+        }
+        if (previous.Size != _snapshot.Size)
+        {
+            OnPropertyChanged(nameof(Size));
+        }
+        if (previous.TotalSize != _snapshot.TotalSize)
+        {
+            OnPropertyChanged(nameof(TotalSize));
+        }
+        if (previous.Progress != _snapshot.Progress)
+        {
+            OnPropertyChanged(nameof(Progress));
+            OnPropertyChanged(nameof(ProgressValue));
+            OnPropertyChanged(nameof(ShowAvailabilityMap));
+        }
+        if (previous.State != _snapshot.State)
+        {
+            OnPropertyChanged(nameof(State));
+            OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(StatusGlyph));
+            OnPropertyChanged(nameof(StatusBrush));
+            OnPropertyChanged(nameof(Progress));
+            OnPropertyChanged(nameof(ProgressValue));
+            OnPropertyChanged(nameof(IsActive));
+            OnPropertyChanged(nameof(IsStopped));
+            OnPropertyChanged(nameof(ShowAvailabilityMap));
+        }
+        if (previous.Seeds != _snapshot.Seeds)
+        {
+            OnPropertyChanged(nameof(Seeds));
+        }
+        if (previous.TotalSeeds != _snapshot.TotalSeeds)
+        {
+            OnPropertyChanged(nameof(Seeds));
+        }
+        if (previous.Peers != _snapshot.Peers)
+        {
+            OnPropertyChanged(nameof(Peers));
+        }
+        if (previous.TotalPeers != _snapshot.TotalPeers)
+        {
+            OnPropertyChanged(nameof(Peers));
+        }
+        if (previous.DownloadSpeed != _snapshot.DownloadSpeed)
+        {
+            OnPropertyChanged(nameof(DownloadSpeed));
+            OnPropertyChanged(nameof(IsActive));
+        }
+        if (previous.UploadSpeed != _snapshot.UploadSpeed)
+        {
+            OnPropertyChanged(nameof(UploadSpeed));
+            OnPropertyChanged(nameof(IsActive));
+        }
+        if (previous.Eta != _snapshot.Eta)
+        {
+            OnPropertyChanged(nameof(Eta));
+        }
+        if (previous.AddedOn != _snapshot.AddedOn)
+        {
+            OnPropertyChanged(nameof(AddedOn));
+        }
+        if (previous.CompletedOn != _snapshot.CompletedOn)
+        {
+            OnPropertyChanged(nameof(CompletedOn));
+        }
+        if (previous.CreatedOn != _snapshot.CreatedOn)
+        {
+            OnPropertyChanged(nameof(CreatedOn));
+        }
+        if (previous.DownloadLimit != _snapshot.DownloadLimit)
+        {
+            OnPropertyChanged(nameof(DownloadLimit));
+        }
+        if (previous.UploadLimit != _snapshot.UploadLimit)
+        {
+            OnPropertyChanged(nameof(UploadLimit));
+        }
+        if (previous.Downloaded != _snapshot.Downloaded)
+        {
+            OnPropertyChanged(nameof(Downloaded));
+        }
+        if (previous.Uploaded != _snapshot.Uploaded)
+        {
+            OnPropertyChanged(nameof(Uploaded));
+        }
+        if (previous.DownloadedSession != _snapshot.DownloadedSession)
+        {
+            OnPropertyChanged(nameof(DownloadedSession));
+        }
+        if (previous.UploadedSession != _snapshot.UploadedSession)
+        {
+            OnPropertyChanged(nameof(UploadedSession));
+        }
+        if (previous.AmountLeft != _snapshot.AmountLeft)
+        {
+            OnPropertyChanged(nameof(AmountLeft));
+        }
+        if (previous.TimeActive != _snapshot.TimeActive)
+        {
+            OnPropertyChanged(nameof(TimeActive));
+        }
+        if (previous.Completed != _snapshot.Completed)
+        {
+            OnPropertyChanged(nameof(Completed));
+        }
+        if (previous.SeenComplete != _snapshot.SeenComplete)
+        {
+            OnPropertyChanged(nameof(SeenComplete));
+        }
+        if (previous.LastActivity != _snapshot.LastActivity)
+        {
+            OnPropertyChanged(nameof(LastActivity));
+        }
+        if (previous.Reannounce != _snapshot.Reannounce)
+        {
+            OnPropertyChanged(nameof(Reannounce));
+        }
+        if (previous.Ratio != _snapshot.Ratio)
+        {
+            OnPropertyChanged(nameof(Ratio));
+        }
+        if (previous.Popularity != _snapshot.Popularity)
+        {
+            OnPropertyChanged(nameof(Popularity));
+        }
+        if (previous.RatioLimit != _snapshot.RatioLimit)
+        {
+            OnPropertyChanged(nameof(RatioLimit));
+        }
+        if (previous.Availability != _snapshot.Availability)
+        {
+            OnPropertyChanged(nameof(Availability));
+            OnPropertyChanged(nameof(AvailabilityCopies));
+        }
+        if (previous.Category != _snapshot.Category)
+        {
+            OnPropertyChanged(nameof(Category));
+        }
+        if (previous.Tags != _snapshot.Tags)
+        {
+            OnPropertyChanged(nameof(Tags));
+        }
+        if (previous.Tracker != _snapshot.Tracker)
+        {
+            OnPropertyChanged(nameof(Tracker));
+        }
+        if (previous.SavePath != _snapshot.SavePath)
+        {
+            OnPropertyChanged(nameof(SavePath));
+        }
+        if (previous.DownloadPath != _snapshot.DownloadPath)
+        {
+            OnPropertyChanged(nameof(DownloadPath));
+        }
+        if (previous.InfoHashV1 != _snapshot.InfoHashV1)
+        {
+            OnPropertyChanged(nameof(InfoHashV1));
+        }
+        if (previous.InfoHashV2 != _snapshot.InfoHashV2)
+        {
+            OnPropertyChanged(nameof(InfoHashV2));
+        }
+        if (previous.IsPrivate != _snapshot.IsPrivate)
+        {
+            OnPropertyChanged(nameof(Private));
+        }
+        OnPropertyChanged(nameof(Model));
+    }
+
+    private readonly struct RowSnapshot(TorrentInfo model)
+    {
+        public readonly string Hash = model.Hash;
+        public readonly int QueuePosition = model.QueuePosition;
+        public readonly string Name = model.Name;
+        public readonly long Size = model.Size;
+        public readonly long TotalSize = model.TotalSize;
+        public readonly double Progress = model.Progress;
+        public readonly string State = model.State;
+        public readonly int Seeds = model.Seeds;
+        public readonly int TotalSeeds = model.TotalSeeds;
+        public readonly int Peers = model.Peers;
+        public readonly int TotalPeers = model.TotalPeers;
+        public readonly long DownloadSpeed = model.DownloadSpeed;
+        public readonly long UploadSpeed = model.UploadSpeed;
+        public readonly long Eta = model.Eta;
+        public readonly long AddedOn = model.AddedOn;
+        public readonly long CompletedOn = model.CompletedOn;
+        public readonly long CreatedOn = model.CreatedOn;
+        public readonly long DownloadLimit = model.DownloadLimit;
+        public readonly long UploadLimit = model.UploadLimit;
+        public readonly long Downloaded = model.Downloaded;
+        public readonly long Uploaded = model.Uploaded;
+        public readonly long DownloadedSession = model.DownloadedSession;
+        public readonly long UploadedSession = model.UploadedSession;
+        public readonly long AmountLeft = model.AmountLeft;
+        public readonly long TimeActive = model.TimeActive;
+        public readonly long Completed = model.Completed;
+        public readonly long SeenComplete = model.SeenComplete;
+        public readonly long LastActivity = model.LastActivity;
+        public readonly long Reannounce = model.Reannounce;
+        public readonly double Ratio = model.Ratio;
+        public readonly double Popularity = model.Popularity;
+        public readonly double RatioLimit = model.RatioLimit;
+        public readonly double Availability = model.Availability;
+        public readonly string Category = model.Category;
+        public readonly string Tags = model.Tags;
+        public readonly string Tracker = model.Tracker;
+        public readonly string SavePath = model.SavePath;
+        public readonly string DownloadPath = model.DownloadPath;
+        public readonly string InfoHashV1 = model.InfoHashV1;
+        public readonly string InfoHashV2 = model.InfoHashV2;
+        public readonly bool IsPrivate = model.IsPrivate;
     }
 
     // Optimistic local updates so the context menu reflects a toggled flag immediately, without

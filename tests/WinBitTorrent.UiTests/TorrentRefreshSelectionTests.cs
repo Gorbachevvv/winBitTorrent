@@ -213,6 +213,77 @@ public sealed class TorrentRefreshSelectionTests(Xunit.Abstractions.ITestOutputH
     private const string TorrentName = "selection-regression.bin";
 
     [UiFact]
+    public void ResizingPanelsSavesOnlyAfterReleaseAndRestoresSizes()
+    {
+        var previousRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");
+        var root = Path.Combine(Path.GetTempPath(), $"WinBitTorrent-UiResize-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        var settingsPath = Path.Combine(root, "client-settings.json");
+        File.WriteAllText(settingsPath, """{"onboarding.completed":true,"ui.language":"en-US","window.main.maximized":false,"window.main.widthDip":1200,"window.main.heightDip":900,"updates.checkOnStartup":false}""");
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        using var app = Application.Launch(UiFactAttribute.FindExecutable()!);
+        using var automation = new UIA3Automation();
+        try
+        {
+            var window = Retry.WhileNull(() => app.GetMainWindow(automation), TimeSpan.FromSeconds(20)).Result!;
+            Assert.NotNull(window);
+            Assert.NotNull(Retry.WhileNull(() => FindByAnyName(window, "Connected"), TimeSpan.FromSeconds(20)).Result);
+            window.SetForeground();
+            Thread.Sleep(1200); // Let initial window placement settle before watching writes.
+
+            foreach (var (id, dx, dy) in new[] { ("DetailsResizeThumb", 0, -70), ("SidebarResizeThumb", 40, 0) })
+            {
+                var thumb = window.FindFirstDescendant(cf => cf.ByAutomationId(id));
+                Assert.NotNull(thumb);
+                var start = thumb!.BoundingRectangle;
+                var x = start.Left + start.Width / 2;
+                var y = start.Top + start.Height / 2;
+                var beforeWrite = File.GetLastWriteTimeUtc(settingsPath);
+                MovePointer(x, y);
+                Mouse.Down(MouseButton.Left);
+                for (var step = 1; step <= 12; step++)
+                {
+                    MovePointer(x + dx * step / 12, y + dy * step / 12);
+                    Thread.Sleep(20);
+                }
+                Thread.Sleep(150);
+                Assert.Equal(beforeWrite, File.GetLastWriteTimeUtc(settingsPath));
+                var moved = thumb.BoundingRectangle;
+                Assert.True(Math.Abs(dx == 0 ? moved.Top - start.Top : moved.Left - start.Left) > 20);
+                Mouse.Up(MouseButton.Left);
+                Assert.True(Retry.WhileFalse(() => File.GetLastWriteTimeUtc(settingsPath) != beforeWrite, TimeSpan.FromSeconds(5)).Success);
+            }
+
+            using var saved = System.Text.Json.JsonDocument.Parse(File.ReadAllText(settingsPath));
+            Assert.InRange(saved.RootElement.GetProperty("layout.sidebarWidth").GetDouble(), 255, 265);
+            Assert.InRange(saved.RootElement.GetProperty("layout.detailsHeight").GetDouble(), 325, 335);
+            FindByAnyName(window, "File")!.Click();
+            FindByAnyName(window, "Exit")!.Click();
+            Assert.True(Retry.WhileFalse(() => app.HasExited, TimeSpan.FromSeconds(20)).Success);
+            using var restarted = Application.Launch(UiFactAttribute.FindExecutable()!);
+            try
+            {
+                var restoredWindow = Retry.WhileNull(() => restarted.GetMainWindow(automation), TimeSpan.FromSeconds(20)).Result!;
+                var restored = Retry.WhileNull(() => restoredWindow.FindFirstDescendant(cf => cf.ByAutomationId("DetailsResizeThumb")), TimeSpan.FromSeconds(5)).Result!;
+                Assert.True(Retry.WhileFalse(() => Math.Abs(restored.BoundingRectangle.Height - 10) <= 1, TimeSpan.FromSeconds(5)).Success);
+                using var persisted = System.Text.Json.JsonDocument.Parse(File.ReadAllText(settingsPath));
+                Assert.Equal(saved.RootElement.GetProperty("layout.sidebarWidth").GetDouble(), persisted.RootElement.GetProperty("layout.sidebarWidth").GetDouble());
+                Assert.Equal(saved.RootElement.GetProperty("layout.detailsHeight").GetDouble(), persisted.RootElement.GetProperty("layout.detailsHeight").GetDouble());
+            }
+            finally { if (!restarted.HasExited) restarted.Kill(); }
+        }
+        finally
+        {
+            Mouse.Up(MouseButton.Left);
+            if (!app.HasExited) app.Kill();
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", previousRoot);
+            try { Directory.Delete(root, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [UiFact]
     public void CategoryAndTagContextMenusOperateOnRightClickedItem()
     {
         var previousRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");

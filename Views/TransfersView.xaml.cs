@@ -49,6 +49,10 @@ public sealed partial class TransfersView : UserControl
     private bool _isRefreshingFiles;
     private bool _sidebarCollapsed;
     private double _sidebarDragWidth;
+    private double _detailsDragHeight;
+    private bool _sidebarResizePending;
+    private bool _detailsResizePending;
+    private bool _splitterFramePending;
     private double _expandedSidebarWidth = SidebarDefaultWidth;
     private int _detailsSelectedIndex;
     private Storyboard? _detailsTransition;
@@ -380,11 +384,54 @@ public sealed partial class TransfersView : UserControl
     private static bool IsKeyDown(VirtualKey key)
         => InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(CoreVirtualKeyStates.Down);
 
+    private void DetailsSplitter_DragStarted(object sender, DragStartedEventArgs e)
+        => _detailsDragHeight = ContentGrid.RowDefinitions[2].ActualHeight;
+
     private void DetailsSplitter_DragDelta(object sender, DragDeltaEventArgs e)
     {
         var details = ContentGrid.RowDefinitions[2];
-        details.Height = new GridLength(Math.Max(details.MinHeight, details.ActualHeight - e.VerticalChange));
+        var maximum = Math.Max(details.MinHeight, ContentGrid.ActualHeight
+            - ContentGrid.RowDefinitions[0].MinHeight - ContentGrid.RowDefinitions[1].ActualHeight);
+        _detailsDragHeight = Math.Clamp(_detailsDragHeight - e.VerticalChange, details.MinHeight, maximum);
+        _detailsResizePending = true;
+        QueueSplitterLayout();
+    }
+
+    private void DetailsSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        ApplyPendingSplitterLayout();
         SaveLayout();
+    }
+
+    private void QueueSplitterLayout()
+    {
+        if (_splitterFramePending)
+            return;
+        _splitterFramePending = true;
+        CompositionTarget.Rendering += SplitterLayout_Rendering;
+    }
+
+    private void SplitterLayout_Rendering(object? sender, object e) => ApplyPendingSplitterLayout();
+
+    private void ApplyPendingSplitterLayout()
+    {
+        if (_splitterFramePending)
+        {
+            CompositionTarget.Rendering -= SplitterLayout_Rendering;
+            _splitterFramePending = false;
+        }
+        if (_detailsResizePending)
+        {
+            _detailsResizePending = false;
+            ContentGrid.RowDefinitions[2].Height = new GridLength(_detailsDragHeight);
+        }
+        if (_sidebarResizePending)
+        {
+            _sidebarResizePending = false;
+            SidebarColumn.Width = new GridLength(_sidebarDragWidth);
+            SidebarPanel.Visibility = _sidebarDragWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
+            UpdateSidebarPanelClip(_sidebarDragWidth);
+        }
     }
 
     private void DetailsSplitter_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -414,13 +461,13 @@ public sealed partial class TransfersView : UserControl
     private void SidebarSplitter_DragDelta(object sender, DragDeltaEventArgs e)
     {
         _sidebarDragWidth = Math.Clamp(_sidebarDragWidth + e.HorizontalChange, 0, SidebarMaxWidth);
-        SidebarColumn.Width = new GridLength(_sidebarDragWidth);
-        SidebarPanel.Visibility = _sidebarDragWidth > 0 ? Visibility.Visible : Visibility.Collapsed;
-        UpdateSidebarPanelClip(_sidebarDragWidth);
+        _sidebarResizePending = true;
+        QueueSplitterLayout();
     }
 
     private void SidebarSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
     {
+        ApplyPendingSplitterLayout();
         if (_sidebarDragWidth <= SidebarCollapseThreshold)
         {
             SetSidebarCollapsed(true);
@@ -545,6 +592,7 @@ public sealed partial class TransfersView : UserControl
     private void TransfersView_Unloaded(object sender, RoutedEventArgs e)
     {
         EndRubberBand(null);
+        ApplyPendingSplitterLayout();
         SaveLayout();
         _filesRefreshTimer.Stop();
         if (!_fileEventsAttached)
@@ -642,16 +690,19 @@ public sealed partial class TransfersView : UserControl
 
     private void SaveLayout()
     {
-        ClientSettings.SetValue("layout.sidebarWidth", _expandedSidebarWidth);
-        ClientSettings.SetValue("layout.sidebarCollapsed", _sidebarCollapsed);
-        ClientSettings.SetValue("layout.detailsHeight", ContentGrid.RowDefinitions[2].ActualHeight);
         // The array's own sequence *is* the saved column order - see RestoreLayout.
         var columns = TorrentTable.Columns.Select(column => new ColumnState(
             ColumnKey(column),
             column.Header?.ToString() ?? string.Empty,
             double.IsFinite(column.ActualWidth) && column.ActualWidth > 0 ? column.ActualWidth : column.Width.Value,
             column.Visibility == Visibility.Visible)).ToList();
-        ClientSettings.SetValue("layout.torrentColumns", JsonSerializer.Serialize(columns));
+        ClientSettings.SetValues(new Dictionary<string, object?>
+        {
+            ["layout.sidebarWidth"] = _expandedSidebarWidth,
+            ["layout.sidebarCollapsed"] = _sidebarCollapsed,
+            ["layout.detailsHeight"] = ContentGrid.RowDefinitions[2].Height.Value,
+            ["layout.torrentColumns"] = JsonSerializer.Serialize(columns)
+        });
     }
 
     private static string ColumnKey(TableViewColumn column)

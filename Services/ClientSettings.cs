@@ -43,6 +43,8 @@ public static class ClientSettings
             var next = (JsonObject)Values().DeepClone();
             foreach (var (key, value) in values)
                 next[key] = value is null ? null : JsonSerializer.SerializeToNode(value);
+            if (JsonNode.DeepEquals(Values(), next) && File.Exists(FilePath))
+                return;
             Save(next);
             // Publish only after the atomic replacement succeeds, including completion flags.
             _values = next;

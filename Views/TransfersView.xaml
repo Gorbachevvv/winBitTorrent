@@ -152,6 +152,7 @@
             PointerExited="Splitter_PointerExited">
             <Thumb
                 x:Name="SidebarResizeThumb"
+                AutomationProperties.AutomationId="SidebarResizeThumb"
                 Background="Transparent"
                 DragCompleted="SidebarSplitter_DragCompleted"
                 DragDelta="SidebarSplitter_DragDelta"
@@ -421,7 +422,10 @@
                     IsHitTestVisible="False"
                     Opacity="0.72" />
                 <Thumb
+                    AutomationProperties.AutomationId="DetailsResizeThumb"
                     Background="Transparent"
+                    DragStarted="DetailsSplitter_DragStarted"
+                    DragCompleted="DetailsSplitter_DragCompleted"
                     DragDelta="DetailsSplitter_DragDelta" />
             </Grid>
 

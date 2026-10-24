@@ -10,6 +10,30 @@ public sealed class ClientSettingsCollection;
 public sealed class OnboardingPreferencesTests
 {
     [Fact]
+    public void UnchangedSettingsDoNotReplaceTheFile()
+    {
+        var originalRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");
+        var root = Path.Combine(Path.GetTempPath(), "WinBitTorrent-SettingsTests", Guid.NewGuid().ToString("N"));
+        Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", root);
+        try
+        {
+            var values = new Dictionary<string, object?> { ["layout.sidebarWidth"] = 260d, ["layout.detailsHeight"] = 330d };
+            ClientSettings.SetValues(values);
+            var file = Path.Combine(root, "client-settings.json");
+            var written = File.GetLastWriteTimeUtc(file);
+            // Denying delete sharing makes any attempted atomic replacement fail.
+            using (var reader = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read))
+                ClientSettings.SetValues(values);
+            Assert.Equal(written, File.GetLastWriteTimeUtc(file));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("WINBITTORRENT_DATA_ROOT", originalRoot);
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
     public async Task SettingsSaveSurvivesBriefReaderLockWithoutLosingExistingValues()
     {
         var originalRoot = Environment.GetEnvironmentVariable("WINBITTORRENT_DATA_ROOT");

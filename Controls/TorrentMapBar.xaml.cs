@@ -20,11 +20,15 @@ public enum TorrentMapMode
 public sealed partial class TorrentMapBar : UserControl
 {
     private const int MaximumColumns = 640;
+    private bool _drawPending;
+    private int _usedRectangles;
 
     public TorrentMapBar()
     {
         InitializeComponent();
-        ActualThemeChanged += (_, _) => Draw();
+        ActualThemeChanged += (_, _) => QueueDraw();
+        Loaded += (_, _) => QueueDraw();
+        Unloaded += (_, _) => CancelDraw();
     }
 
     public TorrentMapMode Mode
@@ -78,25 +82,53 @@ public sealed partial class TorrentMapBar : UserControl
         new PropertyMetadata(-1d, OnVisualPropertyChanged));
 
     private static void OnVisualPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
-        => ((TorrentMapBar)sender).Draw();
+        => ((TorrentMapBar)sender).QueueDraw();
 
-    private void MapCanvas_SizeChanged(object sender, SizeChangedEventArgs e) => Draw();
+    private void MapCanvas_SizeChanged(object sender, SizeChangedEventArgs e) => QueueDraw();
+
+    private void QueueDraw()
+    {
+        if (_drawPending || !IsLoaded)
+            return;
+        _drawPending = true;
+        CompositionTarget.Rendering += DrawFrame;
+    }
+
+    private void CancelDraw()
+    {
+        if (!_drawPending)
+            return;
+        CompositionTarget.Rendering -= DrawFrame;
+        _drawPending = false;
+    }
+
+    private void DrawFrame(object? sender, object e)
+    {
+        CancelDraw();
+        Draw();
+    }
 
     private void Draw()
     {
         if (MapCanvas is null)
             return;
 
-        MapCanvas.Children.Clear();
+        _usedRectangles = 0;
         var width = MapCanvas.ActualWidth;
         var height = MapCanvas.ActualHeight;
         if (width <= 1 || height <= 1)
+        {
+            MapCanvas.Children.Clear();
             return;
+        }
 
         if (Mode == TorrentMapMode.Progress)
             DrawProgress(width, height);
         else
             DrawAvailability(width, height);
+
+        while (MapCanvas.Children.Count > _usedRectangles)
+            MapCanvas.Children.RemoveAt(MapCanvas.Children.Count - 1);
     }
 
     private void DrawProgress(double width, double height)
@@ -232,16 +264,23 @@ public sealed partial class TorrentMapBar : UserControl
 
     private void AddRectangle(double left, double top, double width, double height, Color color)
     {
-        var rectangle = new Rectangle
+        Rectangle rectangle;
+        if (_usedRectangles < MapCanvas.Children.Count)
         {
-            Width = Math.Max(0, width),
-            Height = Math.Max(0, height),
-            Fill = new SolidColorBrush(color),
-            IsHitTestVisible = false
-        };
+            rectangle = (Rectangle)MapCanvas.Children[_usedRectangles];
+            if (rectangle.Fill is SolidColorBrush brush && brush.Color != color)
+                brush.Color = color;
+        }
+        else
+        {
+            rectangle = new Rectangle { Fill = new SolidColorBrush(color), IsHitTestVisible = false };
+            MapCanvas.Children.Add(rectangle);
+        }
+        _usedRectangles++;
+        rectangle.Width = Math.Max(0, width);
+        rectangle.Height = Math.Max(0, height);
         Canvas.SetLeft(rectangle, left);
         Canvas.SetTop(rectangle, top);
-        MapCanvas.Children.Add(rectangle);
     }
 
     // Base colors intentionally match the legend in TransfersView. Progress may blend them when
