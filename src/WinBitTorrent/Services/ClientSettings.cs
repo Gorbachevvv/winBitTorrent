@@ -33,6 +33,21 @@ public static class ClientSettings
         }
     }
 
+    internal static List<FavoriteFolder> GetFavoriteFolders()
+    {
+        lock (Gate)
+        {
+            var folders = new List<FavoriteFolder>();
+            if (Values()[FavoriteFolder.SettingsKey] is JsonArray items)
+                foreach (var item in items.OfType<JsonObject>())
+                    if (item["Name"] is JsonValue n && n.TryGetValue<string>(out var name)
+                        && item["Path"] is JsonValue p && p.TryGetValue<string>(out var path)
+                        && !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(path))
+                        folders.Add(new(name, path));
+            return folders;
+        }
+    }
+
     public static void SetValue(string key, object? value)
         => SetValues(new Dictionary<string, object?> { [key] = value });
 
@@ -106,4 +121,9 @@ public static class ClientSettings
             && (exception.HResult & 0xffff) is 5 or 32 or 33
             && !Directory.Exists(destination)
             && (!File.Exists(destination) || (File.GetAttributes(destination) & FileAttributes.ReadOnly) == 0);
+}
+
+internal sealed record FavoriteFolder(string Name, string Path)
+{
+    internal const string SettingsKey = "downloads.favoriteFolders";
 }

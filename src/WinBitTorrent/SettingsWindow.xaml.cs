@@ -235,7 +235,11 @@ public sealed partial class SettingsWindow : Window
         else
         {
             foreach (var spec in sectionSpecs)
+            {
                 AddEditor(SettingsPanel, spec, localManaged, connected);
+                if (spec.Key == "save_path")
+                    SettingsPanel.Children.Add(CreateFavoriteFoldersCard());
+            }
 
             if (connected && _section == "Downloads")
                 ConfigureDownloadDependencies();

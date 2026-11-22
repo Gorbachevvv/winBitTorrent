@@ -882,4 +882,11 @@
   <data name="SetupText_Reopen" xml:space="preserve"><value>Первоначальная настройка…</value></data>
   <data name="Setup_Reopen.Text" xml:space="preserve"><value>Первоначальная настройка…</value></data>
   <data name="Settings_AppliedRestartLanguage" xml:space="preserve"><value>Настройки применены. Для смены языка перезапустите приложение.</value></data>
+  <data name="FavoriteFolders_Title" xml:space="preserve"><value>Избранные папки</value></data>
+  <data name="FavoriteFolders_Description" xml:space="preserve"><value>Выбирайте путь сохранения одним нажатием при добавлении торрента.</value></data>
+  <data name="FavoriteFolders_Add" xml:space="preserve"><value>Добавить папку</value></data>
+  <data name="FavoriteFolders_Edit" xml:space="preserve"><value>Изменить папку</value></data>
+  <data name="FavoriteFolders_Name" xml:space="preserve"><value>Название</value></data>
+  <data name="FavoriteFolders_Star" xml:space="preserve"><value>Добавить папку в избранное</value></data>
+  <data name="FavoriteFolders_Remove" xml:space="preserve"><value>Убрать папку из избранного</value></data>
 </root>

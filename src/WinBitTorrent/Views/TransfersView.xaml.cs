@@ -93,6 +93,7 @@ public sealed partial class TransfersView : UserControl
         // TableViewRow marks pointer events as handled, so subscribe with handledEventsToo to
         // still observe presses that start on empty space (where the marquee begins).
         TorrentTable.AddHandler(PointerPressedEvent, new PointerEventHandler(TorrentTable_PointerPressed), true);
+        TorrentTable.AddHandler(DoubleTappedEvent, new DoubleTappedEventHandler(TorrentTable_DoubleTapped), true);
         TorrentTable.AddHandler(PointerMovedEvent, new PointerEventHandler(TorrentTable_PointerMoved), true);
         TorrentTable.AddHandler(PointerReleasedEvent, new PointerEventHandler(TorrentTable_PointerReleased), true);
         TorrentTable.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(TorrentTable_PointerCaptureLost), true);
@@ -527,9 +528,25 @@ public sealed partial class TransfersView : UserControl
 
     private async void OpenDestination_Click(object sender, RoutedEventArgs e)
     {
-        var selected = ViewModel.SelectedTorrent;
-        if (selected is null)
-            return;
+        if (ViewModel.SelectedTorrent is { } selected)
+            await OpenDestinationAsync(selected, openDirectory: false);
+    }
+
+    private async void TorrentTable_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        for (var node = e.OriginalSource as DependencyObject; node is not null && node != TorrentTable; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is TableViewRow row && TorrentTable.ItemFromContainer(row) is TorrentRowViewModel torrent)
+            {
+                e.Handled = true;
+                await OpenDestinationAsync(torrent, openDirectory: true);
+                return;
+            }
+        }
+    }
+
+    private async Task OpenDestinationAsync(TorrentRowViewModel selected, bool openDirectory)
+    {
 
         if (!ViewModel.CanUseLocalFiles)
         {
@@ -540,7 +557,10 @@ public sealed partial class TransfersView : UserControl
         var target = ResolveDestinationTarget(selected);
         if (target is not null)
         {
-            SelectInExplorer(target);
+            if (openDirectory && Directory.Exists(target))
+                Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+            else
+                SelectInExplorer(target);
             return;
         }
 

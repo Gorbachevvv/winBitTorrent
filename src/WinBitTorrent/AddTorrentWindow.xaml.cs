@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -48,16 +49,113 @@ public sealed partial class AddTorrentWindow : Window
         _manualSavePath = _defaultSavePath;
         SavePathBox.Text = _defaultSavePath;
         SourcesBox.Text = string.Join(Environment.NewLine, torrentFiles.Concat(urls));
+        RefreshFavoriteFolders();
         _viewReady = true;
         Activated += AddTorrentWindow_Activated;
-        _viewModel.PropertyChanged += ViewModel_PropertyChanged;
-        Closed += (_, _) =>
+        Activated += (_, args) =>
         {
-            _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
-            // A magnet preview polls qBittorrent for up to two minutes; closing the window has to
-            // end that instead of leaving it running against a dead UI.
-            _previewLifetime?.Cancel();
+            if (args.WindowActivationState != WindowActivationState.Deactivated)
+                RefreshFavoriteFolders();
         };
+        _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        Closed += (_, _) => _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        Closed += (_, _) => _previewLifetime?.Cancel();
+    }
+
+    private List<FavoriteFolder> _favoriteFolders = [];
+
+    private void RefreshFavoriteFolders()
+    {
+        var folders = ClientSettings.GetFavoriteFolders();
+        if (_favoriteFolders.SequenceEqual(folders))
+        {
+            UpdateFavoriteFolderVisibility();
+            return;
+        }
+        _favoriteFolders = folders;
+        FavoriteFolderButtons.Children.Clear();
+        foreach (var folder in folders)
+        {
+            var chip = new ToggleButton
+            {
+                Content = new TextBlock { Text = folder.Name, TextTrimming = TextTrimming.CharacterEllipsis },
+                FontSize = 12, MaxWidth = 160, MinHeight = 26,
+                Padding = new Thickness(10, 2, 10, 2), CornerRadius = new CornerRadius(13)
+            };
+            ToolTipService.SetToolTip(chip, folder.Path);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(chip, folder.Name);
+            chip.Click += (_, _) =>
+            {
+                SavePathBox.Text = folder.Path;
+                // A second click still selects this destination even when Text does not change.
+                UpdateFavoriteFolderVisibility();
+            };
+            FavoriteFolderButtons.Children.Add(chip);
+        }
+        UpdateFavoriteFolderVisibility();
+    }
+
+    private void SavePath_Loaded(object sender, RoutedEventArgs args)
+    {
+        // Keep the native clear button accessible beside the overlaid favorite star.
+        if (Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(SavePathBox, 0) is FrameworkElement template
+            && template.FindName("DeleteButton") is Button clear)
+            clear.Margin = new Thickness(0, 0, 32, 0);
+    }
+
+    private void SavePath_TextChanged(object sender, TextChangedEventArgs args)
+    {
+        if (_viewReady)
+            UpdateFavoriteFolderVisibility();
+    }
+
+    private static bool SameFolder(string left, string right)
+    {
+        if (left.StartsWith('/') && !left.StartsWith("//"))
+            return left.TrimEnd('/') == right.TrimEnd('/');
+        return string.Equals(Path.TrimEndingDirectorySeparator(left.Replace('/', '\\')),
+            Path.TrimEndingDirectorySeparator(right.Replace('/', '\\')), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async void FavoriteStar_Click(object sender, RoutedEventArgs args)
+    {
+        var path = SavePathBox.Text.Trim();
+        if (_favoriteFolders.Any(folder => SameFolder(folder.Path, path)))
+        {
+            try
+            {
+                var remaining = ClientSettings.GetFavoriteFolders();
+                remaining.RemoveAll(folder => SameFolder(folder.Path, path));
+                ClientSettings.SetValue(FavoriteFolder.SettingsKey, remaining);
+                RefreshFavoriteFolders();
+            }
+            catch (Exception exception) { ShowError(exception); }
+            return;
+        }
+        var leaf = path.TrimEnd('/', '\\').Split('/', '\\').Last();
+        var name = new TextBox { Header = Localizer.Get("FavoriteFolders_Name", "Display name"), Text = leaf.Length > 0 ? leaf : path };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = SavePathBox.XamlRoot, RequestedTheme = SavePathBox.ActualTheme,
+            Title = Localizer.Get("FavoriteFolders_Star", "Add folder to favorites"),
+            Content = name, PrimaryButtonText = Localizer.Get("CommonAdd.Content", "Add"),
+            CloseButtonText = Localizer.Get("CommonCancel.Content", "Cancel"), DefaultButton = ContentDialogButton.Primary
+        };
+        dialog.Opened += (_, _) => { name.Focus(FocusState.Programmatic); name.SelectAll(); };
+        name.TextChanged += (_, _) => dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(name.Text);
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+        try
+        {
+            var folders = ClientSettings.GetFavoriteFolders();
+            if (!folders.Any(folder => SameFolder(folder.Path, path)))
+            {
+                folders.Add(new FavoriteFolder(name.Text.Trim(), path));
+                ClientSettings.SetValue(FavoriteFolder.SettingsKey, folders);
+            }
+            RefreshFavoriteFolders();
+        }
+        catch (Exception exception) { ShowError(exception); }
     }
 
     private async void AddTorrentWindow_Activated(object sender, WindowActivatedEventArgs args)
@@ -112,6 +210,7 @@ public sealed partial class AddTorrentWindow : Window
             ShowError(exception);
         }
 
+        UpdateFavoriteFolderVisibility();
         if (ParseSources().FirstOrDefault() is { } source)
             await PreviewSourceAsync(source);
     }
@@ -146,6 +245,7 @@ public sealed partial class AddTorrentWindow : Window
         _updatingPathControls = true;
         SavePathBox.IsEnabled = !automatic;
         SavePathBrowseButton.IsEnabled = !automatic;
+        UpdateFavoriteFolderVisibility();
         UseTempPathBox.IsEnabled = !automatic;
         if (automatic)
         {
@@ -159,6 +259,23 @@ public sealed partial class AddTorrentWindow : Window
             UpdateDownloadPathEditors();
         }
         _updatingPathControls = false;
+    }
+
+    private void UpdateFavoriteFolderVisibility()
+    {
+        var path = SavePathBox.Text.Trim();
+        var selectedIndex = _favoriteFolders.FindIndex(folder => SameFolder(folder.Path, path));
+        for (var index = 0; index < FavoriteFolderButtons.Children.Count; index++)
+            ((ToggleButton)FavoriteFolderButtons.Children[index]).IsChecked = index == selectedIndex;
+        var saved = selectedIndex >= 0;
+        FavoriteStarIcon.Glyph = saved ? "\uE735" : "\uE734";
+        FavoriteStar.IsEnabled = path.Length > 0 && AutoTmmModeBox.SelectedIndex != 1;
+        var label = saved ? Localizer.Get("FavoriteFolders_Remove", "Remove folder from favorites")
+            : Localizer.Get("FavoriteFolders_Star", "Add folder to favorites");
+        ToolTipService.SetToolTip(FavoriteStar, label);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(FavoriteStar, label);
+        FavoriteFolderStrip.Visibility = FavoriteFolderButtons.Children.Count > 0 && AutoTmmModeBox.SelectedIndex != 1
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ShowAutomaticPaths()

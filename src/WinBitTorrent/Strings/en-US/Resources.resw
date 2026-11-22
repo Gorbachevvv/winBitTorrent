@@ -882,4 +882,11 @@
   <data name="SetupText_Reopen" xml:space="preserve"><value>First-run setup…</value></data>
   <data name="Setup_Reopen.Text" xml:space="preserve"><value>First-run setup…</value></data>
   <data name="Settings_AppliedRestartLanguage" xml:space="preserve"><value>Settings applied. Restart the app to apply the language change.</value></data>
+  <data name="FavoriteFolders_Title" xml:space="preserve"><value>Favorite folders</value></data>
+  <data name="FavoriteFolders_Description" xml:space="preserve"><value>Choose a save path with one click when adding a torrent.</value></data>
+  <data name="FavoriteFolders_Add" xml:space="preserve"><value>Add folder</value></data>
+  <data name="FavoriteFolders_Edit" xml:space="preserve"><value>Edit folder</value></data>
+  <data name="FavoriteFolders_Name" xml:space="preserve"><value>Display name</value></data>
+  <data name="FavoriteFolders_Star" xml:space="preserve"><value>Add folder to favorites</value></data>
+  <data name="FavoriteFolders_Remove" xml:space="preserve"><value>Remove folder from favorites</value></data>
 </root>

@@ -61,7 +61,8 @@
     <Error Condition="!Exists('$(_EngineHostDevelopmentOutputPath)WinBitTorrent.EngineHost.exe')"
            Text="The development EngineHost executable is missing from '$(_EngineHostDevelopmentOutputPath)'. Build the EngineHost project for $(Platform) / $(RuntimeIdentifier)." />
     <ItemGroup>
-      <EngineHostDevelopmentFiles Include="$(_EngineHostDevelopmentOutputPath)**\*" />
+      <EngineHostDevelopmentFiles Include="$(_EngineHostDevelopmentOutputPath)**\*"
+                                  Exclude="$(_EngineHostDevelopmentOutputPath)EngineHost\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(EngineHostDevelopmentFiles)"
           DestinationFiles="@(EngineHostDevelopmentFiles->'$(OutDir)EngineHost\%(RecursiveDir)%(Filename)%(Extension)')"

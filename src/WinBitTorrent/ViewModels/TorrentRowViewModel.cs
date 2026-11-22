@@ -16,6 +16,7 @@ public sealed class TorrentRowViewModel : ObservableObject
     public TorrentRowViewModel(TorrentInfo model)
     {
         _model = model;
+        TrackerHost = TorrentFilters.TrackerHost(model.Tracker);
         _snapshot = new RowSnapshot(model);
     }
 
@@ -48,6 +49,7 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string CompletedOn => FormatDate(_model.CompletedOn);
     public string CreatedOn => FormatDate(_model.CreatedOn);
     public string Tracker => _model.Tracker;
+    internal string TrackerHost { get; private set; }
     public string DownloadLimit => _model.DownloadLimit <= 0 ? "∞" : ValueFormatter.Speed(_model.DownloadLimit);
     public string UploadLimit => _model.UploadLimit <= 0 ? "∞" : ValueFormatter.Speed(_model.UploadLimit);
     public string Downloaded => ValueFormatter.Size(_model.Downloaded);
@@ -237,6 +239,7 @@ public sealed class TorrentRowViewModel : ObservableObject
         }
         if (previous.Tracker != _snapshot.Tracker)
         {
+            TrackerHost = TorrentFilters.TrackerHost(model.Tracker);
             OnPropertyChanged(nameof(Tracker));
         }
         if (previous.SavePath != _snapshot.SavePath)

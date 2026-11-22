@@ -11,7 +11,7 @@
   <PropertyGroup>
     <WinBitTorrentRepositoryRoot>$(MSBuildThisFileDirectory)</WinBitTorrentRepositoryRoot>
     <WinBitTorrentRuntimeRoot>$(WinBitTorrentRepositoryRoot)artifacts\runtime</WinBitTorrentRuntimeRoot>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <!-- The app only ships en-US, ru-RU and be-BY; without this, every NuGet
          package's satellite resources (Microsoft.UI.Xaml.dll.mui etc.) get

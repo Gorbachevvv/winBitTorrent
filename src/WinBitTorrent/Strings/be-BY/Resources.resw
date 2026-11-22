@@ -868,4 +868,11 @@
   <data name="SetupText_Reopen" xml:space="preserve"><value>Першапачатковая наладка…</value></data>
   <data name="Setup_Reopen.Text" xml:space="preserve"><value>Першапачатковая наладка…</value></data>
   <data name="Settings_AppliedRestartLanguage" xml:space="preserve"><value>Налады ўжытыя. Для змены мовы перазапусціце дадатак.</value></data>
+  <data name="FavoriteFolders_Title" xml:space="preserve"><value>Абраныя папкі</value></data>
+  <data name="FavoriteFolders_Description" xml:space="preserve"><value>Выбірайце шлях захавання адным націсканнем пры даданні торэнта.</value></data>
+  <data name="FavoriteFolders_Add" xml:space="preserve"><value>Дадаць папку</value></data>
+  <data name="FavoriteFolders_Edit" xml:space="preserve"><value>Змяніць папку</value></data>
+  <data name="FavoriteFolders_Name" xml:space="preserve"><value>Назва</value></data>
+  <data name="FavoriteFolders_Star" xml:space="preserve"><value>Дадаць папку ў абранае</value></data>
+  <data name="FavoriteFolders_Remove" xml:space="preserve"><value>Выдаліць папку з абранага</value></data>
 </root>

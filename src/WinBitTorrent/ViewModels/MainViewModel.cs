@@ -35,6 +35,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly Dictionary<string, TorrentRowViewModel> _rows = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PeerRowViewModel> _peers = new(StringComparer.OrdinalIgnoreCase);
     private CancellationTokenSource? _lifetime;
+    private CancellationTokenSource? _syncLifetime;
     private CancellationTokenSource? _detailsLifetime;
     private ITorrentBackendClient? _api;
     private string? _peerHash;
@@ -192,6 +193,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ErrorMessage = string.Empty;
         try
         {
+            _syncLifetime?.Cancel();
             _mainData.Reset();
             _torrentLifecycle.Reset();
             SelectedSpeedHistory.SelectSource(null, 0, 0, DateTimeOffset.UtcNow);
@@ -206,7 +208,10 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             await _profileStore.SelectAsync(SelectedProfile.Id, _lifetime.Token);
             IsConnected = true;
             await ShowPendingMigrationReportAsync(_api, _lifetime.Token);
-            _ = RunSyncLoopAsync(_lifetime.Token);
+            _syncLifetime?.Cancel();
+            _syncLifetime?.Dispose();
+            _syncLifetime = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+            _ = RunSyncLoopAsync(_syncLifetime.Token);
         }
         catch (Exception exception)
         {
@@ -452,7 +457,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             try
             {
-                await RefreshNowAsync();
+                await RefreshNowAsync(cancellationToken);
                 await RefreshSelectedPeersAsync(cancellationToken);
                 if (++_visualizationRefreshTick >= 3)
                 {
@@ -477,15 +482,20 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
-    private async Task RefreshNowAsync()
+    private async Task RefreshNowAsync(CancellationToken cancellationToken = default)
     {
-        await _refreshGate.WaitAsync(_lifetime?.Token ?? default);
+        if (!cancellationToken.CanBeCanceled)
+            cancellationToken = _lifetime?.Token ?? default;
+        await _refreshGate.WaitAsync(cancellationToken);
         try
         {
             if (_api is null)
                 return;
 
-            var response = await _api.Sync.GetMainDataAsync(_mainData.ResponseId, _lifetime?.Token ?? default);
+            var api = _api;
+            var response = await api.Sync.GetMainDataAsync(_mainData.ResponseId, cancellationToken);
+            if (cancellationToken.IsCancellationRequested || !ReferenceEquals(api, _api))
+                return;
             var changeSet = _mainData.Apply(response);
             _notifications.Publish(_torrentLifecycle.Observe(changeSet));
             ApplyChangeSet(changeSet);
@@ -554,7 +564,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         try
         {
             foreach (var filter in StatusFilters)
-                filter.Count = _rows.Values.Count(row => MatchesStatus(row, filter.Key));
+                filter.Count = filter.Key == "all" ? _rows.Count : _rows.Values.Count(row => TorrentFilters.MatchesStatus(row.Model, filter.Key));
 
             EnsureAllFilter(CategoryFilters, TorrentFilterKind.Category, "\uE71D");
             EnsureAllFilter(TagFilters, TorrentFilterKind.Tag, "\uE8EC");
@@ -573,7 +583,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             ReplaceFilters(TagFilters, tags, TorrentFilterKind.Tag, "\uE8EC", offset: 1, knownKeys: _mainData.Tags);
 
             var trackers = _rows.Values
-                .Select(static row => TrackerHost(row.Model.Tracker))
+                .Select(static row => row.TrackerHost)
                 .Where(static value => !string.IsNullOrWhiteSpace(value))
                 .GroupBy(static value => value, StringComparer.OrdinalIgnoreCase);
             ReplaceFilters(TrackerFilters, trackers, TorrentFilterKind.Tracker, "\uE774", offset: 1);
@@ -666,7 +676,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var row = desired[index];
             if (index < Torrents.Count && ReferenceEquals(Torrents[index], row))
                 continue;
-            var existingIndex = Torrents.IndexOf(row);
+            var existingIndex = index < Torrents.Count ? Torrents.IndexOf(row) : -1;
             if (existingIndex >= 0)
                 Torrents.Move(existingIndex, index);
             else
@@ -677,12 +687,6 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
 
     private static string? FilterKey(FilterItemViewModel? filter) => filter is null || filter.IsAll ? null : filter.Key;
-
-    private static bool MatchesStatus(TorrentRowViewModel row, string status)
-        => TorrentFilters.MatchesStatus(row.Model, status);
-
-    private static string TrackerHost(string value)
-        => TorrentFilters.TrackerHost(value);
 
     private async Task LoadSelectedDetailsAsync(TorrentRowViewModel? selected, CancellationToken cancellationToken)
     {
@@ -1026,6 +1030,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         _connection.StateChanged -= OnConnectionStateChanged;
         await ShutdownAsync();
+        _syncLifetime?.Dispose();
         _detailsLifetime?.Dispose();
         _lifetime?.Dispose();
     }

@@ -66,9 +66,20 @@
                                 <TextBlock x:Uid="AddTorrentSavePathLabel" Text="Save path" />
                                 <Grid ColumnSpacing="6">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                    <TextBox x:Name="SavePathBox" />
+                                    <Grid>
+                                        <TextBox x:Name="SavePathBox" Padding="10,5,34,5" Loaded="SavePath_Loaded" TextChanged="SavePath_TextChanged" />
+                                        <Button x:Name="FavoriteStar" Width="28" Height="28" MinHeight="0" Margin="0,0,3,0" Padding="0"
+                                                HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource SubtleButtonStyle}" Click="FavoriteStar_Click">
+                                            <FontIcon x:Name="FavoriteStarIcon" FontSize="15" Glyph="&#xE734;" />
+                                        </Button>
+                                    </Grid>
                                     <Button x:Name="SavePathBrowseButton" x:Uid="AddTorrentChangePath" Grid.Column="1" Content="Change" Click="SavePathBrowse_Click" />
                                 </Grid>
+                                <ScrollViewer x:Name="FavoriteFolderStrip" Visibility="Collapsed"
+                                              HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled">
+                                    <StackPanel x:Name="FavoriteFolderButtons" Orientation="Horizontal" Spacing="5" />
+                                </ScrollViewer>
                             </StackPanel>
                             <Grid ColumnSpacing="8">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
