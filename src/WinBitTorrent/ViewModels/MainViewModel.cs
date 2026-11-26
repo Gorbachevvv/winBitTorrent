@@ -166,6 +166,21 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool CanUseLocalFiles => _api?.Capabilities.HasFlag(BackendCapabilities.LocalFileSystem) == true;
     public bool HasSelectedTorrent => SelectedTorrent is not null;
 
+    /// <summary> <see cref="Services.PowerAction"/> armed for the downloads. It fires once and is then cleared </summary>
+    public PowerAction PendingPowerAction { get; private set; }
+
+    /// <summary> Hash of the watched torrent, null watches every download </summary>
+    public string? PowerActionTorrentHash { get; private set; }
+
+    /// <summary> Raised on the UI thread once the armed <see cref="PendingPowerAction"/> is due </summary>
+    public event Action<PowerAction>? PowerActionDue;
+
+    public void ArmPowerAction(PowerAction action, string? torrentHash)
+    {
+        PendingPowerAction = action;
+        PowerActionTorrentHash = action == PowerAction.None ? null : torrentHash;
+    }
+
     public async Task InitializeAsync()
     {
         if (_lifetime is not null)
@@ -497,8 +512,16 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (cancellationToken.IsCancellationRequested || !ReferenceEquals(api, _api))
                 return;
             var changeSet = _mainData.Apply(response);
-            _notifications.Publish(_torrentLifecycle.Observe(changeSet));
+            var events = _torrentLifecycle.Observe(changeSet);
+            _notifications.Publish(events);
             ApplyChangeSet(changeSet);
+            if (PendingPowerAction != PowerAction.None &&
+                DownloadCompletionWatch.IsReached(PowerActionTorrentHash, events, _mainData.Torrents.Values))
+            {
+                var action = PendingPowerAction;
+                ArmPowerAction(PowerAction.None, null);
+                PowerActionDue?.Invoke(action);
+            }
             if (SelectedTorrent is { } selected)
                 SelectedSpeedHistory.RecordSample(selected.Model.DownloadSpeed, selected.Model.UploadSpeed, DateTimeOffset.UtcNow);
             IsConnected = true;
