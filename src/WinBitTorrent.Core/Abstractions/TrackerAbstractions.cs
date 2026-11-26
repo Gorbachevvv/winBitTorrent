@@ -42,7 +42,12 @@ public interface ITrackerProxyOptions
 public interface ITrackerInteractiveAuthentication
 {
     Uri LoginPage { get; }
-    Task ImportSessionCookiesAsync(IReadOnlyCollection<Cookie> cookies, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Imports the browser session. <paramref name="userAgent"/> is the sign-in browser's own one:
+    /// Cloudflare binds its clearance cookie to it, so requests sent with another one get the check again
+    /// </summary>
+    Task ImportSessionCookiesAsync(IReadOnlyCollection<Cookie> cookies, string? userAgent = null, CancellationToken cancellationToken = default);
 }
 
 public interface ITrackerSessionControl

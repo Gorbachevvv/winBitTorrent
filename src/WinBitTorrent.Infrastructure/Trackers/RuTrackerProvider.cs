@@ -26,6 +26,8 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
     private IPAddress? _activeProxyAddress;
     private IPAddress[] _proxyAddresses = [];
     private string? _curlCookieFile;
+    // Cloudflare binds cf_clearance to the browser that passed its check, so a browser session keeps that browser's UA
+    private string _userAgent = BrowserUserAgent;
 
     public string Id => "rutracker";
     public string DisplayName => "RuTracker";
@@ -43,6 +45,7 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            _userAgent = BrowserUserAgent;
             if (UseBuiltInProxy)
             {
                 await SignInWithBuiltInProxyAsync(credentials, cancellationToken).ConfigureAwait(false);
@@ -96,7 +99,7 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
         }
     }
 
-    public async Task ImportSessionCookiesAsync(IReadOnlyCollection<Cookie> cookies, CancellationToken cancellationToken = default)
+    public async Task ImportSessionCookiesAsync(IReadOnlyCollection<Cookie> cookies, string? userAgent = null, CancellationToken cancellationToken = default)
     {
         var session = cookies.FirstOrDefault(static cookie =>
             cookie.Name.Equals("bb_session", StringComparison.OrdinalIgnoreCase) &&
@@ -113,6 +116,7 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
 
             ResetClient();
             ResetCurlSession();
+            _userAgent = string.IsNullOrWhiteSpace(userAgent) ? BrowserUserAgent : userAgent.Trim();
             if (UseBuiltInProxy)
             {
                 _proxyAddresses = (await Dns.GetHostAddressesAsync(OfficialAddonProxy.Host, cancellationToken).ConfigureAwait(false))
@@ -379,7 +383,7 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
         var systemProxy = CreateSystemProxy();
         var handler = CreateSystemProxyHandler(_cookies, systemProxy);
         _client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-        _client.DefaultRequestHeaders.UserAgent.ParseAdd(BrowserUserAgent);
+        _client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", _userAgent);
         _client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("ru-RU,ru;q=0.9,en;q=0.7");
         _activeMirror = mirror;
     }
@@ -458,7 +462,7 @@ public sealed partial class RuTrackerProvider : ITrackerSearchProvider, ITracker
             AddCurlArgument(startInfo, "--resolve", $"{OfficialAddonProxy.Host}:{OfficialAddonProxy.Port}:{proxyAddress}");
             AddCurlArgument(startInfo, "--cookie", EnsureCurlCookieFile());
             AddCurlArgument(startInfo, "--cookie-jar", EnsureCurlCookieFile());
-            AddCurlArgument(startInfo, "--user-agent", BrowserUserAgent);
+            AddCurlArgument(startInfo, "--user-agent", _userAgent);
             AddCurlArgument(startInfo, "--header", "Accept-Language: ru-RU,ru;q=0.9,en;q=0.7");
             AddCurlArgument(startInfo, "--output", outputFile);
             AddCurlArgument(startInfo, "--write-out", "%{http_code}");
