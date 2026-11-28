@@ -515,8 +515,7 @@ public sealed partial class SettingsWindow : Window
             Header = header,
             Content = content,
             IsExpanded = false,
-            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
-            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+            Style = (Style)Application.Current.Resources["SettingsGroupStyle"],
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(7),
             Padding = new Thickness(0),
@@ -623,8 +622,7 @@ public sealed partial class SettingsWindow : Window
         return new Border
         {
             Padding = new Thickness(14, 8, 14, 8),
-            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
-            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+            Style = (Style)Application.Current.Resources["SettingsCardStyle"],
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(6),
             Child = content

@@ -367,8 +367,8 @@
                     <tv:TableViewTextColumn x:Uid="ColumnPopularity" Header="Popularity" Width="82" Visibility="Collapsed" Binding="{Binding Popularity}" />
                     <tv:TableViewTextColumn x:Uid="ColumnCategory" Header="Category" Width="110" Binding="{Binding Category}" />
                     <tv:TableViewTextColumn x:Uid="ColumnTags" Header="Tags" Width="120" Binding="{Binding Tags}" />
-                    <tv:TableViewTextColumn x:Uid="ColumnAddedOn" Header="Added on" Width="145" Binding="{Binding AddedOn}" />
-                    <tv:TableViewTextColumn x:Uid="ColumnCompletedOn" Header="Completed on" Width="145" Visibility="Collapsed" Binding="{Binding CompletedOn}" />
+                    <tv:TableViewTextColumn x:Uid="ColumnAddedOn" Header="Added on" Width="145" SortMemberPath="AddedOnTimestamp" Binding="{Binding AddedOn}" />
+                    <tv:TableViewTextColumn x:Uid="ColumnCompletedOn" Header="Completed on" Width="145" Visibility="Collapsed" SortMemberPath="CompletedOnTimestamp" Binding="{Binding CompletedOn}" />
                     <tv:TableViewTextColumn x:Uid="ColumnTracker" Header="Tracker" Width="160" Visibility="Collapsed" Binding="{Binding Tracker}" />
                     <tv:TableViewTextColumn x:Uid="ColumnDownLimit" Header="Down limit" Width="100" Visibility="Collapsed" Binding="{Binding DownloadLimit}" />
                     <tv:TableViewTextColumn x:Uid="ColumnUpLimit" Header="Up limit" Width="100" Visibility="Collapsed" Binding="{Binding UploadLimit}" />
@@ -381,15 +381,15 @@
                     <tv:TableViewTextColumn x:Uid="ColumnSavePath" Header="Save path" Width="220" Visibility="Collapsed" Binding="{Binding SavePath}" />
                     <tv:TableViewTextColumn x:Uid="ColumnCompleted" Header="Completed" Width="100" Visibility="Collapsed" Binding="{Binding Completed}" />
                     <tv:TableViewTextColumn x:Uid="ColumnRatioLimit" Header="Ratio limit" Width="90" Visibility="Collapsed" Binding="{Binding RatioLimit}" />
-                    <tv:TableViewTextColumn x:Uid="ColumnSeenComplete" Header="Last seen complete" Width="145" Visibility="Collapsed" Binding="{Binding SeenComplete}" />
-                    <tv:TableViewTextColumn x:Uid="ColumnLastActivity" Header="Last activity" Width="145" Visibility="Collapsed" Binding="{Binding LastActivity}" />
+                    <tv:TableViewTextColumn x:Uid="ColumnSeenComplete" Header="Last seen complete" Width="145" Visibility="Collapsed" SortMemberPath="SeenCompleteTimestamp" Binding="{Binding SeenComplete}" />
+                    <tv:TableViewTextColumn x:Uid="ColumnLastActivity" Header="Last activity" Width="145" Visibility="Collapsed" SortMemberPath="LastActivityTimestamp" Binding="{Binding LastActivity}" />
                     <tv:TableViewTextColumn x:Uid="ColumnAvailability" Header="Availability" Width="90" Visibility="Collapsed" Binding="{Binding Availability}" />
                     <tv:TableViewTextColumn x:Uid="ColumnDownloadPath" Header="Download path" Width="220" Visibility="Collapsed" Binding="{Binding DownloadPath}" />
                     <tv:TableViewTextColumn x:Uid="ColumnInfoHashV1" Header="Info hash v1" Width="290" Visibility="Collapsed" Binding="{Binding InfoHashV1}" />
                     <tv:TableViewTextColumn x:Uid="ColumnInfoHashV2" Header="Info hash v2" Width="420" Visibility="Collapsed" Binding="{Binding InfoHashV2}" />
                     <tv:TableViewTextColumn x:Uid="ColumnReannounce" Header="Reannounce" Width="100" Visibility="Collapsed" Binding="{Binding Reannounce}" />
                     <tv:TableViewTextColumn x:Uid="ColumnPrivate" Header="Private" Width="70" Visibility="Collapsed" Binding="{Binding Private}" />
-                    <tv:TableViewTextColumn x:Uid="ColumnCreatedOn" Header="Created on" Width="145" Visibility="Collapsed" Binding="{Binding CreatedOn}" />
+                    <tv:TableViewTextColumn x:Uid="ColumnCreatedOn" Header="Created on" Width="145" Visibility="Collapsed" SortMemberPath="CreatedOnTimestamp" Binding="{Binding CreatedOn}" />
                 </tv:TableView.Columns>
             </tv:TableView>
 
@@ -517,6 +517,15 @@
                 <TabViewItem x:Uid="DetailsGeneral" Header="General" IsClosable="False" IconSource="{StaticResource DetailsGeneralIcon}">
                     <ScrollViewer Padding="12,8">
                         <StackPanel Spacing="12">
+                            <StackPanel Spacing="6" Visibility="{Binding SelectedTorrent.HasMissingFiles, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}">
+                                <TextBlock Text="{Binding SelectedTorrent.Status}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding SelectedTorrent.Model.ContentPath}" IsTextSelectionEnabled="True" TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button x:Uid="MissingLocate" Content="Find files…" Click="MissingLocate_Click" />
+                                    <Button x:Uid="MissingCheck" Content="Check again" Click="MissingCheck_Click" />
+                                    <Button x:Uid="MissingDownload" Content="Download missing data" Click="MissingDownload_Click" />
+                                </StackPanel>
+                            </StackPanel>
                             <Border
                                 Padding="12,9"
                                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"

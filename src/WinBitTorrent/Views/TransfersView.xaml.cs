@@ -726,9 +726,8 @@ public sealed partial class TransfersView : UserControl
     }
 
     private static string ColumnKey(TableViewColumn column)
-        => !string.IsNullOrWhiteSpace(column.SortMemberPath)
-            ? column.SortMemberPath
-            : column is TableViewBoundColumn bound ? bound.Binding?.Path?.Path ?? string.Empty : string.Empty;
+        => column is TableViewBoundColumn bound && bound.Binding?.Path?.Path is { Length: > 0 } path
+            ? path : column.SortMemberPath ?? string.Empty;
 
     private static string LocalizedColumnHeader(TableViewColumn column)
     {
@@ -817,6 +816,38 @@ public sealed partial class TransfersView : UserControl
 
     private async void Stop_Click(object sender, RoutedEventArgs e)
         => await ExecuteMenuActionAsync(ViewModel.StopSelectedAsync);
+
+    private async void MissingLocate_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTorrent is not { HasMissingFiles: true } torrent || ViewModel.Api is not { } api) return;
+        await ExecuteMenuActionAsync(async () =>
+        {
+            if (!ViewModel.CanUseLocalFiles)
+            {
+                var path = await PromptAsync(Localizer.Get("Dialog_SetTorrentLocation", "Set torrent location"),
+                    Localizer.Get("AddTorrentSavePathLabel.Text", "Save path"), torrent.SavePath);
+                if (!string.IsNullOrWhiteSpace(path)) await api.Torrents.SetLocationAsync(torrent.Hash, path.Trim());
+                return;
+            }
+            var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.Downloads };
+            picker.FileTypeFilter.Add("*");
+            InitializePicker(picker);
+            if (await picker.PickSingleFolderAsync() is { } folder)
+                await api.Torrents.SetLocationAsync(torrent.Hash, folder.Path);
+        });
+    }
+
+    private async void MissingCheck_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTorrent is { HasMissingFiles: true } torrent && ViewModel.Api is { } api)
+            await ExecuteMenuActionAsync(() => api.Torrents.ExecuteAsync(TorrentCommand.Recheck, torrent.Hash));
+    }
+
+    private async void MissingDownload_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTorrent is { HasMissingFiles: true } torrent && ViewModel.Api is { } api)
+            await ExecuteMenuActionAsync(() => api.Torrents.ExecuteAsync(TorrentCommand.Start, torrent.Hash));
+    }
 
     private async void ForceRecheck_Click(object sender, RoutedEventArgs e)
         => await ExecuteMenuActionAsync(ViewModel.RecheckSelectedAsync);

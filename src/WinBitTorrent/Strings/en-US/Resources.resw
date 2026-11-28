@@ -889,4 +889,8 @@
   <data name="FavoriteFolders_Name" xml:space="preserve"><value>Display name</value></data>
   <data name="FavoriteFolders_Star" xml:space="preserve"><value>Add folder to favorites</value></data>
   <data name="FavoriteFolders_Remove" xml:space="preserve"><value>Remove folder from favorites</value></data>
+  <data name="TorrentState_MissingFiles" xml:space="preserve"><value>Files not found</value></data>
+  <data name="MissingLocate.Content" xml:space="preserve"><value>Find files…</value></data>
+  <data name="MissingCheck.Content" xml:space="preserve"><value>Check again</value></data>
+  <data name="MissingDownload.Content" xml:space="preserve"><value>Download missing data</value></data>
 </root>

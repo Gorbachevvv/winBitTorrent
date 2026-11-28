@@ -347,6 +347,13 @@ public sealed class EngineHostTests(Xunit.Abstractions.ITestOutputHelper output)
             torrent = Assert.Single(await host.Client.Torrents.GetInfoAsync());
             Assert.Equal("stoppedDL", torrent.State);
             Assert.True(torrent.Downloaded >= beforeRestart);
+            await host.StopAsync();
+            var partialFile = Path.Combine(incomplete, "payload.bin");
+            var heldFile = Path.Combine(dataRoot, "held-partial.bin");
+            File.Move(partialFile, heldFile);
+            await host.StartAsync();
+            Assert.Equal("missingFiles", Assert.Single(await host.Client!.Torrents.GetInfoAsync()).State);
+            File.Move(heldFile, partialFile);
             await host.Client.Torrents.ExecuteAsync(TorrentCommand.Start, torrent.Hash);
             await WaitUntilAsync(() => Task.FromResult(File.Exists(Path.Combine(downloads, "payload.bin"))), TimeSpan.FromSeconds(30));
             await Task.Delay(750); // let EngineHost persist storage_moved without any UI poll
@@ -379,6 +386,20 @@ public sealed class EngineHostTests(Xunit.Abstractions.ITestOutputHelper output)
             var downloaded = await File.ReadAllBytesAsync(Path.Combine(relocated, "payload.bin"));
             Assert.Equal(SHA256.HashData(content), SHA256.HashData(downloaded));
             Assert.True(webSeed.BytesServed < content.Length * 2L, $"Resume downloaded too much data: {webSeed.BytesServed} bytes.");
+
+            File.Delete(Path.Combine(relocated, "payload.bin"));
+            var servedBeforeRecovery = webSeed.BytesServed;
+            await host.StartAsync();
+            Assert.Equal("missingFiles", Assert.Single(await host.Client!.Torrents.GetInfoAsync()).State);
+            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Recheck, torrent.Hash);
+            await Task.Delay(1500);
+            Assert.Equal("missingFiles", Assert.Single(await host.Client.Torrents.GetInfoAsync()).State);
+            Assert.Equal(servedBeforeRecovery, webSeed.BytesServed);
+            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Start, torrent.Hash);
+            await WaitUntilAsync(async () => (await host.Client.Torrents.GetInfoAsync()).Single().Progress >= 1,
+                TimeSpan.FromSeconds(30));
+            await host.StopAsync();
+            Assert.Equal(content, await File.ReadAllBytesAsync(Path.Combine(relocated, "payload.bin")));
         }
         finally
         {
@@ -567,7 +588,18 @@ public sealed class EngineHostTests(Xunit.Abstractions.ITestOutputHelper output)
                 TimeSpan.FromSeconds(20));
             var successfulCheck = Assert.Single(await host.Client.Torrents.GetInfoAsync());
             Assert.Equal("stoppedUP", successfulCheck.State);
+            await host.Client.Torrents.ExecuteAsync(TorrentCommand.Start, recovered.Hash);
             await host.StopAsync();
+            var relocated = Directory.CreateDirectory(Path.Combine(dataRoot, "relocated")).FullName;
+            File.Move(downloadedPath, Path.Combine(relocated, "external-data.bin"));
+            await host.StartAsync();
+            Assert.Equal("missingFiles", (await host.Client!.Torrents.GetInfoAsync()).Single().State);
+            await host.StopAsync();
+            await host.StartAsync();
+            Assert.Equal("missingFiles", (await host.Client!.Torrents.GetInfoAsync()).Single().State);
+            await host.Client.Torrents.SetLocationAsync(recovered.Hash, relocated);
+            await WaitUntilAsync(async () =>
+                (await host.Client.Torrents.GetInfoAsync()).Single().State == "stoppedUP", TimeSpan.FromSeconds(20));
         }
         finally
         {

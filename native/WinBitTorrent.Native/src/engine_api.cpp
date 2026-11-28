@@ -250,6 +250,7 @@ namespace winbittorrent
         int inactive_seeding_time_limit = -1;
         int queue_position = -1;
         bool needs_recheck = false;
+        bool missing_files = false;
     };
 
     class engine
@@ -338,6 +339,43 @@ namespace winbittorrent
             return settings;
         }
 
+        static bool missing_saved_data(lt::add_torrent_params const& params)
+        {
+            if (!params.ti) return false;
+            auto const& files = params.ti->files();
+            bool const seed = bool(params.flags & lt::torrent_flags::seed_mode);
+            if (!seed && params.have_pieces.none_set() && params.unfinished_pieces.empty()) return false;
+            for (auto index : files.file_range())
+            {
+                if (files.pad_file_at(index) || files.file_size(index) == 0) continue;
+                auto const i = static_cast<std::size_t>(static_cast<int>(index));
+                if (i < params.file_priorities.size() && params.file_priorities[i] == lt::dont_download) continue;
+                auto const first_byte = files.map_file(index, 0, 1);
+                auto const last_byte = files.map_file(index, files.file_size(index) - 1, 1);
+                bool expected = seed;
+                for (auto piece = first_byte.piece; !expected && piece <= last_byte.piece; ++piece)
+                {
+                    expected = static_cast<int>(piece) < params.have_pieces.size() && params.have_pieces[piece];
+                    if (expected) break;
+                    auto const partial = params.unfinished_pieces.find(piece);
+                    if (partial == params.unfinished_pieces.end()) continue;
+                    auto const& blocks = partial->second;
+                    int const start = piece == first_byte.piece ? first_byte.start / lt::default_block_size : 0;
+                    int const end = piece == last_byte.piece
+                        ? std::min(blocks.size(), 1 + last_byte.start / lt::default_block_size) : blocks.size();
+                    for (int block = start; block < end && !expected; ++block)
+                        expected = blocks[block];
+                }
+                if (!expected) continue;
+                auto renamed = params.renamed_files.find(index);
+                auto path = utf8_path(params.save_path) / utf8_path(renamed == params.renamed_files.end()
+                    ? files.file_path(index) : renamed->second);
+                std::error_code ec;
+                if (!fs::is_regular_file(path, ec)) return true;
+            }
+            return false;
+        }
+
         void load_resume_files()
         {
             for (auto const& item : fs::directory_iterator(resume_root_))
@@ -377,6 +415,12 @@ namespace winbittorrent
                         params.ti = std::make_shared<lt::torrent_info>(path_text(torrent_path), error);
                     if (!error)
                     {
+                        imported.missing_files = root.dict_find_int_value("wbt-missing-files") != 0 || missing_saved_data(params);
+                        if (imported.missing_files)
+                        {
+                            params.flags |= lt::torrent_flags::paused;
+                            params.flags &= ~lt::torrent_flags::auto_managed;
+                        }
                         auto handle = session_.add_torrent(std::move(params), error);
                         if (!error)
                         {
@@ -468,6 +512,8 @@ namespace winbittorrent
                 {
                     checked->handle.pause();
                     checked->handle.unset_flags(lt::torrent_flags::upload_mode);
+                    if (checked->handle.status().is_finished)
+                        state(checked->handle).missing_files = false;
                 }
                 completed.push_back(checked->handle);
                 resume_saved_ = false;
@@ -486,6 +532,7 @@ namespace winbittorrent
                     extra.complete_path = moved->storage_path();
                     extra.download_path.clear();
                     extra.pending_location.clear();
+                    if (extra.missing_files) check_without_download(moved->handle);
                 }
                 completed.push_back(moved->handle);
                 storage_changed_ = true;
@@ -569,7 +616,11 @@ namespace winbittorrent
             if (saved == nullptr) return;
             auto const hash = primary_hash(saved->params.info_hashes);
             if (hash.empty()) return;
-            write_atomic(resume_root_ / (hash + ".fastresume"), lt::write_resume_data_buf(saved->params));
+            auto data = lt::write_resume_data(saved->params);
+            if (state(saved->handle).missing_files) data["wbt-missing-files"] = 1;
+            std::vector<char> bytes;
+            lt::bencode(std::back_inserter(bytes), data);
+            write_atomic(resume_root_ / (hash + ".fastresume"), bytes);
             if (saved->params.ti)
             {
                 try
@@ -697,7 +748,7 @@ namespace winbittorrent
             return {
                 { "hash", primary_hash(status.info_hashes) }, { "name", name },
                 { "size", total }, { "total_size", status.total }, { "progress", status.progress },
-                { "state", state_name(status) }, { "num_seeds", status.num_seeds },
+                { "state", extra.missing_files ? "missingFiles" : state_name(status) }, { "num_seeds", status.num_seeds },
                 { "num_complete", std::max(status.num_complete, 0) },
                 { "num_leechs", std::max(status.num_peers - status.num_seeds, 0) },
                 { "num_incomplete", std::max(status.num_incomplete, 0) },
@@ -747,7 +798,7 @@ namespace winbittorrent
                     || (filter == "active" && (status.download_payload_rate > 0 || status.upload_payload_rate > 0))
                     || (filter == "inactive" && status.download_payload_rate == 0 && status.upload_payload_rate == 0)
                     || (filter == "stalled" && name.starts_with("stalled"))
-                    || (filter == "errored" && bool(status.errc));
+                    || (filter == "errored" && (bool(status.errc) || extra.missing_files));
                 if (include && (category.empty() || category == extra.category) && (tag.empty() || extra.tags.contains(tag)))
                     result.push_back(torrent(handle, status));
             }
@@ -1064,6 +1115,15 @@ namespace winbittorrent
                 handle.piece_priority(lt::piece_index_t{ info->num_pieces() - 1 }, enabled ? lt::top_priority : lt::default_priority);
         }
 
+        void check_without_download(lt::torrent_handle const& handle)
+        {
+            handle.unset_flags(lt::torrent_flags::auto_managed);
+            handle.set_flags(lt::torrent_flags::upload_mode);
+            pause_after_recheck_.insert(primary_hash(handle.info_hashes()));
+            handle.force_recheck();
+            handle.resume();
+        }
+
         void command(json::object const& payload)
         {
             std::vector<lt::torrent_handle> stopped;
@@ -1071,17 +1131,20 @@ namespace winbittorrent
             {
                 switch (integer(payload, "command"))
                 {
-                case 0: handle.resume(); state(handle).force_start = false; break;
+                case 0:
+                    if (state(handle).missing_files)
+                    {
+                        pause_after_recheck_.erase(primary_hash(handle.info_hashes()));
+                        handle.unset_flags(lt::torrent_flags::upload_mode);
+                        state(handle).missing_files = false;
+                        handle.force_recheck();
+                    }
+                    handle.resume(); state(handle).force_start = false; break;
                 case 1: handle.pause(); stopped.push_back(handle); break;
                 case 2:
                     if (handle.status().flags & lt::torrent_flags::paused)
-                    {
-                        handle.unset_flags(lt::torrent_flags::auto_managed);
-                        handle.set_flags(lt::torrent_flags::upload_mode);
-                        handle.resume();
-                        pause_after_recheck_.insert(primary_hash(handle.info_hashes()));
-                    }
-                    handle.force_recheck();
+                        check_without_download(handle);
+                    else handle.force_recheck();
                     break;
                 case 3: handle.force_reannounce(); break;
                 case 4: handle.queue_position_up(); break;
@@ -1165,6 +1228,7 @@ namespace winbittorrent
                 auto& extra = state(handle);
                 if (name == "setForceStart")
                 {
+                    if (extra.missing_files) continue;
                     extra.force_start = boolean(parameters, "value");
                     if (extra.force_start) { handle.unset_flags(lt::torrent_flags::auto_managed); handle.resume(); }
                     else if (queueing_enabled_) handle.set_flags(lt::torrent_flags::auto_managed);
@@ -1194,7 +1258,8 @@ namespace winbittorrent
                 else if (name == "setLocation")
                 {
                     extra.pending_location = text(parameters, "location");
-                    handle.move_storage(extra.pending_location);
+                    handle.move_storage(extra.pending_location, extra.missing_files
+                        ? lt::move_flags_t::reset_save_path : lt::move_flags_t::always_replace_files);
                 }
                 else if (name == "setDownloadLimit") handle.set_download_limit(static_cast<int>(integer(parameters, "limit")));
                 else if (name == "setUploadLimit") handle.set_upload_limit(static_cast<int>(integer(parameters, "limit")));
@@ -1452,7 +1517,7 @@ namespace winbittorrent
             {
                 if (pex_enabled_) handle.unset_flags(lt::torrent_flags::disable_pex);
                 else handle.set_flags(lt::torrent_flags::disable_pex);
-                if (queueing_enabled_ && !state(handle).force_start) handle.set_flags(lt::torrent_flags::auto_managed);
+                if (queueing_enabled_ && !state(handle).force_start && !state(handle).missing_files) handle.set_flags(lt::torrent_flags::auto_managed);
                 else handle.unset_flags(lt::torrent_flags::auto_managed);
                 handle.set_max_connections(max_connections_per_torrent_);
                 handle.set_max_uploads(max_uploads_per_torrent_);

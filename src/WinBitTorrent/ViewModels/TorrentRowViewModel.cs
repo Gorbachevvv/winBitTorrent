@@ -46,8 +46,11 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string Category => _model.Category;
     public string Tags => _model.Tags;
     public string AddedOn => FormatDate(_model.AddedOn);
+    public long AddedOnTimestamp => _model.AddedOn;
     public string CompletedOn => FormatDate(_model.CompletedOn);
+    public long CompletedOnTimestamp => _model.CompletedOn;
     public string CreatedOn => FormatDate(_model.CreatedOn);
+    public long CreatedOnTimestamp => _model.CreatedOn;
     public string Tracker => _model.Tracker;
     internal string TrackerHost { get; private set; }
     public string DownloadLimit => _model.DownloadLimit <= 0 ? "∞" : ValueFormatter.Speed(_model.DownloadLimit);
@@ -62,7 +65,9 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string Completed => ValueFormatter.Size(_model.Completed);
     public string RatioLimit => _model.RatioLimit < 0 ? "∞" : ValueFormatter.Ratio(_model.RatioLimit);
     public string SeenComplete => FormatDate(_model.SeenComplete);
+    public long SeenCompleteTimestamp => _model.SeenComplete;
     public string LastActivity => FormatDate(_model.LastActivity);
+    public long LastActivityTimestamp => _model.LastActivity;
     public double AvailabilityCopies => _model.Availability;
     public string Availability => _model.Availability < 0
         ? "—"
@@ -73,7 +78,8 @@ public sealed class TorrentRowViewModel : ObservableObject
     public string Reannounce => ValueFormatter.Duration(_model.Reannounce);
     public string Private => _model.IsPrivate ? Localizer.Get("Common_Yes", "Yes") : Localizer.Get("Common_No", "No");
     public bool IsActive => _model.DownloadSpeed > 0 || _model.UploadSpeed > 0 || _model.State.Contains("downloading", StringComparison.OrdinalIgnoreCase);
-    public bool IsStopped => _model.State.Contains("paused", StringComparison.OrdinalIgnoreCase)
+    public bool HasMissingFiles => _model.State == "missingFiles";
+    public bool IsStopped => HasMissingFiles || _model.State.Contains("paused", StringComparison.OrdinalIgnoreCase)
         || _model.State.Contains("stopped", StringComparison.OrdinalIgnoreCase);
     public bool ShowAvailabilityMap => !IsStopped && EffectiveProgress < 1d;
 
@@ -113,6 +119,7 @@ public sealed class TorrentRowViewModel : ObservableObject
         if (previous.State != _snapshot.State)
         {
             OnPropertyChanged(nameof(State));
+            OnPropertyChanged(nameof(HasMissingFiles));
             OnPropertyChanged(nameof(Status));
             OnPropertyChanged(nameof(StatusGlyph));
             OnPropertyChanged(nameof(StatusBrush));
@@ -155,14 +162,17 @@ public sealed class TorrentRowViewModel : ObservableObject
         if (previous.AddedOn != _snapshot.AddedOn)
         {
             OnPropertyChanged(nameof(AddedOn));
+            OnPropertyChanged(nameof(AddedOnTimestamp));
         }
         if (previous.CompletedOn != _snapshot.CompletedOn)
         {
             OnPropertyChanged(nameof(CompletedOn));
+            OnPropertyChanged(nameof(CompletedOnTimestamp));
         }
         if (previous.CreatedOn != _snapshot.CreatedOn)
         {
             OnPropertyChanged(nameof(CreatedOn));
+            OnPropertyChanged(nameof(CreatedOnTimestamp));
         }
         if (previous.DownloadLimit != _snapshot.DownloadLimit)
         {
@@ -203,10 +213,12 @@ public sealed class TorrentRowViewModel : ObservableObject
         if (previous.SeenComplete != _snapshot.SeenComplete)
         {
             OnPropertyChanged(nameof(SeenComplete));
+            OnPropertyChanged(nameof(SeenCompleteTimestamp));
         }
         if (previous.LastActivity != _snapshot.LastActivity)
         {
             OnPropertyChanged(nameof(LastActivity));
+            OnPropertyChanged(nameof(LastActivityTimestamp));
         }
         if (previous.Reannounce != _snapshot.Reannounce)
         {
@@ -372,7 +384,8 @@ public sealed class TorrentRowViewModel : ObservableObject
 
     private static string TorrentStateText(string state) => state switch
     {
-        "error" or "missingFiles" => Localizer.Get("TorrentState_Error", "Error"),
+        "missingFiles" => Localizer.Get("TorrentState_MissingFiles", "Files not found"),
+        "error" => Localizer.Get("TorrentState_Error", "Error"),
         "uploading" or "forcedUP" => Localizer.Get("TorrentState_Seeding", "Seeding"),
         "pausedUP" or "stoppedUP" => Localizer.Get("TorrentState_Completed", "Completed"),
         "queuedUP" => Localizer.Get("TorrentState_QueuedUpload", "Queued for upload"),
