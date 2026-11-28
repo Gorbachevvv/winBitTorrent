@@ -889,6 +889,17 @@
   <data name="FavoriteFolders_Name" xml:space="preserve"><value>Display name</value></data>
   <data name="FavoriteFolders_Star" xml:space="preserve"><value>Add folder to favorites</value></data>
   <data name="FavoriteFolders_Remove" xml:space="preserve"><value>Remove folder from favorites</value></data>
+  <data name="PowerActionMenu.Text" xml:space="preserve"><value>When downloads complete</value></data>
+  <data name="PowerActionNone.Text" xml:space="preserve"><value>Do nothing</value></data>
+  <data name="PowerActionSleep.Text" xml:space="preserve"><value>Sleep</value></data>
+  <data name="PowerActionShutdown.Text" xml:space="preserve"><value>Shut down</value></data>
+  <data name="PowerTargetAll.Text" xml:space="preserve"><value>After all downloads</value></data>
+  <data name="PowerTargetSelected.Text" xml:space="preserve"><value>After the selected torrent</value></data>
+  <data name="PowerAction_SleepFailed" xml:space="preserve"><value>Windows did not put the computer to sleep.</value></data>
+  <data name="PowerAction_SleepCountdown" xml:space="preserve"><value>Downloads are complete. The computer will go to sleep in {0} s.</value></data>
+  <data name="PowerAction_ShutdownCountdown" xml:space="preserve"><value>Downloads are complete. The computer will shut down in {0} s.</value></data>
+  <data name="PowerAction_Title" xml:space="preserve"><value>When downloads complete</value></data>
+  <data name="PowerAction_Now" xml:space="preserve"><value>Now</value></data>
   <data name="TorrentState_MissingFiles" xml:space="preserve"><value>Files not found</value></data>
   <data name="MissingLocate.Content" xml:space="preserve"><value>Find files…</value></data>
   <data name="MissingCheck.Content" xml:space="preserve"><value>Check again</value></data>

@@ -70,6 +70,15 @@
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Name="CookiesMenuItem" x:Uid="CookiesMenu" Text="Cookies…" Click="Cookies_Click" />
                 <MenuFlyoutItem x:Uid="StatisticsMenu" Text="Statistics…" Click="Statistics_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutSubItem x:Uid="PowerActionMenu" Text="When downloads complete" Icon="Clock">
+                    <RadioMenuFlyoutItem x:Name="PowerActionNoneItem" x:Uid="PowerActionNone" Text="Do nothing" GroupName="PowerAction" IsChecked="True" Tag="None" Click="PowerAction_Click" />
+                    <RadioMenuFlyoutItem x:Name="PowerActionSleepItem" x:Uid="PowerActionSleep" Text="Sleep" GroupName="PowerAction" Tag="Sleep" Click="PowerAction_Click" />
+                    <RadioMenuFlyoutItem x:Name="PowerActionShutdownItem" x:Uid="PowerActionShutdown" Text="Shut down" GroupName="PowerAction" Tag="Shutdown" Click="PowerAction_Click" />
+                    <MenuFlyoutSeparator />
+                    <RadioMenuFlyoutItem x:Name="PowerTargetAllItem" x:Uid="PowerTargetAll" Text="After all downloads" GroupName="PowerTarget" IsChecked="True" Click="PowerAction_Click" />
+                    <RadioMenuFlyoutItem x:Name="PowerTargetSelectedItem" x:Uid="PowerTargetSelected" Text="After the selected torrent" GroupName="PowerTarget" IsEnabled="{Binding HasSelectedTorrent}" Click="PowerAction_Click" />
+                </MenuFlyoutSubItem>
             </MenuBarItem>
             <MenuBarItem x:Name="WorkspaceHelpMenu" x:Uid="HelpMenu" Height="28" Margin="1,0" VerticalAlignment="Center" Title="Help">
                 <MenuFlyoutItem x:Name="CheckUpdatesMenuItem" x:Uid="CheckUpdatesMenu" Text="Check for updates…" Icon="Sync" Click="CheckForUpdates_Click" />

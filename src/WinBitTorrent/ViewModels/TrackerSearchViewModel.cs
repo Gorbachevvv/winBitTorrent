@@ -278,7 +278,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         BackToTrackers();
     }
 
-    public async Task<bool> CompleteInteractiveLoginAsync(IReadOnlyCollection<Cookie> cookies, string? signedInUser = null)
+    public async Task<bool> CompleteInteractiveLoginAsync(IReadOnlyCollection<Cookie> cookies, string? signedInUser = null, string? userAgent = null)
     {
         if (_activeProvider is not ITrackerInteractiveAuthentication interactive || IsBusy)
             return false;
@@ -288,7 +288,7 @@ public sealed partial class TrackerSearchViewModel : ObservableObject
         Status = Localizer.Get("Tracker_ImportingBrowserSession", "Checking the RuTracker browser session…");
         try
         {
-            await interactive.ImportSessionCookiesAsync(cookies);
+            await interactive.ImportSessionCookiesAsync(cookies, userAgent);
             SignedInUser = string.IsNullOrWhiteSpace(signedInUser) ? _activeProvider.DisplayName : signedInUser.Trim();
             IsSignedIn = true;
             Results.Clear();

@@ -76,6 +76,8 @@ public sealed partial class MainWindow : Window
             () => ViewModel.IsConnected,
             () => ViewModel.UseAlternativeSpeedLimits);
         notifications.SetFallbackPresenter(_trayIcon.ShowNotification);
+        ViewModel.PowerActionDue += OnPowerActionDue;
+        ViewModel.PowerActionReset += ResetPowerActionMenu;
     }
 
     public MainViewModel ViewModel { get; }
@@ -675,7 +677,8 @@ public sealed partial class MainWindow : Window
         await ViewModel.ExecuteAllAsync(command);
     }
 
-    private async Task ExitApplicationAsync()
+    /// <param name="afterShutdown"> Runs once the engine has saved its state, right before the window closes </param>
+    private async Task ExitApplicationAsync(Action? afterShutdown = null)
     {
         if (_closing)
             return;
@@ -690,6 +693,7 @@ public sealed partial class MainWindow : Window
             ShowWindow(_windowHandle, ShowWindowCommand.Hide);
             _isWindowVisible = false;
             await ViewModel.ShutdownAsync();
+            afterShutdown?.Invoke();
             _allowClose = true;
             Close();
         }

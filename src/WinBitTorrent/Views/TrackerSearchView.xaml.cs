@@ -364,9 +364,18 @@ public sealed partial class TrackerSearchView : UserControl
         _navigationCancelled = false;
         _loginPageTimeout.Stop();
         ViewModel.IsBrowserPageLoading = false;
+        if (!args.IsSuccess && args.HttpStatusCode != 0)
+        {
+            // The server answered with a page of its own. WebView2 reports any 4xx as a failure, but
+            // Cloudflare's "Just a moment…" check arrives as 403 and has to stay visible: it reloads
+            // the sign-in page by itself once passed, and that navigation lands back here
+            ViewModel.IsBrowserPageFailed = false;
+            return;
+        }
+
         if (!args.IsSuccess)
         {
-            // A failed navigation leaves the browser showing nothing, so the retry panel takes over
+            // No response at all leaves the browser showing nothing, so the retry panel takes over
             // rather than leaving the user staring at a blank rectangle.
             if (!cancelledByUs)
             {
@@ -458,7 +467,8 @@ public sealed partial class TrackerSearchView : UserControl
             }
 
             var userName = await ReadSignedInUserAsync().ConfigureAwait(true);
-            if (await ViewModel.CompleteInteractiveLoginAsync(cookies, userName).ConfigureAwait(true))
+            var userAgent = _loginWebView?.CoreWebView2?.Settings.UserAgent;
+            if (await ViewModel.CompleteInteractiveLoginAsync(cookies, userName, userAgent).ConfigureAwait(true))
             {
                 _rejectedSessions = 0;
                 return BrowserSessionResult.SignedIn;

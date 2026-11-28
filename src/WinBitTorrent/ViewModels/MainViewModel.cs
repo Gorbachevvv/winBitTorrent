@@ -166,6 +166,49 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool CanUseLocalFiles => _api?.Capabilities.HasFlag(BackendCapabilities.LocalFileSystem) == true;
     public bool HasSelectedTorrent => SelectedTorrent is not null;
 
+    /// <summary> <see cref="Services.PowerAction"/> armed for the downloads. It fires once and is then cleared </summary>
+    public PowerAction PendingPowerAction { get; private set; }
+
+    /// <summary> Hash of the watched torrent, null watches every download </summary>
+    public string? PowerActionTorrentHash { get; private set; }
+
+    /// <summary> Raised on the UI thread once the armed <see cref="PendingPowerAction"/> is due </summary>
+    public event Action<PowerAction, int>? PowerActionDue;
+    public event Action? PowerActionReset;
+    private int _powerActionVersion;
+    private bool _powerCompletionObserved;
+    private bool _powerCountdownActive;
+
+    public void ArmPowerAction(PowerAction action, string? torrentHash)
+    {
+        _powerActionVersion++;
+        _powerCompletionObserved = false;
+        _powerCountdownActive = false;
+        PendingPowerAction = action;
+        PowerActionTorrentHash = action == PowerAction.None ? null : torrentHash;
+        if (action == PowerAction.None)
+            PowerActionReset?.Invoke();
+    }
+
+    public bool CanRunPowerAction(int version)
+        => version == _powerActionVersion && PendingPowerAction != PowerAction.None
+            && IsConnected && !IsBusy && _lifetime is { IsCancellationRequested: false }
+            && DownloadCompletionWatch.CanRun(PowerActionTorrentHash, _mainData.Torrents.Values);
+
+    public async Task<bool> VerifyPowerActionAsync(int version)
+    {
+        if (!CanRunPowerAction(version)) return false;
+        await RefreshNowAsync();
+        return CanRunPowerAction(version);
+    }
+
+    public void FinishPowerCountdown(int version, bool disarm)
+    {
+        if (version != _powerActionVersion) return;
+        _powerCountdownActive = false;
+        if (disarm) ArmPowerAction(PowerAction.None, null);
+    }
+
     public async Task InitializeAsync()
     {
         if (_lifetime is not null)
@@ -193,6 +236,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ErrorMessage = string.Empty;
         try
         {
+            ArmPowerAction(PowerAction.None, null);
             _syncLifetime?.Cancel();
             _mainData.Reset();
             _torrentLifecycle.Reset();
@@ -430,7 +474,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     partial void OnSearchTextChanged(string value) => RebuildVisibleRows();
 
-    partial void OnSelectedProfileChanged(ServerProfile? value) => OnPropertyChanged(nameof(CanUseLocalFiles));
+    partial void OnSelectedProfileChanged(ServerProfile? value)
+    {
+        ArmPowerAction(PowerAction.None, null);
+        OnPropertyChanged(nameof(CanUseLocalFiles));
+    }
 
     private async Task ExecuteSelectedAsync(TorrentCommand command)
     {
@@ -497,11 +545,21 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (cancellationToken.IsCancellationRequested || !ReferenceEquals(api, _api))
                 return;
             var changeSet = _mainData.Apply(response);
-            _notifications.Publish(_torrentLifecycle.Observe(changeSet));
+            var events = _torrentLifecycle.Observe(changeSet);
+            _notifications.Publish(events);
             ApplyChangeSet(changeSet);
+            IsConnected = true;
+            if (PendingPowerAction != PowerAction.None)
+            {
+                _powerCompletionObserved |= DownloadCompletionWatch.HasCompletion(PowerActionTorrentHash, events);
+                if (_powerCompletionObserved && !_powerCountdownActive && CanRunPowerAction(_powerActionVersion))
+                {
+                    _powerCountdownActive = true;
+                    PowerActionDue?.Invoke(PendingPowerAction, _powerActionVersion);
+                }
+            }
             if (SelectedTorrent is { } selected)
                 SelectedSpeedHistory.RecordSample(selected.Model.DownloadSpeed, selected.Model.UploadSpeed, DateTimeOffset.UtcNow);
-            IsConnected = true;
             ConnectionStatus = Localizer.Get("Connection_Connected", "Connected");
             ErrorMessage = string.Empty;
         }

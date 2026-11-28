@@ -875,6 +875,17 @@
   <data name="FavoriteFolders_Name" xml:space="preserve"><value>Назва</value></data>
   <data name="FavoriteFolders_Star" xml:space="preserve"><value>Дадаць папку ў абранае</value></data>
   <data name="FavoriteFolders_Remove" xml:space="preserve"><value>Выдаліць папку з абранага</value></data>
+  <data name="PowerActionMenu.Text" xml:space="preserve"><value>Пасля завяршэння загрузак</value></data>
+  <data name="PowerActionNone.Text" xml:space="preserve"><value>Нічога не рабіць</value></data>
+  <data name="PowerActionSleep.Text" xml:space="preserve"><value>Рэжым сну</value></data>
+  <data name="PowerActionShutdown.Text" xml:space="preserve"><value>Выключыць камп'ютар</value></data>
+  <data name="PowerTargetAll.Text" xml:space="preserve"><value>Пасля ўсіх загрузак</value></data>
+  <data name="PowerTargetSelected.Text" xml:space="preserve"><value>Пасля абранага торэнта</value></data>
+  <data name="PowerAction_SleepFailed" xml:space="preserve"><value>Windows не перавяла камп'ютар у рэжым сну.</value></data>
+  <data name="PowerAction_SleepCountdown" xml:space="preserve"><value>Загрузкі завершаны. Камп'ютар пяройдзе ў рэжым сну праз {0} с.</value></data>
+  <data name="PowerAction_ShutdownCountdown" xml:space="preserve"><value>Загрузкі завершаны. Камп'ютар выключыцца праз {0} с.</value></data>
+  <data name="PowerAction_Title" xml:space="preserve"><value>Пасля завяршэння загрузак</value></data>
+  <data name="PowerAction_Now" xml:space="preserve"><value>Зараз</value></data>
   <data name="TorrentState_MissingFiles" xml:space="preserve"><value>Файлы не знойдзены</value></data>
   <data name="MissingLocate.Content" xml:space="preserve"><value>Знайсці файлы…</value></data>
   <data name="MissingCheck.Content" xml:space="preserve"><value>Праверыць зноў</value></data>

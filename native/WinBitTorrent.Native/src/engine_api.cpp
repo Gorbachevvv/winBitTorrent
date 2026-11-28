@@ -166,6 +166,7 @@ namespace
     {
         bool const paused = bool(status.flags & lt::torrent_flags::paused);
         if (status.errc) return "error";
+        if (status.moving_storage) return "moving";
         switch (status.state)
         {
         case lt::torrent_status::checking_files: return status.is_finished ? "checkingUP" : "checkingDL";
@@ -745,10 +746,12 @@ namespace winbittorrent
             auto const ratio = status.all_time_download > 0 ? double(status.all_time_upload) / status.all_time_download : 0.0;
             auto const tracker_entries = handle.trackers();
             auto const name = extra.display_name.empty() ? status.name : extra.display_name;
+            bool const awaiting_final_location = status.is_finished && !extra.download_path.empty()
+                && !extra.complete_path.empty() && status.save_path != extra.complete_path && !status.errc;
             return {
                 { "hash", primary_hash(status.info_hashes) }, { "name", name },
                 { "size", total }, { "total_size", status.total }, { "progress", status.progress },
-                { "state", extra.missing_files ? "missingFiles" : state_name(status) }, { "num_seeds", status.num_seeds },
+                { "state", extra.missing_files ? "missingFiles" : awaiting_final_location ? "moving" : state_name(status) }, { "num_seeds", status.num_seeds },
                 { "num_complete", std::max(status.num_complete, 0) },
                 { "num_leechs", std::max(status.num_peers - status.num_seeds, 0) },
                 { "num_incomplete", std::max(status.num_incomplete, 0) },
